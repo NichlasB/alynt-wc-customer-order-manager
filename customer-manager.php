@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Customer and Order Manager for WooCommerce
  * Description: Provides a customer management interface for WooCommerce customers and orders.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: CueFox
  * Requires at least: 5.0
  * Requires PHP: 7.2
@@ -13,10 +13,27 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
+// Plugin Update Checker
+require_once __DIR__ . '/vendor/autoload.php';
+use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+
+if (class_exists('YahnisElsts\PluginUpdateChecker\v5\PucFactory')) {
+    $myUpdateChecker = PucFactory::buildUpdateChecker(
+        'https://github.com/NichlasB/woocommerce-customer-manager',
+        __FILE__,
+        'woocommerce-customer-manager'
+    );
+    
+    // Set the branch that contains the stable release
+    $myUpdateChecker->setBranch('main');
+    // Enable GitHub releases
+    $myUpdateChecker->getVcsApi()->enableReleaseAssets();
+}
+
 // Define plugin constants
 define('CM_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('CM_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('CM_VERSION', '1.0.0');
+define('CM_VERSION', '1.0.1');
 
 // Check if WooCommerce is active
 if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
