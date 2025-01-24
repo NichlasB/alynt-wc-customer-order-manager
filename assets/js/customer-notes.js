@@ -15,10 +15,10 @@ jQuery(document).ready(function($) {
             url: ajaxurl,
             type: 'POST',
             data: {
-                action: 'cm_add_customer_note',
+                action: 'awcom_add_customer_note',
                 customer_id: customerId,
                 note: noteContent,
-                nonce: cmCustomerNotes.nonce
+                nonce: awcomCustomerNotes.nonce
             },
             beforeSend: function() {
                 button.prop('disabled', true);
@@ -85,11 +85,11 @@ jQuery(document).ready(function($) {
                 url: ajaxurl,
                 type: 'POST',
                 data: {
-                    action: 'cm_edit_customer_note',
-                    customer_id: cmCustomerNotes.customer_id,
+                    action: 'awcom_edit_customer_note',
+                    customer_id: awcomCustomerNotes.customer_id,
                     note_index: noteIndex,
                     note: newContent,
-                    nonce: cmCustomerNotes.nonce
+                    nonce: awcomCustomerNotes.nonce
                 },
                 success: function(response) {
                     if (response.success) {
@@ -116,7 +116,7 @@ jQuery(document).ready(function($) {
 
     // Delete note functionality
     $(document).on('click', '.delete-note', function() {
-        if (!confirm(cmCustomerNotes.confirm_delete)) {
+        if (!confirm(awcomCustomerNotes.confirm_delete)) {
             return;
         }
 
@@ -127,10 +127,10 @@ jQuery(document).ready(function($) {
             url: ajaxurl,
             type: 'POST',
             data: {
-                action: 'cm_delete_customer_note',
-                customer_id: cmCustomerNotes.customer_id,
+                action: 'awcom_delete_customer_note',
+                customer_id: awcomCustomerNotes.customer_id,
                 note_index: noteIndex,
-                nonce: cmCustomerNotes.nonce
+                nonce: awcomCustomerNotes.nonce
             },
             success: function(response) {
                 if (response.success) {

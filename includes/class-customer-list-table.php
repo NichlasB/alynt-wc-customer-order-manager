@@ -1,5 +1,5 @@
 <?php
-namespace CustomerManager;
+namespace AlyntWCOrderManager;
 
 if (!class_exists('WP_List_Table')) {
     require_once(ABSPATH . 'wp-admin/includes/class-wp-list-table.php');
@@ -17,13 +17,13 @@ class CustomerListTable extends \WP_List_Table {
     public function get_columns() {
         return [
             'cb'            => '<input type="checkbox" />',
-            'customer_name' => __('Name', 'customer-manager'),
-            'company'       => __('Company', 'customer-manager'),
-            'email'        => __('Email', 'customer-manager'),
-            'phone'        => __('Phone', 'customer-manager'),
-            'address'      => __('Address', 'customer-manager'),
-            'created'      => __('Created', 'customer-manager'),
-            'orders'       => __('Orders', 'customer-manager'),
+            'customer_name' => __('Name', 'alynt-wc-customer-order-manager'),
+            'company'       => __('Company', 'alynt-wc-customer-order-manager'),
+            'email'        => __('Email', 'alynt-wc-customer-order-manager'),
+            'phone'        => __('Phone', 'alynt-wc-customer-order-manager'),
+            'address'      => __('Address', 'alynt-wc-customer-order-manager'),
+            'created'      => __('Created', 'alynt-wc-customer-order-manager'),
+            'orders'       => __('Orders', 'alynt-wc-customer-order-manager'),
         ];
     }
 
@@ -43,18 +43,18 @@ class CustomerListTable extends \WP_List_Table {
 
     protected function column_customer_name($item) {
         $name = $item->first_name . ' ' . $item->last_name;
-        $edit_link = admin_url('admin.php?page=customer-manager-edit&id=' . $item->ID);
+        $edit_link = admin_url('admin.php?page=alynt-wc-customer-order-manager-edit&id=' . $item->ID);
         
         $actions = [
             'edit' => sprintf(
                 '<a href="%s">%s</a>',
                 esc_url($edit_link),
-                __('Edit', 'customer-manager')
+                __('Edit', 'alynt-wc-customer-order-manager')
             ),
             'delete' => sprintf(
                 '<a href="#" class="delete-customer" data-id="%s">%s</a>',
                 $item->ID,
-                __('Delete', 'customer-manager')
+                __('Delete', 'alynt-wc-customer-order-manager')
             ),
         ];
 
@@ -73,7 +73,7 @@ class CustomerListTable extends \WP_List_Table {
         return sprintf(
             '<a href="%s">%s</a>',
             esc_url($url),
-            sprintf(_n('%s order', '%s orders', $count, 'customer-manager'), $count)
+            sprintf(_n('%s order', '%s orders', $count, 'alynt-wc-customer-order-manager'), $count)
         );
     }
 
@@ -162,7 +162,7 @@ class CustomerListTable extends \WP_List_Table {
 
     public function get_bulk_actions() {
         return [
-            'delete' => __('Delete', 'customer-manager')
+            'delete' => __('Delete', 'alynt-wc-customer-order-manager')
         ];
     }
 
@@ -177,9 +177,9 @@ class CustomerListTable extends \WP_List_Table {
         $all_class = $current === 'all' ? ' class="current"' : '';
         $views['all'] = sprintf(
             '<a href="%s"%s>%s <span class="count">(%d)</span></a>',
-            admin_url('admin.php?page=customer-manager'),
+            admin_url('admin.php?page=alynt-wc-customer-order-manager'),
             $all_class,
-            __('All', 'customer-manager'),
+            __('All', 'alynt-wc-customer-order-manager'),
             $total_customers
         );
 

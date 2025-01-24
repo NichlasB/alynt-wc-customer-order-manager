@@ -1,0 +1,27 @@
+.payment-link-actions {
+    padding: 0 12px;
+    margin: 1.5em 0;
+}
+
+.payment-link-actions h3 {
+    padding: 0 !important;
+    margin: 1.5em 0 0 0 !important;
+}
+
+.payment-link-actions .wc-order-data-row {
+    padding: 1.5em 0 0 0;
+}
+
+.awcom-copy-payment-link {
+    display: inline-flex !important;
+    align-items: center;
+    width: 100%;
+    justify-content: center;
+}
+
+.awcom-copy-payment-link .dashicons {
+    margin-right: 5px;
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}

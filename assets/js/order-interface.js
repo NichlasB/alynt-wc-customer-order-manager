@@ -5,11 +5,11 @@ jQuery(function($) {
 
     $('<style>')
     .text(`
-        .cm-order-items .original-price del {
+        .awcom-order-items .original-price del {
             color: #999;
             margin-right: 5px;
         }
-        .cm-order-items .price-discount {
+        .awcom-order-items .price-discount {
             color: #4CAF50;
             font-size: 0.9em;
             margin-left: 5px;
@@ -18,16 +18,16 @@ jQuery(function($) {
     .appendTo('head');
 
     // Initialize Select2 for product search
-    $('#cm-add-product').select2({
+    $('#awcom-add-product').select2({
         ajax: {
-            url: cmOrderVars.ajaxurl,
+            url: awcomOrderVars.ajaxurl,
             dataType: 'json',
             delay: 250,
             data: function(params) {
                 return {
                     term: params.term,
-                    action: 'cm_search_products',
-                    nonce: cmOrderVars.nonce,
+                    action: 'awcom_search_products',
+                    nonce: awcomOrderVars.nonce,
                 customer_id: jQuery('input[name="customer_id"]').val() // Add this line
             };
         },
@@ -39,10 +39,10 @@ jQuery(function($) {
         cache: true
     },
     minimumInputLength: 2,
-    placeholder: cmOrderVars.i18n.search_products,
+    placeholder: awcomOrderVars.i18n.search_products,
     allowClear: true,
     width: '100%',
-    dropdownParent: $('.cm-product-search')
+    dropdownParent: $('.awcom-product-search')
 });
 
     // ---------------
@@ -50,7 +50,7 @@ jQuery(function($) {
     // ---------------
 
     // Handle product selection
-    $('#cm-add-product').on('select2:select', function(e) {
+    $('#awcom-add-product').on('select2:select', function(e) {
         var product = e.params.data;
         addProductToOrder(product);
         $(this).val(null).trigger('change');
@@ -59,14 +59,14 @@ jQuery(function($) {
     });
 
     // Handle quantity changes
-    $(document).on('change keyup', '.cm-order-items input.quantity', function() {
+    $(document).on('change keyup', '.awcom-order-items input.quantity', function() {
         updateLineTotal($(this).closest('tr'));
         updateOrderTotals();
         updateShippingMethods();
     });
 
     // Handle remove item
-    $(document).on('click', '.cm-order-items .remove-item', function(e) {
+    $(document).on('click', '.awcom-order-items .remove-item', function(e) {
         e.preventDefault();
         $(this).closest('tr').remove();
         updateOrderTotals();
@@ -95,9 +95,9 @@ jQuery(function($) {
         row.append('<td class="quantity"><input type="number" name="items[' + product.id + '][quantity]" class="quantity" value="1" min="1"></td>');
         row.append('<td class="price">' + priceDisplay + '</td>');
         row.append('<td class="total">' + product.formatted_price + '</td>');
-        row.append('<td class="actions"><a href="#" class="remove-item" title="' + cmOrderVars.i18n.remove_item + '">×</a></td>');
+        row.append('<td class="actions"><a href="#" class="remove-item" title="' + awcomOrderVars.i18n.remove_item + '">×</a></td>');
 
-        $('.cm-order-items tbody').append(row);
+        $('.awcom-order-items tbody').append(row);
         updateOrderTotals();
         updateShippingMethods();
     }
@@ -118,7 +118,7 @@ jQuery(function($) {
 
     function updateOrderTotals() {
         var subtotal = 0;
-        $('.cm-order-items tbody tr').each(function() {
+        $('.awcom-order-items tbody tr').each(function() {
             subtotal += updateLineTotal($(this));
         });
 
@@ -130,14 +130,14 @@ jQuery(function($) {
         }
 
         // Update displayed totals
-        $('.cm-order-items .subtotal').text(formatPrice(subtotal));
+        $('.awcom-order-items .subtotal').text(formatPrice(subtotal));
         $('.shipping-total').text(formatPrice(shippingCost));
         $('.order-total').text(formatPrice(subtotal + shippingCost));
     }
 
     function formatPrice(price) {
         return accounting.formatMoney(price, {
-            symbol: cmOrderVars.currency_symbol,
+            symbol: awcomOrderVars.currency_symbol,
             decimal: ".",
             thousand: ",",
             precision: 2,
@@ -151,21 +151,21 @@ jQuery(function($) {
 
     function updateShippingMethods() {
         var items = [];
-        $('.cm-order-items tbody tr').each(function() {
+        $('.awcom-order-items tbody tr').each(function() {
             items.push({
                 product_id: $(this).data('product-id'),
                 quantity: $(this).find('input.quantity').val()
             });
         });
 
-        $('#shipping-methods').html('<p class="loading">' + cmOrderVars.i18n.calculating + '</p>');
+        $('#shipping-methods').html('<p class="loading">' + awcomOrderVars.i18n.calculating + '</p>');
 
         $.ajax({
-            url: cmOrderVars.ajaxurl,
+            url: awcomOrderVars.ajaxurl,
             type: 'POST',
             data: {
-                action: 'cm_get_shipping_methods',
-                nonce: cmOrderVars.nonce,
+                action: 'awcom_get_shipping_methods',
+                nonce: awcomOrderVars.nonce,
                 customer_id: $('input[name="customer_id"]').val(),
                 items: items
             },
@@ -184,7 +184,7 @@ jQuery(function($) {
                     });
                     html += '</ul>';
                 } else {
-                    html = '<p class="no-shipping">' + cmOrderVars.i18n.no_shipping + '</p>';
+                    html = '<p class="no-shipping">' + awcomOrderVars.i18n.no_shipping + '</p>';
                 }
 
                 $('#shipping-methods').html(html);
@@ -196,7 +196,7 @@ jQuery(function($) {
                 }
             },
             error: function() {
-                $('#shipping-methods').html('<p class="error">' + cmOrderVars.i18n.shipping_error + '</p>');
+                $('#shipping-methods').html('<p class="error">' + awcomOrderVars.i18n.shipping_error + '</p>');
             }
         });
     }
@@ -206,21 +206,21 @@ jQuery(function($) {
     // ---------------
 
     // Initialize shipping methods if there are items in the order
-    if ($('.cm-order-items tbody tr').length > 0) {
+    if ($('.awcom-order-items tbody tr').length > 0) {
         updateShippingMethods();
     }
 
     // Form submission handling
-    $('#cm-create-order-form').on('submit', function(e) {
-        if ($('.cm-order-items tbody tr').length === 0) {
+    $('#awcom-create-order-form').on('submit', function(e) {
+        if ($('.awcom-order-items tbody tr').length === 0) {
             e.preventDefault();
-            alert(cmOrderVars.i18n.no_items || 'Please add at least one item to the order.');
+            alert(awcomOrderVars.i18n.no_items || 'Please add at least one item to the order.');
             return false;
         }
 
         if ($('input[name="shipping_method"]:checked').length === 0) {
             e.preventDefault();
-            alert(cmOrderVars.i18n.no_shipping_selected || 'Please select a shipping method.');
+            alert(awcomOrderVars.i18n.no_shipping_selected || 'Please select a shipping method.');
             return false;
         }
     });

@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name: Customer and Order Manager for WooCommerce
+ * Plugin Name: Alynt WooCommerce Customer and Order Manager
  * Description: Provides a customer management interface for WooCommerce customers and orders.
- * Version: 1.0.1
- * Author: CueFox
+ * Version: 1.0.2
+ * Author: Alynt
  * Requires at least: 5.0
  * Requires PHP: 7.2
  * WC requires at least: 4.0
@@ -19,9 +19,9 @@ use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
 if (class_exists('YahnisElsts\PluginUpdateChecker\v5\PucFactory')) {
     $myUpdateChecker = PucFactory::buildUpdateChecker(
-        'https://github.com/NichlasB/woocommerce-customer-manager',
+        'https://github.com/NichlasB/alynt-wc-customer-order-manager',
         __FILE__,
-        'woocommerce-customer-manager'
+        'alynt-wc-customer-order-manager'
     );
     
     // Set the branch that contains the stable release
@@ -31,16 +31,16 @@ if (class_exists('YahnisElsts\PluginUpdateChecker\v5\PucFactory')) {
 }
 
 // Define plugin constants
-define('CM_PLUGIN_PATH', plugin_dir_path(__FILE__));
-define('CM_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('CM_VERSION', '1.0.1');
+define('AWCOM_PLUGIN_PATH', plugin_dir_path(__FILE__));
+define('AWCOM_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('AWCOM_VERSION', '1.0.2');
 
 // Check if WooCommerce is active
 if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
     add_action('admin_notices', function() {
         ?>
         <div class="notice notice-error">
-            <p><?php _e('Customer Manager requires WooCommerce to be installed and activated.', 'customer-manager'); ?></p>
+            <p><?php _e('Alynt WC Customer Order Manager requires WooCommerce to be installed and activated.', 'alynt-wc-customer-order-manager'); ?></p>
         </div>
         <?php
     });
@@ -49,8 +49,8 @@ if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get
 
 // Autoloader for plugin classes
 spl_autoload_register(function($class) {
-    $prefix = 'CustomerManager\\';
-    $base_dir = CM_PLUGIN_PATH . 'includes/';
+    $prefix = 'AlyntWCOrderManager\\';
+    $base_dir = AWCOM_PLUGIN_PATH . 'includes/';
 
     $len = strlen($prefix);
     if (strncmp($prefix, $class, $len) !== 0) {
@@ -66,31 +66,33 @@ spl_autoload_register(function($class) {
 });
 
 // Initialize plugin
-function cm_init() {
+function awcom_init() {
     // Load text domain for translations
-    load_plugin_textdomain('customer-manager', false, dirname(plugin_basename(__FILE__)) . '/languages/');
+    load_plugin_textdomain('alynt-wc-customer-order-manager', false, dirname(plugin_basename(__FILE__)) . '/languages/');
     
     // Initialize admin pages
     if (is_admin()) {
         // Include required files
-        require_once CM_PLUGIN_PATH . 'includes/class-security.php';
-        require_once CM_PLUGIN_PATH . 'includes/class-admin-pages.php';
-        require_once CM_PLUGIN_PATH . 'includes/class-order-interface.php';
-        require_once CM_PLUGIN_PATH . 'includes/class-order-handler.php';
+        require_once AWCOM_PLUGIN_PATH . 'includes/class-security.php';
+        require_once AWCOM_PLUGIN_PATH . 'includes/class-admin-pages.php';
+        require_once AWCOM_PLUGIN_PATH . 'includes/class-order-interface.php';
+        require_once AWCOM_PLUGIN_PATH . 'includes/class-payment-link.php';
+        require_once AWCOM_PLUGIN_PATH . 'includes/class-order-handler.php';
         
-        new \CustomerManager\AdminPages();
-        new \CustomerManager\OrderInterface();
-        new \CustomerManager\OrderHandler();
+        new \AlyntWCOrderManager\AdminPages();
+        new \AlyntWCOrderManager\OrderInterface();
+        $payment_link = new \AlyntWCOrderManager\PaymentLink();
+        new \AlyntWCOrderManager\OrderHandler();
     }
 }
-add_action('plugins_loaded', 'cm_init');
+add_action('plugins_loaded', 'awcom_init');
 
 // Activation hook
-register_activation_hook(__FILE__, 'cm_activate');
-function cm_activate() {
+register_activation_hook(__FILE__, 'awcom_activate');
+function awcom_activate() {
     // Create necessary directories
     $upload_dir = wp_upload_dir();
-    $plugin_dir = $upload_dir['basedir'] . '/customer-manager';
+    $plugin_dir = $upload_dir['basedir'] . '/alynt-wc-customer-order-manager';
     
     if (!file_exists($plugin_dir)) {
         wp_mkdir_p($plugin_dir);
@@ -109,26 +111,26 @@ function cm_activate() {
 }
 
 // Deactivation hook
-register_deactivation_hook(__FILE__, 'cm_deactivate');
-function cm_deactivate() {
+register_deactivation_hook(__FILE__, 'awcom_deactivate');
+function awcom_deactivate() {
     flush_rewrite_rules();
 }
 
 // Add plugin action links
-add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'cm_add_plugin_action_links');
-function cm_add_plugin_action_links($links) {
+add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'awcom_add_plugin_action_links');
+function awcom_add_plugin_action_links($links) {
     $plugin_links = array(
-        '<a href="' . admin_url('admin.php?page=customer-manager') . '">' . __('Manage Customers', 'customer-manager') . '</a>'
+        '<a href="' . admin_url('admin.php?page=alynt-wc-customer-order-manager') . '">' . __('Manage Customers', 'alynt-wc-customer-order-manager') . '</a>'
     );
     return array_merge($plugin_links, $links);
 }
 
 // Add documentation link in plugin meta
-add_filter('plugin_row_meta', 'cm_plugin_row_meta', 10, 2);
-function cm_plugin_row_meta($links, $file) {
+add_filter('plugin_row_meta', 'awcom_plugin_row_meta', 10, 2);
+function awcom_plugin_row_meta($links, $file) {
     if (plugin_basename(__FILE__) === $file) {
         $row_meta = array(
-            'docs' => '<a href="#" target="_blank">' . __('Documentation', 'customer-manager') . '</a>'
+            'docs' => '<a href="#" target="_blank">' . __('Documentation', 'alynt-wc-customer-order-manager') . '</a>'
         );
         return array_merge($links, $row_meta);
     }
