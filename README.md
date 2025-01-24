@@ -1,4 +1,4 @@
-# Customer and Order Manager for WooCommerce
+# Alynt WooCommerce Customer and Order Manager
 
 A powerful WordPress plugin that enhances WooCommerce's customer and order management capabilities. This plugin provides a comprehensive interface for efficiently managing customer relationships and order processing.
 
@@ -13,6 +13,7 @@ A powerful WordPress plugin that enhances WooCommerce's customer and order manag
   - Streamlined order processing
   - Bulk order management
   - Custom order status handling
+  - Quick payment link copying and sharing
 
 - **Security**
   - Secure data handling
@@ -28,7 +29,7 @@ A powerful WordPress plugin that enhances WooCommerce's customer and order manag
 ## 🔧 Installation
 
 1. Clone this repository or download the ZIP file
-2. Upload the plugin files to the `/wp-content/plugins/woocommerce-customer-manager` directory
+2. Upload the plugin files to the `/wp-content/plugins/alynt-wc-customer-order-manager` directory
 3. Activate the plugin through the WordPress admin panel
 4. Configure the plugin settings under WooCommerce menu
 
@@ -36,9 +37,15 @@ A powerful WordPress plugin that enhances WooCommerce's customer and order manag
 
 After installation and activation:
 
-1. Navigate to WooCommerce > Customer Manager in your WordPress admin panel
+1. Navigate to WooCommerce > Alynt Customer Order Manager in your WordPress admin panel
 2. Use the intuitive interface to manage customers and orders
 3. Customize the settings according to your needs
+
+### Payment Link Sharing
+- Open any order in the WooCommerce order edit screen
+- Look for the "Copy Payment Link" button in the order actions sidebar
+- Click the button to copy the payment URL to your clipboard
+- Share the link with your customer via email, message, or any preferred method
 
 ## 🔒 Security
 
@@ -48,6 +55,11 @@ The plugin implements various security measures:
 - Capability checks for user actions
 
 ## Changelog
+
+### 1.0.2 (2025-01-24)
+- Added "Copy Payment Link" button to order details for quick payment link sharing
+- Improved order management interface
+- Updated documentation with new features
 
 ### 1.0.1 (2025-01-24)
 - Added GitHub Update Checker integration for automatic plugin updates
@@ -73,4 +85,3 @@ This project is licensed under the GPL v2 or later - see the [LICENSE](LICENSE) 
 
 For support queries:
 - Create an issue in this repository
-- Contact our support team

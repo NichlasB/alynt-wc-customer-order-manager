@@ -1,5 +1,5 @@
 <?php
-namespace CustomerManager;
+namespace AlyntWCOrderManager;
 
 class AdminPages {
     public function __construct() {
@@ -8,11 +8,11 @@ class AdminPages {
         add_action('admin_init', array($this, 'handle_customer_form_submission'));
         add_action('admin_init', array($this, 'handle_customer_edit_submission'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_customer_notes_scripts'));
-        add_action('wp_ajax_cm_add_customer_note', array($this, 'handle_add_customer_note'));
+        add_action('wp_ajax_awcom_add_customer_note', array($this, 'handle_add_customer_note'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_editor_scripts'));
         add_action('wp_ajax_save_login_email_template', array($this, 'save_login_email_template'));
-        add_action('wp_ajax_cm_edit_customer_note', array($this, 'handle_edit_customer_note'));
-        add_action('wp_ajax_cm_delete_customer_note', array($this, 'handle_delete_customer_note'));
+        add_action('wp_ajax_awcom_edit_customer_note', array($this, 'handle_edit_customer_note'));
+        add_action('wp_ajax_awcom_delete_customer_note', array($this, 'handle_delete_customer_note'));
     }
 
     public function set_html_content_type() {
@@ -25,31 +25,31 @@ class AdminPages {
         }
 
         add_menu_page(
-            __('Customer Manager', 'customer-manager'),
-            __('Customer Manager', 'customer-manager'),
+            __('Customer Manager', 'alynt-wc-customer-order-manager'),
+            __('Customer Manager', 'alynt-wc-customer-order-manager'),
             'manage_woocommerce',
-            'customer-manager',
+            'alynt-wc-customer-order-manager',
             array($this, 'render_main_page'),
             'dashicons-groups',
             56
         );
 
         add_submenu_page(
-            'customer-manager',
-            __('Add New Customer', 'customer-manager'),
-            __('Add New Customer', 'customer-manager'),
+            'alynt-wc-customer-order-manager',
+            __('Add New Customer', 'alynt-wc-customer-order-manager'),
+            __('Add New Customer', 'alynt-wc-customer-order-manager'),
             'manage_woocommerce',
-            'customer-manager-add',
+            'alynt-wc-customer-order-manager-add',
             array($this, 'render_add_page')
         );
 
         // Hidden page for editing customers
         add_submenu_page(
             null,
-            __('Edit Customer', 'customer-manager'),
-            __('Edit Customer', 'customer-manager'),
+            __('Edit Customer', 'alynt-wc-customer-order-manager'),
+            __('Edit Customer', 'alynt-wc-customer-order-manager'),
             'manage_woocommerce',
-            'customer-manager-edit',
+            'alynt-wc-customer-order-manager-edit',
             array($this, 'render_edit_page')
         );
     }
@@ -59,30 +59,30 @@ class AdminPages {
             wp_die(__('You do not have sufficient permissions to access this page.'));
         }
 
-        require_once CM_PLUGIN_PATH . 'includes/class-customer-list-table.php';
+        require_once AWCOM_PLUGIN_PATH . 'includes/class-customer-list-table.php';
         $customer_table = new CustomerListTable();
         $customer_table->prepare_items();
 
         ?>
         <div class="wrap">
-            <h1 class="wp-heading-inline"><?php _e('Customer Manager', 'customer-manager'); ?></h1>
-            <a href="<?php echo admin_url('admin.php?page=customer-manager-add'); ?>" class="page-title-action">
-                <?php _e('Add New Customer', 'customer-manager'); ?>
+            <h1 class="wp-heading-inline"><?php _e('Customer Manager', 'alynt-wc-customer-order-manager'); ?></h1>
+            <a href="<?php echo admin_url('admin.php?page=alynt-wc-customer-order-manager-add'); ?>" class="page-title-action">
+                <?php _e('Add New Customer', 'alynt-wc-customer-order-manager'); ?>
             </a>
 
             <?php
             if (isset($_GET['deleted'])) {
                 $count = intval($_GET['deleted']);
                 echo '<div class="notice notice-success is-dismissible"><p>' . 
-                sprintf(_n('%s customer deleted.', '%s customers deleted.', $count, 'customer-manager'), $count) . 
+                sprintf(_n('%s customer deleted.', '%s customers deleted.', $count, 'alynt-wc-customer-order-manager'), $count) . 
                 '</p></div>';
             }
             ?>
 
             <form method="post">
                 <?php
-                $customer_table->search_box(__('Search Customers', 'customer-manager'), 'customer-search');
-                wp_nonce_field('bulk-customers', 'customer-manager-nonce');
+                $customer_table->search_box(__('Search Customers', 'alynt-wc-customer-order-manager'), 'customer-search');
+                wp_nonce_field('bulk-customers', 'alynt-wc-customer-order-manager-nonce');
                 $customer_table->display();
                 ?>
             </form>
@@ -97,18 +97,18 @@ class AdminPages {
 
         $customer_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
         if (!$customer_id) {
-            wp_die(__('Invalid customer ID.', 'customer-manager'));
+            wp_die(__('Invalid customer ID.', 'alynt-wc-customer-order-manager'));
         }
 
         $customer = get_user_by('id', $customer_id);
         if (!$customer || !in_array('customer', $customer->roles)) {
-            wp_die(__('Invalid customer.', 'customer-manager'));
+            wp_die(__('Invalid customer.', 'alynt-wc-customer-order-manager'));
         }
 
         ?>
         <div class="wrap">
 
-            <h1><?php printf(__('Edit Customer - %s %s', 'customer-manager'), 
+            <h1><?php printf(__('Edit Customer - %s %s', 'alynt-wc-customer-order-manager'), 
                 esc_html($customer->first_name), 
                 esc_html($customer->last_name)); ?></h1>
 
@@ -129,7 +129,7 @@ class AdminPages {
                 ));
 
                 echo '<div class="notice notice-success is-dismissible"><p>' . 
-                __('Customer updated successfully.', 'customer-manager') . 
+                __('Customer updated successfully.', 'alynt-wc-customer-order-manager') . 
                 ($current_group ? ' Current group: ' . esc_html($current_group) : '') . 
                 '</p></div>';
             }
@@ -140,7 +140,7 @@ class AdminPages {
             }
             if (isset($_GET['email_sent']) && $_GET['email_sent'] == '1') {
                 echo '<div class="notice notice-success is-dismissible"><p>' . 
-                __('Login details email sent successfully.', 'customer-manager') . '</p></div>';
+                __('Login details email sent successfully.', 'alynt-wc-customer-order-manager') . '</p></div>';
             }
             ?>
 
@@ -149,16 +149,16 @@ class AdminPages {
                     <!-- Left Column -->
                     <div id="post-body-content">
                         <div class="postbox">
-                            <h2 class="hndle"><span><?php _e('Customer Information', 'customer-manager'); ?></h2>
+                            <h2 class="hndle"><span><?php _e('Customer Information', 'alynt-wc-customer-order-manager'); ?></h2>
                                 <div class="inside">
-                                    <form method="post" class="cm-customer-form">
-                                        <?php wp_nonce_field('edit_customer', 'cm_customer_nonce'); ?>
+                                    <form method="post" class="awcom-customer-form">
+                                        <?php wp_nonce_field('edit_customer', 'awcom_customer_nonce'); ?>
                                         <input type="hidden" name="action" value="edit_customer">
                                         <input type="hidden" name="customer_id" value="<?php echo esc_attr($customer_id); ?>">
                                         <table class="form-table">
                                             <tr>
                                                 <th scope="row">
-                                                    <label for="customer_group"><?php _e('Customer Group (if any)', 'customer-manager'); ?></label>
+                                                    <label for="customer_group"><?php _e('Customer Group (if any)', 'alynt-wc-customer-order-manager'); ?></label>
                                                 </th>
                                                 <td>
                                                     <?php
@@ -176,7 +176,7 @@ class AdminPages {
                                                     ));
                                                     ?>
                                                     <select name="customer_group" id="customer_group" class="regular-text">
-                                                        <option value=""><?php _e('Select a group...', 'customer-manager'); ?></option>
+                                                        <option value=""><?php _e('Select a group...', 'alynt-wc-customer-order-manager'); ?></option>
                                                         <?php foreach ($groups as $group) : ?>
                                                             <option value="<?php echo esc_attr($group->group_id); ?>" 
                                                                 <?php selected($current_group, $group->group_id); ?>>
@@ -188,7 +188,7 @@ class AdminPages {
                                             </tr>
                                             <tr>
                                                 <th scope="row">
-                                                    <label for="first_name"><?php _e('First Name', 'customer-manager'); ?> *</label>
+                                                    <label for="first_name"><?php _e('First Name', 'alynt-wc-customer-order-manager'); ?> *</label>
                                                 </th>
                                                 <td>
                                                     <input type="text" name="first_name" id="first_name" class="regular-text" 
@@ -198,7 +198,7 @@ class AdminPages {
 
                                             <tr>
                                                 <th scope="row">
-                                                    <label for="last_name"><?php _e('Last Name', 'customer-manager'); ?> *</label>
+                                                    <label for="last_name"><?php _e('Last Name', 'alynt-wc-customer-order-manager'); ?> *</label>
                                                 </th>
                                                 <td>
                                                     <input type="text" name="last_name" id="last_name" class="regular-text" 
@@ -208,7 +208,7 @@ class AdminPages {
 
                                             <tr>
                                                 <th scope="row">
-                                                    <label for="email"><?php _e('Email Address', 'customer-manager'); ?> *</label>
+                                                    <label for="email"><?php _e('Email Address', 'alynt-wc-customer-order-manager'); ?> *</label>
                                                 </th>
                                                 <td>
                                                     <input type="email" name="email" id="email" class="regular-text" 
@@ -218,7 +218,7 @@ class AdminPages {
 
                                             <tr>
                                                 <th scope="row">
-                                                    <label for="company"><?php _e('Company Name', 'customer-manager'); ?></label>
+                                                    <label for="company"><?php _e('Company Name', 'alynt-wc-customer-order-manager'); ?></label>
                                                 </th>
                                                 <td>
                                                     <input type="text" name="billing_company" id="company" class="regular-text" 
@@ -228,7 +228,7 @@ class AdminPages {
 
                                             <tr>
                                                 <th scope="row">
-                                                    <label for="phone"><?php _e('Phone', 'customer-manager'); ?></label>
+                                                    <label for="phone"><?php _e('Phone', 'alynt-wc-customer-order-manager'); ?></label>
                                                 </th>
                                                 <td>
                                                     <input type="tel" name="billing_phone" id="phone" class="regular-text" 
@@ -238,7 +238,7 @@ class AdminPages {
 
                                             <tr>
                                                 <th scope="row">
-                                                    <label for="billing_address_1"><?php _e('Billing Address 1', 'customer-manager'); ?></label>
+                                                    <label for="billing_address_1"><?php _e('Billing Address 1', 'alynt-wc-customer-order-manager'); ?></label>
                                                 </th>
                                                 <td>
                                                     <input type="text" name="billing_address_1" id="billing_address_1" class="regular-text" 
@@ -248,7 +248,7 @@ class AdminPages {
 
                                             <tr>
                                                 <th scope="row">
-                                                    <label for="billing_address_2"><?php _e('Billing Address 2', 'customer-manager'); ?></label>
+                                                    <label for="billing_address_2"><?php _e('Billing Address 2', 'alynt-wc-customer-order-manager'); ?></label>
                                                 </th>
                                                 <td>
                                                     <input type="text" name="billing_address_2" id="billing_address_2" class="regular-text" 
@@ -257,7 +257,7 @@ class AdminPages {
                                             </tr>
                                             <tr>
                                                 <th scope="row">
-                                                    <label for="billing_city"><?php _e('City', 'customer-manager'); ?></label>
+                                                    <label for="billing_city"><?php _e('City', 'alynt-wc-customer-order-manager'); ?></label>
                                                 </th>
                                                 <td>
                                                     <input type="text" name="billing_city" id="billing_city" class="regular-text" 
@@ -267,7 +267,7 @@ class AdminPages {
 
                                             <tr>
                                                 <th scope="row">
-                                                    <label for="billing_state"><?php _e('State', 'customer-manager'); ?></label>
+                                                    <label for="billing_state"><?php _e('State', 'alynt-wc-customer-order-manager'); ?></label>
                                                 </th>
                                                 <td>
                                                     <input type="text" name="billing_state" id="billing_state" class="regular-text" 
@@ -277,7 +277,7 @@ class AdminPages {
 
                                             <tr>
                                                 <th scope="row">
-                                                    <label for="billing_postcode"><?php _e('Postal Code', 'customer-manager'); ?></label>
+                                                    <label for="billing_postcode"><?php _e('Postal Code', 'alynt-wc-customer-order-manager'); ?></label>
                                                 </th>
                                                 <td>
                                                     <input type="text" name="billing_postcode" id="billing_postcode" class="regular-text" 
@@ -287,7 +287,7 @@ class AdminPages {
 
                                             <tr>
                                                 <th scope="row">
-                                                    <label for="billing_country"><?php _e('Country', 'customer-manager'); ?></label>
+                                                    <label for="billing_country"><?php _e('Country', 'alynt-wc-customer-order-manager'); ?></label>
                                                 </th>
                                                 <td>
                                                     <select name="billing_country" id="billing_country" class="regular-text">
@@ -307,9 +307,9 @@ class AdminPages {
                                         </table>
 
                                         <div class="submit-button-container">
-                                            <?php submit_button(__('Update Customer', 'customer-manager')); ?>
-                                            <a href="<?php echo admin_url('admin.php?page=customer-manager'); ?>" class="button">
-                                                <?php _e('Back to List', 'customer-manager'); ?>
+                                            <?php submit_button(__('Update Customer', 'alynt-wc-customer-order-manager')); ?>
+                                            <a href="<?php echo admin_url('admin.php?page=alynt-wc-customer-order-manager'); ?>" class="button">
+                                                <?php _e('Back to List', 'alynt-wc-customer-order-manager'); ?>
                                             </a>
                                         </div>
                                     </form>
@@ -318,11 +318,11 @@ class AdminPages {
 
                             <!-- Orders Section -->
                             <div class="orders-section postbox">
-                                <h2 class="hndle"><?php _e('Orders', 'customer-manager'); ?></h2>
+                                <h2 class="hndle"><?php _e('Orders', 'alynt-wc-customer-order-manager'); ?></h2>
                                 <div class="inside">
                                     <p>
-                                        <a href="<?php echo esc_url(admin_url('admin.php?page=customer-manager-create-order&customer_id=' . $customer_id)); ?>" 
-                                            class="button button-primary"><?php _e('Create New Order', 'customer-manager'); ?></a>
+                                        <a href="<?php echo esc_url(admin_url('admin.php?page=alynt-wc-customer-order-manager-create-order&customer_id=' . $customer_id)); ?>" 
+                                            class="button button-primary"><?php _e('Create New Order', 'alynt-wc-customer-order-manager'); ?></a>
                                         </p>
                                         <?php
                                     // Display recent orders
@@ -334,13 +334,13 @@ class AdminPages {
                                         ));
 
                                         if ($orders) {
-                                            echo '<h3>' . __('Recent Orders', 'customer-manager') . '</h3>';
+                                            echo '<h3>' . __('Recent Orders', 'alynt-wc-customer-order-manager') . '</h3>';
                                             echo '<table class="widefat">';
                                             echo '<thead><tr>';
-                                            echo '<th>' . __('Order', 'customer-manager') . '</th>';
-                                            echo '<th>' . __('Date', 'customer-manager') . '</th>';
-                                            echo '<th>' . __('Status', 'customer-manager') . '</th>';
-                                            echo '<th>' . __('Total', 'customer-manager') . '</th>';
+                                            echo '<th>' . __('Order', 'alynt-wc-customer-order-manager') . '</th>';
+                                            echo '<th>' . __('Date', 'alynt-wc-customer-order-manager') . '</th>';
+                                            echo '<th>' . __('Status', 'alynt-wc-customer-order-manager') . '</th>';
+                                            echo '<th>' . __('Total', 'alynt-wc-customer-order-manager') . '</th>';
                                             echo '</tr></thead>';
                                             echo '<tbody>';
                                             foreach ($orders as $order) {
@@ -354,7 +354,7 @@ class AdminPages {
                                             }
                                             echo '</tbody></table>';
                                         } else {
-                                            echo '<p>' . __('No orders found for this customer.', 'customer-manager') . '</p>';
+                                            echo '<p>' . __('No orders found for this customer.', 'alynt-wc-customer-order-manager') . '</p>';
                                         }
                                         ?>
                                     </div>
@@ -365,16 +365,16 @@ class AdminPages {
                             <div id="postbox-container-1" class="postbox-container">
                                 <!-- Login Details Box -->
                                 <div class="postbox">
-                                    <h2 class="hndle"><span><?php _e('Login Details', 'customer-manager'); ?></span></h2>
+                                    <h2 class="hndle"><span><?php _e('Login Details', 'alynt-wc-customer-order-manager'); ?></span></h2>
                                     <div class="inside">
                                         <form method="post">
                                             <?php wp_nonce_field('send_login_details', 'send_login_nonce'); ?>
                                             <input type="hidden" name="action" value="send_login_details">
                                             <input type="hidden" name="customer_id" value="<?php echo esc_attr($customer_id); ?>">
-                                            <?php submit_button(__('Send Login Details Email', 'customer-manager'), 'secondary'); ?>
+                                            <?php submit_button(__('Send Login Details Email', 'alynt-wc-customer-order-manager'), 'secondary'); ?>
                                         </form>
                                         <button type="button" class="button" id="edit-email-template">
-                                            <?php _e('Edit Email Template', 'customer-manager'); ?>
+                                            <?php _e('Edit Email Template', 'alynt-wc-customer-order-manager'); ?>
                                         </button>
                                     </div>
                                 </div>
@@ -382,19 +382,19 @@ class AdminPages {
                                 <!-- Email Template Modal -->
                                 <div id="email-template-modal" style="display:none;">
                                     <div class="email-template-editor">
-                                        <h2><?php _e('Edit Login Email Template', 'customer-manager'); ?></h2>
+                                        <h2><?php _e('Edit Login Email Template', 'alynt-wc-customer-order-manager'); ?></h2>
                                         <p class="description">
-                                            <?php _e('Available merge tags:', 'customer-manager'); ?>
+                                            <?php _e('Available merge tags:', 'alynt-wc-customer-order-manager'); ?>
                                             <br>
-                                            <code>{customer_first_name}</code> - <?php _e('Customer\'s first name', 'customer-manager'); ?>
+                                            <code>{customer_first_name}</code> - <?php _e('Customer\'s first name', 'alynt-wc-customer-order-manager'); ?>
                                             <br>
-                                            <code>{password_reset_link}</code> - <?php _e('Password reset link', 'customer-manager'); ?>
+                                            <code>{password_reset_link}</code> - <?php _e('Password reset link', 'alynt-wc-customer-order-manager'); ?>
                                         </p>
                                         <?php 
-                                        $template = get_option('cm_login_email_template', ''); 
+                                        $template = get_option('awcom_login_email_template', ''); 
                                         if (empty($template)) {
                                             $template = sprintf(
-                                                __("Hello {customer_first_name},\n\nYou can set your password and login to your account by visiting the following address:\n\n{password_reset_link}\n\nThis link will expire in 24 hours.\n\nRegards,\n%s", 'customer-manager'),
+                                                __("Hello {customer_first_name},\n\nYou can set your password and login to your account by visiting the following address:\n\n{password_reset_link}\n\nThis link will expire in 24 hours.\n\nRegards,\n%s", 'alynt-wc-customer-order-manager'),
                                                 get_bloginfo('name')
                                             );
                                         }
@@ -404,10 +404,10 @@ class AdminPages {
                                         ?>
                                         <div class="submit-buttons">
                                             <button type="button" class="button button-primary save-template">
-                                                <?php _e('Save Template', 'customer-manager'); ?>
+                                                <?php _e('Save Template', 'alynt-wc-customer-order-manager'); ?>
                                             </button>
                                             <button type="button" class="button cancel-edit">
-                                                <?php _e('Cancel', 'customer-manager'); ?>
+                                                <?php _e('Cancel', 'alynt-wc-customer-order-manager'); ?>
                                             </button>
                                         </div>
                                     </div>
@@ -415,7 +415,7 @@ class AdminPages {
 
                                 <!-- Customer Notes Box -->
                                 <div class="postbox">
-                                    <h2 class="hndle"><span><?php _e('Customer Notes', 'customer-manager'); ?></span></h2>
+                                    <h2 class="hndle"><span><?php _e('Customer Notes', 'alynt-wc-customer-order-manager'); ?></span></h2>
                                     <div class="inside">
                                         <div class="customer-notes-list">
                                             <?php
@@ -426,8 +426,8 @@ class AdminPages {
                                                 echo '<div class="customer-note" data-note-index="' . esc_attr($index) . '">';
                                                 echo '<div class="note-content">' . wp_kses_post($note['content']) . '</div>';
                                                 echo '<div class="note-actions">';
-                                                echo '<button type="button" class="button button-small edit-note"><span class="dashicons dashicons-edit"></span> ' . esc_html__('Edit', 'customer-manager') . '</button> ';
-                                                echo '<button type="button" class="button button-small delete-note"><span class="dashicons dashicons-trash"></span> ' . esc_html__('Delete', 'customer-manager') . '</button>';
+                                                echo '<button type="button" class="button button-small edit-note"><span class="dashicons dashicons-edit"></span> ' . esc_html__('Edit', 'alynt-wc-customer-order-manager') . '</button> ';
+                                                echo '<button type="button" class="button button-small delete-note"><span class="dashicons dashicons-trash"></span> ' . esc_html__('Delete', 'alynt-wc-customer-order-manager') . '</button>';
                                                 echo '</div>';
                                                 echo '<div class="note-meta">';
                                                 echo 'By ' . esc_html($note['author']) . ' on ' . 
@@ -436,14 +436,14 @@ class AdminPages {
                                                 echo '</div>';
                                             }
                                         } else {
-                                            echo '<p>' . __('No notes found.', 'customer-manager') . '</p>';
+                                            echo '<p>' . __('No notes found.', 'alynt-wc-customer-order-manager') . '</p>';
                                         }
                                         ?>
                                     </div>
                                     <div class="add-note">
-                                        <textarea name="customer_note" placeholder="<?php esc_attr_e('Add a note about this customer...', 'customer-manager'); ?>"></textarea>
+                                        <textarea name="customer_note" placeholder="<?php esc_attr_e('Add a note about this customer...', 'alynt-wc-customer-order-manager'); ?>"></textarea>
                                         <button type="button" class="button add-note-button" data-customer-id="<?php echo esc_attr($customer_id); ?>">
-                                            <?php _e('Add Note', 'customer-manager'); ?>
+                                            <?php _e('Add Note', 'alynt-wc-customer-order-manager'); ?>
                                         </button>
                                     </div>
                                 </div>
@@ -459,38 +459,38 @@ class AdminPages {
      * Enqueues scripts needed for customer notes functionality
      */
     public function enqueue_customer_notes_scripts($hook) {
-        if ($hook !== 'admin_page_customer-manager-edit') {
+        if ($hook !== 'admin_page_alynt-wc-customer-order-manager-edit') {
             return;
         }
 
-    // Enqueue the stylesheet
+        // Enqueue the stylesheet
         wp_enqueue_style(
-            'cm-edit-customer',
-            CM_PLUGIN_URL . 'assets/css/edit-customer.css',
-        array('dashicons'),  // Added dashicons dependency
-        CM_VERSION
+            'awcom-edit-customer',
+            AWCOM_PLUGIN_URL . 'assets/css/edit-customer.css',
+        array('dashicons'),
+        AWCOM_VERSION
     );
 
-    // Enqueue the script
+        // Enqueue the script
         wp_enqueue_script(
-            'cm-customer-notes',
-            CM_PLUGIN_URL . 'assets/js/customer-notes.js',
+            'awcom-customer-notes',
+            AWCOM_PLUGIN_URL . 'assets/js/customer-notes.js',
             array('jquery'),
-            CM_VERSION,
+            AWCOM_VERSION,
             true
         );
 
-        wp_localize_script('cm-customer-notes', 'cmCustomerNotes', array(
-            'nonce' => wp_create_nonce('cm_customer_notes'),
+        wp_localize_script('awcom-customer-notes', 'awcomCustomerNotes', array(
+            'nonce' => wp_create_nonce('awcom_customer_notes'),
             'ajaxurl' => admin_url('admin-ajax.php'),
             'customer_id' => isset($_GET['id']) ? intval($_GET['id']) : 0,
-            'confirm_delete' => __('Are you sure you want to delete this note?', 'customer-manager')
+            'confirm_delete' => __('Are you sure you want to delete this note?', 'alynt-wc-customer-order-manager')
         ));
 
     }
 
     public function enqueue_editor_scripts($hook) {
-        if ($hook != 'admin_page_customer-manager-edit') {
+        if ($hook != 'admin_page_alynt-wc-customer-order-manager-edit') {
             return;
         }
 
@@ -503,25 +503,25 @@ class AdminPages {
 
         // Enqueue our custom script
         wp_enqueue_script(
-            'cm-email-template',
-            CM_PLUGIN_URL . 'assets/js/email-template.js',
+            'awcom-email-template',
+            AWCOM_PLUGIN_URL . 'assets/js/email-template.js',
             array('jquery', 'jquery-ui-dialog'),
-            CM_VERSION,
+            AWCOM_VERSION,
             true
         );
 
-        wp_localize_script('cm-email-template', 'cmEmailVars', array(
+        wp_localize_script('awcom-email-template', 'awcomEmailVars', array(
             'ajaxurl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('cm_email_template'),
+            'nonce' => wp_create_nonce('awcom_email_template'),
             'mergeTags' => array(
-                '{customer_first_name}' => __('Customer First Name', 'customer-manager'),
-                '{password_reset_link}' => __('Password Reset Link', 'customer-manager')
+                '{customer_first_name}' => __('Customer First Name', 'alynt-wc-customer-order-manager'),
+                '{password_reset_link}' => __('Password Reset Link', 'alynt-wc-customer-order-manager')
             )
         ));
     }
 
     public function save_login_email_template() {
-        check_ajax_referer('cm_email_template', 'nonce');
+        check_ajax_referer('awcom_email_template', 'nonce');
 
         if (!current_user_can('manage_woocommerce')) {
             wp_send_json_error('Permission denied');
@@ -532,7 +532,7 @@ class AdminPages {
         }
 
         $template = wp_kses_post($_POST['template']);
-        $updated = update_option('cm_login_email_template', $template);
+        $updated = update_option('awcom_login_email_template', $template);
 
         if ($updated) {
             wp_send_json_success('Template saved successfully');
@@ -545,7 +545,7 @@ class AdminPages {
      * Handles AJAX requests for adding customer notes
      */
     public function handle_add_customer_note() {
-        check_ajax_referer('cm_customer_notes', 'nonce');
+        check_ajax_referer('awcom_customer_notes', 'nonce');
 
         if (!Security::user_can_access()) {
             wp_send_json_error(array('message' => 'Permission denied'));
@@ -588,7 +588,7 @@ class AdminPages {
     }
 
     public function handle_edit_customer_note() {
-        check_ajax_referer('cm_customer_notes', 'nonce');
+        check_ajax_referer('awcom_customer_notes', 'nonce');
 
         if (!Security::user_can_access()) {
             wp_send_json_error(array('message' => 'Permission denied'));
@@ -623,7 +623,7 @@ class AdminPages {
     }
 
     public function handle_delete_customer_note() {
-        check_ajax_referer('cm_customer_notes', 'nonce');
+        check_ajax_referer('awcom_customer_notes', 'nonce');
 
         if (!Security::user_can_access()) {
             wp_send_json_error(array('message' => 'Permission denied'));
@@ -646,7 +646,7 @@ class AdminPages {
         }
 
         unset($notes[$note_index]);
-    $notes = array_values($notes); // Reindex array
+    $notes = array_values($notes);
 
     update_user_meta($customer_id, '_customer_notes', $notes);
 
@@ -654,12 +654,12 @@ class AdminPages {
 }
 
 public function handle_bulk_actions() {
-    if (!isset($_POST['customers']) || !isset($_POST['customer-manager-nonce'])) {
+    if (!isset($_POST['customers']) || !isset($_POST['alynt-wc-customer-order-manager-nonce'])) {
         return;
     }
 
         // Verify nonce
-    Security::verify_nonce('customer-manager-nonce', 'bulk-customers');
+    Security::verify_nonce('alynt-wc-customer-order-manager-nonce', 'bulk-customers');
 
         // Check permissions
     if (!Security::user_can_access()) {
@@ -680,7 +680,7 @@ public function handle_bulk_actions() {
         // Redirect back to the customer list with a success message
     wp_redirect(add_query_arg(
         array(
-            'page' => 'customer-manager',
+            'page' => 'alynt-wc-customer-order-manager',
             'deleted' => count($customer_ids)
         ),
         admin_url('admin.php')
@@ -693,21 +693,21 @@ public function handle_customer_form_submission() {
         return;
     }
 
-    if (!isset($_POST['cm_customer_nonce']) || 
-        !wp_verify_nonce($_POST['cm_customer_nonce'], 'create_customer')) {
-        wp_die(__('Security check failed', 'customer-manager'));
+    if (!isset($_POST['awcom_customer_nonce']) || 
+        !wp_verify_nonce($_POST['awcom_customer_nonce'], 'create_customer')) {
+        wp_die(__('Security check failed', 'alynt-wc-customer-order-manager'));
 }
 
 if (!Security::user_can_access()) {
-    wp_die(__('You do not have sufficient permissions', 'customer-manager'));
+    wp_die(__('You do not have sufficient permissions', 'alynt-wc-customer-order-manager'));
 }
 
     // Validate required fields
 if (empty($_POST['first_name']) || empty($_POST['last_name']) || empty($_POST['email'])) {
     wp_redirect(add_query_arg(
         array(
-            'page' => 'customer-manager-add',
-            'error' => urlencode(__('Please fill in all required fields.', 'customer-manager'))
+            'page' => 'alynt-wc-customer-order-manager-add',
+            'error' => urlencode(__('Please fill in all required fields.', 'alynt-wc-customer-order-manager'))
         ),
         admin_url('admin.php')
     ));
@@ -718,8 +718,8 @@ if (empty($_POST['first_name']) || empty($_POST['last_name']) || empty($_POST['e
 if (email_exists($_POST['email'])) {
     wp_redirect(add_query_arg(
         array(
-            'page' => 'customer-manager-add',
-            'error' => urlencode(__('This email address is already registered.', 'customer-manager'))
+            'page' => 'alynt-wc-customer-order-manager-add',
+            'error' => urlencode(__('This email address is already registered.', 'alynt-wc-customer-order-manager'))
         ),
         admin_url('admin.php')
     ));
@@ -741,7 +741,7 @@ $user_id = wp_insert_user($user_data);
 if (is_wp_error($user_id)) {
     wp_redirect(add_query_arg(
         array(
-            'page' => 'customer-manager-add',
+            'page' => 'alynt-wc-customer-order-manager-add',
             'error' => urlencode($user_id->get_error_message())
         ),
         admin_url('admin.php')
@@ -789,7 +789,7 @@ if (isset($_POST['customer_group'])) {
     // Redirect to edit page for the new customer
 wp_redirect(add_query_arg(
     array(
-        'page' => 'customer-manager-edit',
+        'page' => 'alynt-wc-customer-order-manager-edit',
         'id' => $user_id,
         'created' => '1'
     ),
@@ -804,13 +804,13 @@ public function handle_customer_edit_submission() {
     }
 
     if ($_POST['action'] === 'edit_customer') {
-        if (!isset($_POST['cm_customer_nonce']) || 
-            !wp_verify_nonce($_POST['cm_customer_nonce'], 'edit_customer')) {
-            wp_die(__('Security check failed', 'customer-manager'));
+        if (!isset($_POST['awcom_customer_nonce']) || 
+            !wp_verify_nonce($_POST['awcom_customer_nonce'], 'edit_customer')) {
+            wp_die(__('Security check failed', 'alynt-wc-customer-order-manager'));
     }
 
     if (!Security::user_can_access()) {
-        wp_die(__('You do not have sufficient permissions', 'customer-manager'));
+        wp_die(__('You do not have sufficient permissions', 'alynt-wc-customer-order-manager'));
     }
 
     $customer_id = intval($_POST['customer_id']);
@@ -819,9 +819,9 @@ public function handle_customer_edit_submission() {
     if (empty($_POST['first_name']) || empty($_POST['last_name']) || empty($_POST['email'])) {
         wp_redirect(add_query_arg(
             array(
-                'page' => 'customer-manager-edit',
+                'page' => 'alynt-wc-customer-order-manager-edit',
                 'id' => $customer_id,
-                'error' => urlencode(__('Please fill in all required fields.', 'customer-manager'))
+                'error' => urlencode(__('Please fill in all required fields.', 'alynt-wc-customer-order-manager'))
             ),
             admin_url('admin.php')
         ));
@@ -833,9 +833,9 @@ public function handle_customer_edit_submission() {
     if ($existing_user && $existing_user->ID != $customer_id) {
         wp_redirect(add_query_arg(
             array(
-                'page' => 'customer-manager-edit',
+                'page' => 'alynt-wc-customer-order-manager-edit',
                 'id' => $customer_id,
-                'error' => urlencode(__('This email address is already registered to another user.', 'customer-manager'))
+                'error' => urlencode(__('This email address is already registered to another user.', 'alynt-wc-customer-order-manager'))
             ),
             admin_url('admin.php')
         ));
@@ -855,7 +855,7 @@ public function handle_customer_edit_submission() {
     if (is_wp_error($user_id)) {
         wp_redirect(add_query_arg(
             array(
-                'page' => 'customer-manager-edit',
+                'page' => 'alynt-wc-customer-order-manager-edit',
                 'id' => $customer_id,
                 'error' => urlencode($user_id->get_error_message())
             ),
@@ -926,7 +926,7 @@ public function handle_customer_edit_submission() {
 
     wp_redirect(add_query_arg(
         array(
-            'page' => 'customer-manager-edit',
+            'page' => 'alynt-wc-customer-order-manager-edit',
             'id' => $customer_id,
             'updated' => '1'
         ),
@@ -937,24 +937,24 @@ public function handle_customer_edit_submission() {
 } elseif ($_POST['action'] === 'send_login_details') {
     if (!isset($_POST['send_login_nonce']) || 
         !wp_verify_nonce($_POST['send_login_nonce'], 'send_login_details')) {
-        wp_die(__('Security check failed', 'customer-manager'));
+        wp_die(__('Security check failed', 'alynt-wc-customer-order-manager'));
 }
 
 $customer_id = intval($_POST['customer_id']);
 $user = get_user_by('id', $customer_id);
 
 if (!$user) {
-    wp_die(__('Invalid customer.', 'customer-manager'));
+    wp_die(__('Invalid customer.', 'alynt-wc-customer-order-manager'));
 }
 
 $key = get_password_reset_key($user);
 $reset_link = network_site_url("wp-login.php?action=rp&key=$key&login=" . rawurlencode($user->user_login), 'login');
 
 $to = $user->user_email;
-$subject = sprintf(__('[%s] Your login details', 'customer-manager'), get_bloginfo('name'));
+$subject = sprintf(__('[%s] Your login details', 'alynt-wc-customer-order-manager'), get_bloginfo('name'));
 
 // Get custom template if it exists
-$template = get_option('cm_login_email_template', '');
+$template = get_option('awcom_login_email_template', '');
 if (!empty($template)) {
     $message = str_replace(
         array('{customer_first_name}', '{password_reset_link}'),
@@ -969,7 +969,7 @@ if (!empty($template)) {
             <a href="%s">%s</a><br><br>
             This link will expire in 24 hours.<br><br>
             Regards,<br>
-            %s', 'customer-manager'),
+            %s', 'alynt-wc-customer-order-manager'),
         $user->display_name,
         esc_url($reset_link),
         esc_url($reset_link),
@@ -991,7 +991,7 @@ remove_filter('wp_mail_content_type', array($this, 'set_html_content_type'));
 
 wp_redirect(add_query_arg(
     array(
-        'page' => 'customer-manager-edit',
+        'page' => 'alynt-wc-customer-order-manager-edit',
         'id' => $customer_id,
         'email_sent' => '1'
     ),
@@ -1007,13 +1007,13 @@ public function render_add_page() {
     }
     ?>
     <div class="wrap">
-        <h1><?php _e('Add New Customer', 'customer-manager'); ?></h1>
+        <h1><?php _e('Add New Customer', 'alynt-wc-customer-order-manager'); ?></h1>
 
         <?php
             // Show success/error messages
         if (isset($_GET['created']) && $_GET['created'] == '1') {
             echo '<div class="notice notice-success is-dismissible"><p>' . 
-            __('Customer created successfully.', 'customer-manager') . '</p></div>';
+            __('Customer created successfully.', 'alynt-wc-customer-order-manager') . '</p></div>';
         }
         if (isset($_GET['error'])) {
             echo '<div class="notice notice-error is-dismissible"><p>' . 
@@ -1021,14 +1021,14 @@ public function render_add_page() {
         }
         ?>
 
-        <form method="post" class="cm-customer-form">
-            <?php wp_nonce_field('create_customer', 'cm_customer_nonce'); ?>
+        <form method="post" class="awcom-customer-form">
+            <?php wp_nonce_field('create_customer', 'awcom_customer_nonce'); ?>
             <input type="hidden" name="action" value="create_customer">
 
             <table class="form-table">
                 <tr>
                     <th scope="row">
-                        <label for="customer_group"><?php _e('Customer Group', 'customer-manager'); ?></label>
+                        <label for="customer_group"><?php _e('Customer Group', 'alynt-wc-customer-order-manager'); ?></label>
                     </th>
                     <td>
                         <?php
@@ -1039,7 +1039,7 @@ public function render_add_page() {
                         $groups = $wpdb->get_results("SELECT * FROM $groups_table");
                         ?>
                         <select name="customer_group" id="customer_group" class="regular-text">
-                            <option value=""><?php _e('- None (unassigned) -', 'customer-manager'); ?></option>
+                            <option value=""><?php _e('- None (unassigned) -', 'alynt-wc-customer-order-manager'); ?></option>
                             <?php foreach ($groups as $group) : ?>
                                 <option value="<?php echo esc_attr($group->group_id); ?>">
                                     <?php echo esc_html($group->group_name); ?>
@@ -1050,7 +1050,7 @@ public function render_add_page() {
                 </tr>
                 <tr>
                     <th scope="row">
-                        <label for="first_name"><?php _e('First Name', 'customer-manager'); ?> *</label>
+                        <label for="first_name"><?php _e('First Name', 'alynt-wc-customer-order-manager'); ?> *</label>
                     </th>
                     <td>
                         <input type="text" name="first_name" id="first_name" class="regular-text" required>
@@ -1059,7 +1059,7 @@ public function render_add_page() {
 
                 <tr>
                     <th scope="row">
-                        <label for="last_name"><?php _e('Last Name', 'customer-manager'); ?> *</label>
+                        <label for="last_name"><?php _e('Last Name', 'alynt-wc-customer-order-manager'); ?> *</label>
                     </th>
                     <td>
                         <input type="text" name="last_name" id="last_name" class="regular-text" required>
@@ -1068,7 +1068,7 @@ public function render_add_page() {
 
                 <tr>
                     <th scope="row">
-                        <label for="email"><?php _e('Email Address', 'customer-manager'); ?> *</label>
+                        <label for="email"><?php _e('Email Address', 'alynt-wc-customer-order-manager'); ?> *</label>
                     </th>
                     <td>
                         <input type="email" name="email" id="email" class="regular-text" required>
@@ -1077,7 +1077,7 @@ public function render_add_page() {
 
                 <tr>
                     <th scope="row">
-                        <label for="company"><?php _e('Company Name', 'customer-manager'); ?></label>
+                        <label for="company"><?php _e('Company Name', 'alynt-wc-customer-order-manager'); ?></label>
                     </th>
                     <td>
                         <input type="text" name="billing_company" id="company" class="regular-text">
@@ -1086,7 +1086,7 @@ public function render_add_page() {
 
                 <tr>
                     <th scope="row">
-                        <label for="phone"><?php _e('Phone', 'customer-manager'); ?></label>
+                        <label for="phone"><?php _e('Phone', 'alynt-wc-customer-order-manager'); ?></label>
                     </th>
                     <td>
                         <input type="tel" name="billing_phone" id="phone" class="regular-text">
@@ -1095,7 +1095,7 @@ public function render_add_page() {
 
                 <tr>
                     <th scope="row">
-                        <label for="billing_address_1"><?php _e('Billing Address 1', 'customer-manager'); ?></label>
+                        <label for="billing_address_1"><?php _e('Billing Address 1', 'alynt-wc-customer-order-manager'); ?></label>
                     </th>
                     <td>
                         <input type="text" name="billing_address_1" id="billing_address_1" class="regular-text">
@@ -1104,7 +1104,7 @@ public function render_add_page() {
 
                 <tr>
                     <th scope="row">
-                        <label for="billing_address_2"><?php _e('Billing Address 2', 'customer-manager'); ?></label>
+                        <label for="billing_address_2"><?php _e('Billing Address 2', 'alynt-wc-customer-order-manager'); ?></label>
                     </th>
                     <td>
                         <input type="text" name="billing_address_2" id="billing_address_2" class="regular-text">
@@ -1113,7 +1113,7 @@ public function render_add_page() {
 
                 <tr>
                     <th scope="row">
-                        <label for="billing_city"><?php _e('City', 'customer-manager'); ?></label>
+                        <label for="billing_city"><?php _e('City', 'alynt-wc-customer-order-manager'); ?></label>
                     </th>
                     <td>
                         <input type="text" name="billing_city" id="billing_city" class="regular-text">
@@ -1122,7 +1122,7 @@ public function render_add_page() {
 
                 <tr>
                     <th scope="row">
-                        <label for="billing_state"><?php _e('State', 'customer-manager'); ?></label>
+                        <label for="billing_state"><?php _e('State', 'alynt-wc-customer-order-manager'); ?></label>
                     </th>
                     <td>
                         <input type="text" name="billing_state" id="billing_state" class="regular-text">
@@ -1131,7 +1131,7 @@ public function render_add_page() {
 
                 <tr>
                     <th scope="row">
-                        <label for="billing_postcode"><?php _e('Postal Code', 'customer-manager'); ?></label>
+                        <label for="billing_postcode"><?php _e('Postal Code', 'alynt-wc-customer-order-manager'); ?></label>
                     </th>
                     <td>
                         <input type="text" name="billing_postcode" id="billing_postcode" class="regular-text">
@@ -1140,7 +1140,7 @@ public function render_add_page() {
 
                 <tr>
                     <th scope="row">
-                        <label for="billing_country"><?php _e('Country', 'customer-manager'); ?></label>
+                        <label for="billing_country"><?php _e('Country', 'alynt-wc-customer-order-manager'); ?></label>
                     </th>
                     <td>
                         <select name="billing_country" id="billing_country" class="regular-text">
@@ -1158,7 +1158,7 @@ public function render_add_page() {
                 </tr>
             </table>
 
-            <?php submit_button(__('Create Customer', 'customer-manager')); ?>
+            <?php submit_button(__('Create Customer', 'alynt-wc-customer-order-manager')); ?>
         </form>
     </div>
     <?php

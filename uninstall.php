@@ -5,12 +5,12 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
 }
 
 // Delete plugin options
-delete_option('wc_customer_manager_settings');
+delete_option('alynt_wc_customer_order_manager_settings');
 
 // Clean up any additional options
 $option_names = array(
-    'wc_customer_manager_version',
-    'wc_customer_manager_db_version'
+    'alynt_wc_customer_order_manager_version',
+    'alynt_wc_customer_order_manager_db_version'
 );
 
 foreach ($option_names as $option) {
@@ -18,18 +18,18 @@ foreach ($option_names as $option) {
 }
 
 // Clear any transients
-delete_transient('wc_customer_manager_cache');
+delete_transient('alynt_wc_customer_order_manager_cache');
 
 // If using custom tables, you might want to remove them
 global $wpdb;
-$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}wc_customer_manager_data");
+$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}alynt_wc_customer_order_manager_data");
 
 // Clear any scheduled events
-wp_clear_scheduled_hook('wc_customer_manager_scheduled_task');
+wp_clear_scheduled_hook('alynt_wc_customer_order_manager_scheduled_task');
 
 // Remove any uploaded files or directories if they exist
 $upload_dir = wp_upload_dir();
-$plugin_upload_dir = $upload_dir['basedir'] . '/wc-customer-manager';
+$plugin_upload_dir = $upload_dir['basedir'] . '/alynt-wc-customer-order-manager';
 if (is_dir($plugin_upload_dir)) {
     require_once(ABSPATH . 'wp-admin/includes/class-wp-filesystem-base.php');
     require_once(ABSPATH . 'wp-admin/includes/class-wp-filesystem-direct.php');

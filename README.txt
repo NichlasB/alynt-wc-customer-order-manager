@@ -1,11 +1,11 @@
-=== Customer and Order Manager for WooCommerce ===
-Contributors: CueFox
+=== Alynt WooCommerce Customer and Order Manager ===
+Contributors: Alynt
 Tags: woocommerce, customers, orders, management, admin
 Requires at least: 5.0
 Tested up to: 6.7.1
 Requires PHP: 7.2
 WC requires at least: 4.0
-Stable tag: 1.0.0
+Stable tag: 1.0.2
 License: GPL v2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,6 +21,7 @@ Customer and Order Manager for WooCommerce enhances your WooCommerce store's adm
 * Secure customer data management
 * Customizable order interface
 * Streamlined administrative workflow
+* Easy payment link sharing
 
 = Requirements =
 * WordPress 5.0 or higher
@@ -29,7 +30,7 @@ Customer and Order Manager for WooCommerce enhances your WooCommerce store's adm
 
 == Installation ==
 
-1. Upload the plugin files to the `/wp-content/plugins/woocommerce-customer-manager` directory, or install the plugin through the WordPress plugins screen directly.
+1. Upload the plugin files to the `/wp-content/plugins/alynt-wc-customer-order-manager` directory, or install the plugin through the WordPress plugins screen directly.
 2. Activate the plugin through the 'Plugins' screen in WordPress
 3. Ensure WooCommerce is installed and activated
 4. Access the customer management features through the WooCommerce menu
@@ -44,7 +45,16 @@ Yes, WooCommerce must be installed and activated for this plugin to work.
 
 The plugin works with any WordPress theme as it operates primarily in the admin area.
 
+= How do I use the payment link copy feature? =
+
+When viewing an order in the admin area, you'll find a "Copy Payment Link" button in the order actions sidebar. Click this button to copy the payment URL to your clipboard, which you can then share with your customer.
+
 == Changelog ==
+
+= 1.0.2 - 2025-01-24 =
+* Feature: Added "Copy Payment Link" button to order details
+* Enhancement: Improved order management interface
+* Documentation: Updated documentation with new features
 
 = 1.0.1 - 2025-01-24 =
 * Enhancement: Added GitHub Update Checker integration
@@ -61,6 +71,9 @@ The plugin works with any WordPress theme as it operates primarily in the admin 
 * Security features implementation
 
 == Upgrade Notice ==
+
+= 1.0.2 =
+New feature: Adds payment link copying functionality for easier order management. Recommended for all users.
 
 = 1.0.1 =
 Important update: Adds automatic update functionality through WordPress admin panel and includes improved documentation. Recommended for all users.

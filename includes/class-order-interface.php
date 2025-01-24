@@ -1,30 +1,30 @@
 <?php
-namespace CustomerManager;
+namespace AlyntWCOrderManager;
 
 class OrderInterface {
     private $customer_id;
 
     public function __construct() {
         add_action('admin_menu', array($this, 'add_menu_pages'));
-        add_action('wp_ajax_cm_search_products', array($this, 'ajax_search_products'));
-        add_action('wp_ajax_cm_get_shipping_methods', array($this, 'ajax_get_shipping_methods'));
+        add_action('wp_ajax_awcom_search_products', array($this, 'ajax_search_products'));
+        add_action('wp_ajax_awcom_get_shipping_methods', array($this, 'ajax_get_shipping_methods'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_scripts'));
     }
 
     public function add_menu_pages() {
-        // Hidden page for creating orders
+    // Hidden page for creating orders
         add_submenu_page(
-            null,
-            __('Create Order', 'customer-manager'),
-            __('Create Order', 'customer-manager'),
-            'manage_woocommerce',
-            'customer-manager-create-order',
-            array($this, 'render_create_order_page')
-        );
+        null,  // parent slug
+        __('Create Order', 'alynt-wc-customer-order-manager'),  // page title
+        __('Create Order', 'alynt-wc-customer-order-manager'),  // menu title
+        'manage_woocommerce',  // capability
+        'alynt-wc-customer-order-manager-create-order',  // menu slug
+        array($this, 'render_create_order_page')  // callback function
+    );
     }
 
     public function enqueue_scripts($hook) {
-        if ($hook != 'admin_page_customer-manager-create-order') {
+        if ($hook != 'admin_page_alynt-wc-customer-order-manager-create-order') {
             return;
         }
 
@@ -37,33 +37,33 @@ class OrderInterface {
 
         // Enqueue our custom styles and scripts
         wp_enqueue_style(
-            'cm-order-interface', 
-            CM_PLUGIN_URL . 'assets/css/order-interface.css',
+            'awcom-order-interface', 
+            AWCOM_PLUGIN_URL . 'assets/css/order-interface.css',
             array('select2'),
-            CM_VERSION
+            AWCOM_VERSION
         );
 
         wp_enqueue_script(
-            'cm-order-interface',
-            CM_PLUGIN_URL . 'assets/js/order-interface.js',
+            'awcom-order-interface',
+            AWCOM_PLUGIN_URL . 'assets/js/order-interface.js',
             array('jquery', 'select2', 'accounting'),
-            CM_VERSION,
+            AWCOM_VERSION,
             true
         );
 
-        wp_localize_script('cm-order-interface', 'cmOrderVars', array(
+        wp_localize_script('awcom-order-interface', 'awcomOrderVars', array(
             'ajaxurl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('cm-order-interface'),
+            'nonce' => wp_create_nonce('awcom-order-interface'),
             'currency_symbol' => get_woocommerce_currency_symbol(),
             'i18n' => array(
-                'search_products' => __('Search for a product...', 'customer-manager'),
-                'no_products' => __('No products found', 'customer-manager'),
-                'remove_item' => __('Remove item', 'customer-manager'),
-                'calculating' => __('Calculating...', 'customer-manager'),
-                'no_shipping' => __('No shipping methods available', 'customer-manager'),
-                'shipping_error' => __('Error calculating shipping methods', 'customer-manager'),
-                'no_items' => __('Please add at least one item to the order.', 'customer-manager'),
-                'no_shipping_selected' => __('Please select a shipping method.', 'customer-manager'),
+                'search_products' => __('Search for a product...', 'alynt-wc-customer-order-manager'),
+                'no_products' => __('No products found', 'alynt-wc-customer-order-manager'),
+                'remove_item' => __('Remove item', 'alynt-wc-customer-order-manager'),
+                'calculating' => __('Calculating...', 'alynt-wc-customer-order-manager'),
+                'no_shipping' => __('No shipping methods available', 'alynt-wc-customer-order-manager'),
+                'shipping_error' => __('Error calculating shipping methods', 'alynt-wc-customer-order-manager'),
+                'no_items' => __('Please add at least one item to the order.', 'alynt-wc-customer-order-manager'),
+                'no_shipping_selected' => __('Please select a shipping method.', 'alynt-wc-customer-order-manager'),
             )
         ));
     }
@@ -75,19 +75,19 @@ class OrderInterface {
 
         $this->customer_id = isset($_GET['customer_id']) ? intval($_GET['customer_id']) : 0;
         if (!$this->customer_id) {
-            wp_die(__('Invalid customer ID.', 'customer-manager'));
+            wp_die(__('Invalid customer ID.', 'alynt-wc-customer-order-manager'));
         }
 
         $customer = get_user_by('id', $this->customer_id);
         if (!$customer || !in_array('customer', $customer->roles)) {
-            wp_die(__('Invalid customer.', 'customer-manager'));
+            wp_die(__('Invalid customer.', 'alynt-wc-customer-order-manager'));
         }
 
         ?>
         <div class="wrap">
             <h1><?php 
             printf(
-                __('Create Order for %s', 'customer-manager'),
+                __('Create Order for %s', 'alynt-wc-customer-order-manager'),
                 esc_html($customer->first_name . ' ' . $customer->last_name)
             ); 
         ?></h1>
@@ -99,8 +99,8 @@ class OrderInterface {
         }
         ?>
 
-        <form method="post" id="cm-create-order-form">
-            <?php wp_nonce_field('create_order', 'cm_order_nonce'); ?>
+        <form method="post" id="awcom-create-order-form">
+            <?php wp_nonce_field('create_order', 'awcom_order_nonce'); ?>
             <input type="hidden" name="action" value="create_order">
             <input type="hidden" name="customer_id" value="<?php echo esc_attr($this->customer_id); ?>">
 
@@ -109,20 +109,20 @@ class OrderInterface {
                     <div id="post-body-content">
                         <!-- Products Section -->
                         <div class="postbox">
-                            <h2 class="hndle"><span><?php _e('Order Items', 'customer-manager'); ?></span></h2>
+                            <h2 class="hndle"><span><?php _e('Order Items', 'alynt-wc-customer-order-manager'); ?></span></h2>
                             <div class="inside">
-                                <div class="cm-product-search">
-                                    <select id="cm-add-product" style="width: 100%;">
+                                <div class="awcom-product-search">
+                                    <select id="awcom-add-product" style="width: 100%;">
                                         <option></option>
                                     </select>
                                 </div>
-                                <table class="widefat cm-order-items">
+                                <table class="widefat awcom-order-items">
                                     <thead>
                                         <tr>
-                                            <th><?php _e('Item', 'customer-manager'); ?></th>
-                                            <th class="quantity"><?php _e('Qty', 'customer-manager'); ?></th>
-                                            <th class="price"><?php _e('Price', 'customer-manager'); ?></th>
-                                            <th class="total"><?php _e('Total', 'customer-manager'); ?></th>
+                                            <th><?php _e('Item', 'alynt-wc-customer-order-manager'); ?></th>
+                                            <th class="quantity"><?php _e('Qty', 'alynt-wc-customer-order-manager'); ?></th>
+                                            <th class="price"><?php _e('Price', 'alynt-wc-customer-order-manager'); ?></th>
+                                            <th class="total"><?php _e('Total', 'alynt-wc-customer-order-manager'); ?></th>
                                             <th class="actions"></th>
                                         </tr>
                                     </thead>
@@ -132,19 +132,19 @@ class OrderInterface {
                                     <tfoot>
                                         <tr>
                                             <td colspan="2"></td>
-                                            <td><?php _e('Subtotal:', 'customer-manager'); ?></td>
+                                            <td><?php _e('Subtotal:', 'alynt-wc-customer-order-manager'); ?></td>
                                             <td class="subtotal">0.00</td>
                                             <td></td>
                                         </tr>
                                         <tr>
                                             <td colspan="2"></td>
-                                            <td><?php _e('Shipping:', 'customer-manager'); ?></td>
+                                            <td><?php _e('Shipping:', 'alynt-wc-customer-order-manager'); ?></td>
                                             <td class="shipping-total">0.00</td>
                                             <td></td>
                                         </tr>
                                         <tr>
                                             <td colspan="2"></td>
-                                            <td><strong><?php _e('Total:', 'customer-manager'); ?></strong></td>
+                                            <td><strong><?php _e('Total:', 'alynt-wc-customer-order-manager'); ?></strong></td>
                                             <td class="order-total"><strong>0.00</strong></td>
                                             <td></td>
                                         </tr>
@@ -155,10 +155,10 @@ class OrderInterface {
 
                         <!-- Customer Notes -->
                         <div class="postbox">
-                            <h2 class="hndle"><span><?php _e('Order Notes', 'customer-manager'); ?></span></h2>
+                            <h2 class="hndle"><span><?php _e('Order Notes', 'alynt-wc-customer-order-manager'); ?></span></h2>
                             <div class="inside">
                                 <textarea name="order_notes" rows="5" style="width: 100%;" 
-                                placeholder="<?php esc_attr_e('Add any notes about this order (optional)', 'customer-manager'); ?>"></textarea>
+                                placeholder="<?php esc_attr_e('Add any notes about this order (optional)', 'alynt-wc-customer-order-manager'); ?>"></textarea>
                             </div>
                         </div>
                     </div>
@@ -166,20 +166,20 @@ class OrderInterface {
                     <div id="postbox-container-1" class="postbox-container">
                         <!-- Order Actions -->
                         <div class="postbox">
-                            <h2 class="hndle"><span><?php _e('Order Actions', 'customer-manager'); ?></span></h2>
+                            <h2 class="hndle"><span><?php _e('Order Actions', 'alynt-wc-customer-order-manager'); ?></span></h2>
                             <div class="inside">
-                                <?php submit_button(__('Create Order', 'customer-manager'), 'primary', 'submit', false); ?>
-                                <a href="<?php echo esc_url(admin_url('admin.php?page=customer-manager-edit&id=' . $this->customer_id)); ?>" 
-                                    class="button"><?php _e('Cancel', 'customer-manager'); ?></a>
+                                <?php submit_button(__('Create Order', 'alynt-wc-customer-order-manager'), 'primary', 'submit', false); ?>
+                                <a href="<?php echo esc_url(admin_url('admin.php?page=alynt-wc-customer-order-manager-edit&id=' . $this->customer_id)); ?>" 
+                                    class="button"><?php _e('Cancel', 'alynt-wc-customer-order-manager'); ?></a>
                                 </div>
                             </div>
 
                             <!-- Customer Details -->
                             <div class="postbox">
-                                <h2 class="hndle"><span><?php _e('Customer Details', 'customer-manager'); ?></span></h2>
+                                <h2 class="hndle"><span><?php _e('Customer Details', 'alynt-wc-customer-order-manager'); ?></span></h2>
                                 <div class="inside">
                                     <div class="billing-details">
-                                        <h4><?php _e('Billing Address', 'customer-manager'); ?></h4>
+                                        <h4><?php _e('Billing Address', 'alynt-wc-customer-order-manager'); ?></h4>
                                         <?php
                                         $billing_address = array(
                                             'first_name' => $customer->first_name,
@@ -203,11 +203,11 @@ class OrderInterface {
 
                             <!-- Shipping Method -->
                             <div class="postbox">
-                                <h2 class="hndle"><span><?php _e('Shipping', 'customer-manager'); ?></span></h2>
+                                <h2 class="hndle"><span><?php _e('Shipping', 'alynt-wc-customer-order-manager'); ?></span></h2>
                                 <div class="inside">
                                     <div id="shipping-methods">
                                         <!-- Shipping methods will be loaded here -->
-                                        <p class="loading"><?php _e('Calculating available shipping methods...', 'customer-manager'); ?></p>
+                                        <p class="loading"><?php _e('Calculating available shipping methods...', 'alynt-wc-customer-order-manager'); ?></p>
                                     </div>
                                 </div>
                             </div>
@@ -220,7 +220,7 @@ class OrderInterface {
     }
 
     public function ajax_search_products() {
-        check_ajax_referer('cm-order-interface', 'nonce');
+        check_ajax_referer('awcom-order-interface', 'nonce');
 
         if (!current_user_can('manage_woocommerce')) {
             wp_die(-1);
@@ -344,7 +344,7 @@ class OrderInterface {
     }
 
     public function ajax_get_shipping_methods() {
-        check_ajax_referer('cm-order-interface', 'nonce');
+        check_ajax_referer('awcom-order-interface', 'nonce');
 
         if (!current_user_can('manage_woocommerce')) {
             wp_die(-1);

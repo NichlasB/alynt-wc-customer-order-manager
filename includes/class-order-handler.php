@@ -1,5 +1,5 @@
 <?php
-namespace CustomerManager;
+namespace AlyntWCOrderManager;
 
 use WC_Order_Item_Product;
 use WC_Order_Item_Shipping;
@@ -14,7 +14,7 @@ class OrderHandler {
 
     private function log($message) {
         if (self::DEBUG) {
-            error_log('[Customer Manager] ' . $message);
+            error_log('[Alynt WC Customer Order Manager] ' . $message);
         }
     }
 
@@ -44,36 +44,36 @@ class OrderHandler {
             return;
         }
 
-        if (!isset($_POST['cm_order_nonce']) || 
-            !wp_verify_nonce($_POST['cm_order_nonce'], 'create_order')) {
-            wp_die(__('Security check failed', 'customer-manager'));
+        if (!isset($_POST['awcom_order_nonce']) || 
+            !wp_verify_nonce($_POST['awcom_order_nonce'], 'create_order')) {
+            wp_die(__('Security check failed', 'alynt-wc-customer-order-manager'));
     }
 
     if (!Security::user_can_access()) {
-        wp_die(__('You do not have sufficient permissions', 'customer-manager'));
+        wp_die(__('You do not have sufficient permissions', 'alynt-wc-customer-order-manager'));
     }
 
     $customer_id = isset($_POST['customer_id']) ? intval($_POST['customer_id']) : 0;
     if (!$customer_id) {
-        wp_die(__('Invalid customer ID.', 'customer-manager'));
+        wp_die(__('Invalid customer ID.', 'alynt-wc-customer-order-manager'));
     }
 
         // Validate items
     if (empty($_POST['items']) || !is_array($_POST['items'])) {
-        $this->redirect_with_error($customer_id, __('No items selected.', 'customer-manager'));
+        $this->redirect_with_error($customer_id, __('No items selected.', 'alynt-wc-customer-order-manager'));
     }
 
         // Validate shipping method
     if (empty($_POST['shipping_method'])) {
-        $this->redirect_with_error($customer_id, __('Please select a shipping method.', 'customer-manager'));
+        $this->redirect_with_error($customer_id, __('Please select a shipping method.', 'alynt-wc-customer-order-manager'));
     }
 
     try {
-            // Create the order
+        // Create the order
         $order = wc_create_order(array(
-            'customer_id' => $customer_id,
-            'created_via' => 'customer_manager'
-        ));
+        'customer_id' => $customer_id,
+        'created_via' => 'alynt_wc_customer_order_manager'
+    ));
 
         // Add items to order
 foreach ($_POST['items'] as $product_id => $item_data) {
@@ -186,7 +186,7 @@ foreach ($_POST['items'] as $product_id => $item_data) {
 
     } catch (Exception $e) {
         $this->redirect_with_error($customer_id, sprintf(
-            __('Error adding product "%s" to order: %s', 'customer-manager'),
+            __('Error adding product "%s" to order: %s', 'alynt-wc-customer-order-manager'),
             $product->get_name(),
             $e->getMessage()
         ));
@@ -199,7 +199,7 @@ foreach ($_POST['items'] as $product_id => $item_data) {
 
         // Add shipping
         if (!$this->add_shipping_to_order($order, $_POST['shipping_method'])) {
-            $this->redirect_with_error($customer_id, __('Error adding shipping method to order.', 'customer-manager'));
+            $this->redirect_with_error($customer_id, __('Error adding shipping method to order.', 'alynt-wc-customer-order-manager'));
             return;
         }
 
@@ -230,7 +230,7 @@ foreach ($_POST['items'] as $product_id => $item_data) {
 
         // Add admin note
         $admin_note = sprintf(
-            __('Order created via Customer Manager by %s', 'customer-manager'),
+            __('Order created via Alynt WC Customer Order Manager by %s', 'alynt-wc-customer-order-manager'),
             wp_get_current_user()->display_name
         );
         $order->add_order_note($admin_note, 0, false);
@@ -426,7 +426,7 @@ private function get_available_shipping_methods($order) {
 private function log_order_creation($order_id, $customer_id) {
     $current_user = wp_get_current_user();
     $log_entry = sprintf(
-        __('Order #%1$s created for customer #%2$s by %3$s', 'customer-manager'),
+        __('Order #%1$s created for customer #%2$s by %3$s', 'alynt-wc-customer-order-manager'),
         $order_id,
         $customer_id,
         $current_user->display_name
@@ -438,7 +438,7 @@ private function log_order_creation($order_id, $customer_id) {
 private function redirect_with_error($customer_id, $error_message) {
     wp_redirect(add_query_arg(
         array(
-            'page' => 'customer-manager-create-order',
+            'page' => 'alynt-wc-customer-order-manager-create-order',
             'customer_id' => $customer_id,
             'error' => urlencode($error_message)
         ),

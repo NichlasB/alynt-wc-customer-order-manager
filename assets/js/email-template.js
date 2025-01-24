@@ -55,11 +55,11 @@ jQuery(function($) {
             $saveButton.prop('disabled', true).addClass('loading');
 
             $.ajax({
-                url: cmEmailVars.ajaxurl,
+                url: awcomEmailVars.ajaxurl,
                 type: 'POST',
                 data: {
                     action: 'save_login_email_template',
-                    nonce: cmEmailVars.nonce,
+                    nonce: awcomEmailVars.nonce,
                     template: content
                 },
                 success: function(response) {
@@ -95,7 +95,7 @@ jQuery(function($) {
     });
 
     // Handle merge tag insertion if needed
-    if (typeof cmEmailVars !== 'undefined' && cmEmailVars.mergeTags) {
+    if (typeof awcomEmailVars !== 'undefined' && awcomEmailVars.mergeTags) {
         var $mergeTagsSelect = $('<select>', {
             class: 'merge-tags-select',
             style: 'margin-bottom: 10px;'
@@ -105,7 +105,7 @@ jQuery(function($) {
         }));
 
         // Add merge tags to select
-        $.each(cmEmailVars.mergeTags, function(tag, description) {
+        $.each(awcomEmailVars.mergeTags, function(tag, description) {
             $mergeTagsSelect.append($('<option>', {
                 value: tag,
                 text: description + ' (' + tag + ')'

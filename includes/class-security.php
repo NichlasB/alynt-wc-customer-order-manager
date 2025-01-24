@@ -1,5 +1,5 @@
 <?php
-namespace CustomerManager;
+namespace AlyntWCOrderManager;
 
 class Security {
     /**
@@ -28,7 +28,7 @@ class Security {
     public static function verify_nonce($nonce_name, $action) {
         if (!isset($_REQUEST[$nonce_name]) || 
             !wp_verify_nonce($_REQUEST[$nonce_name], $action)) {
-            wp_die(__('Security check failed', 'customer-manager'));
+            wp_die(__('Security check failed', 'alynt-wc-customer-order-manager'));
         }
     }
 }
