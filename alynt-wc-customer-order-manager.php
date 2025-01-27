@@ -93,11 +93,13 @@ function awcom_init() {
         require_once AWCOM_PLUGIN_PATH . 'includes/class-order-interface.php';
         require_once AWCOM_PLUGIN_PATH . 'includes/class-payment-link.php';
         require_once AWCOM_PLUGIN_PATH . 'includes/class-order-handler.php';
+        require_once AWCOM_PLUGIN_PATH . 'includes/class-order-payment-access.php';
         
         new \AlyntWCOrderManager\AdminPages();
         new \AlyntWCOrderManager\OrderInterface();
         $payment_link = new \AlyntWCOrderManager\PaymentLink();
         new \AlyntWCOrderManager\OrderHandler();
+        new \AlyntWCOrderManager\OrderPaymentAccess();
     }
 }
 add_action('plugins_loaded', 'awcom_init');
