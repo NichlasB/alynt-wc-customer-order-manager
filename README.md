@@ -54,7 +54,12 @@ The plugin implements various security measures:
 - WordPress nonce verification
 - Capability checks for user actions
 
-## Changelog
+## 📝 Changelog
+
+### 1.0.3 (2025-01-27)
+- Fixed potential Composer autoloader conflicts with other plugins
+- Improved plugin compatibility in multi-plugin environments
+
 
 ### 1.0.2 (2025-01-24)
 - Added "Copy Payment Link" button to order details for quick payment link sharing
@@ -72,10 +77,6 @@ The plugin implements various security measures:
 - Customer management interface
 - Order handling capabilities
 - Security features implementation
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📝 License
 
