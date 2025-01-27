@@ -5,7 +5,7 @@ Requires at least: 5.0
 Tested up to: 6.7.1
 Requires PHP: 7.2
 WC requires at least: 4.0
-Stable tag: 1.0.3
+Stable tag: 1.0.4
 License: GPL v2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,6 +51,11 @@ When viewing an order in the admin area, you'll find a "Copy Payment Link" butto
 
 == Changelog ==
 
+= 1.0.4 =
+* Added: Ability for administrators and shop managers to process payments on behalf of customers
+* Added: Secure access to order payment forms for authorized roles
+* Added: Streamlined payment processing workflow for customer service
+
 = 1.0.3 - 2025-01-27 =
 * Fix: Resolved potential Composer autoloader conflicts with other plugins
 * Enhancement: Improved plugin compatibility with environments using multiple Composer-based plugins
@@ -75,6 +80,9 @@ When viewing an order in the admin area, you'll find a "Copy Payment Link" butto
 * Security features implementation
 
 == Upgrade Notice ==
+
+= 1.0.4 =
+Important update for stores that process customer payments manually. Administrators and shop managers can now access payment forms to process payments on behalf of customers.
 
 = 1.0.3 =
 Important stability update: Fixes potential conflicts with other plugins using Composer. Recommended for all users, especially those running multiple plugins.

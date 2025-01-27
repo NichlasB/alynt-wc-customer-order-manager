@@ -56,6 +56,11 @@ The plugin implements various security measures:
 
 ## 📝 Changelog
 
+### 1.0.4
+- Added ability for administrators and shop managers to process payments on behalf of customers
+- Added secure access to order payment forms for authorized roles
+- Added streamlined payment processing workflow for customer service
+
 ### 1.0.3 (2025-01-27)
 - Fixed potential Composer autoloader conflicts with other plugins
 - Improved plugin compatibility in multi-plugin environments
