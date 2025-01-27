@@ -5,7 +5,7 @@ Requires at least: 5.0
 Tested up to: 6.7.1
 Requires PHP: 7.2
 WC requires at least: 4.0
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 License: GPL v2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,6 +51,10 @@ When viewing an order in the admin area, you'll find a "Copy Payment Link" butto
 
 == Changelog ==
 
+= 1.0.3 - 2025-01-27 =
+* Fix: Resolved potential Composer autoloader conflicts with other plugins
+* Enhancement: Improved plugin compatibility with environments using multiple Composer-based plugins
+
 = 1.0.2 - 2025-01-24 =
 * Feature: Added "Copy Payment Link" button to order details
 * Enhancement: Improved order management interface
@@ -71,6 +75,9 @@ When viewing an order in the admin area, you'll find a "Copy Payment Link" butto
 * Security features implementation
 
 == Upgrade Notice ==
+
+= 1.0.3 =
+Important stability update: Fixes potential conflicts with other plugins using Composer. Recommended for all users, especially those running multiple plugins.
 
 = 1.0.2 =
 New feature: Adds payment link copying functionality for easier order management. Recommended for all users.

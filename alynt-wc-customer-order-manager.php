@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Alynt WooCommerce Customer and Order Manager
  * Description: Provides a customer management interface for WooCommerce customers and orders.
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: Alynt
  * Requires at least: 5.0
  * Requires PHP: 7.2
@@ -14,7 +14,22 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin Update Checker
-require_once __DIR__ . '/vendor/autoload.php';
+$composerAutoloaderPath = __DIR__ . '/vendor/autoload.php';
+$composerAutoloaderExists = false;
+
+// Check if any Composer autoloader is already loaded
+foreach (get_included_files() as $file) {
+    if (strpos($file, 'vendor/composer/autoload_real.php') !== false) {
+        $composerAutoloaderExists = true;
+        break;
+    }
+}
+
+// Only load our autoloader if no other Composer autoloader is loaded
+if (!$composerAutoloaderExists) {
+    require_once $composerAutoloaderPath;
+}
+
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
 if (class_exists('YahnisElsts\PluginUpdateChecker\v5\PucFactory')) {
@@ -33,7 +48,7 @@ if (class_exists('YahnisElsts\PluginUpdateChecker\v5\PucFactory')) {
 // Define plugin constants
 define('AWCOM_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('AWCOM_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('AWCOM_VERSION', '1.0.2');
+define('AWCOM_VERSION', '1.0.3');
 
 // Check if WooCommerce is active
 if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
