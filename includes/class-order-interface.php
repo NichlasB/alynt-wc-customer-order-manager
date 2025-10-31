@@ -198,6 +198,40 @@ class OrderInterface {
                                         echo '</div>';
                                         ?>
                                     </div>
+                                    
+                                    <?php
+                                    // Check if customer has a different shipping address
+                                    $shipping_address_1 = get_user_meta($this->customer_id, 'shipping_address_1', true);
+                                    if (!empty($shipping_address_1)) {
+                                        $shipping_address = array(
+                                            'first_name' => $customer->first_name,
+                                            'last_name'  => $customer->last_name,
+                                            'company'    => get_user_meta($this->customer_id, 'shipping_company', true),
+                                            'address_1'  => get_user_meta($this->customer_id, 'shipping_address_1', true),
+                                            'address_2'  => get_user_meta($this->customer_id, 'shipping_address_2', true),
+                                            'city'       => get_user_meta($this->customer_id, 'shipping_city', true),
+                                            'state'      => get_user_meta($this->customer_id, 'shipping_state', true),
+                                            'postcode'   => get_user_meta($this->customer_id, 'shipping_postcode', true),
+                                            'country'    => get_user_meta($this->customer_id, 'shipping_country', true),
+                                        );
+                                        
+                                        // Only show shipping address if it's different from billing
+                                        $is_different = (
+                                            $shipping_address['address_1'] !== $billing_address['address_1'] ||
+                                            $shipping_address['city'] !== $billing_address['city'] ||
+                                            $shipping_address['country'] !== $billing_address['country']
+                                        );
+                                        
+                                        if ($is_different) {
+                                            echo '<div class="shipping-details" style="margin-top: 20px;">';
+                                            echo '<h4>' . __('Shipping Address', 'alynt-wc-customer-order-manager') . '</h4>';
+                                            echo '<div class="address">';
+                                            echo WC()->countries->get_formatted_address($shipping_address);
+                                            echo '</div>';
+                                            echo '</div>';
+                                        }
+                                    }
+                                    ?>
                                 </div>
                             </div>
 
@@ -229,87 +263,187 @@ class OrderInterface {
         $customer_id = isset($_GET['customer_id']) ? intval($_GET['customer_id']) : 0;
         $term = isset($_GET['term']) ? wc_clean($_GET['term']) : '';
 
-        error_log('WCCG Debug - Search Products:');
-        error_log('Customer ID: ' . $customer_id);
-        error_log('Search Term: ' . $term);
-
         if (empty($term)) {
             wp_die();
         }
 
-        $args = array(
+        // Search for products by title only (direct database query to avoid content search)
+        global $wpdb;
+        $search_term = '%' . $wpdb->esc_like($term) . '%';
+        
+        $title_sql = $wpdb->prepare(
+            "SELECT ID FROM {$wpdb->posts} 
+            WHERE post_type IN ('product', 'product_variation')
+            AND post_status = 'publish'
+            AND post_title LIKE %s
+            ORDER BY post_title ASC
+            LIMIT 25",
+            $search_term
+        );
+        
+        $title_ids = $wpdb->get_col($title_sql);
+        $found_posts = array();
+        $found_ids = array();
+        
+        // Convert title IDs to post objects
+        foreach ($title_ids as $id) {
+            $post = get_post($id);
+            if ($post) {
+                $found_ids[] = $id;
+                $found_posts[] = $post;
+            }
+        }
+        
+        // Search for products by SKU
+        $sku_args = array(
             'post_type'      => array('product', 'product_variation'),
             'post_status'    => 'publish',
             'posts_per_page' => 25,
-            's'              => $term,
+            'meta_query'     => array(
+                array(
+                    'key'     => '_sku',
+                    'value'   => $term,
+                    'compare' => 'LIKE'
+                )
+            ),
             'orderby'        => 'title',
             'order'          => 'ASC',
         );
+        
+        $sku_query = new \WP_Query($sku_args);
+        
+        // Add SKU matches that aren't already found
+        if ($sku_query->have_posts()) {
+            while ($sku_query->have_posts()) {
+                $sku_query->the_post();
+                $post_id = get_the_ID();
+                if (!in_array($post_id, $found_ids)) {
+                    $found_ids[] = $post_id;
+                    $found_posts[] = get_post($post_id);
+                }
+            }
+            wp_reset_postdata();
+        }
+        
+        // Sort by title
+        usort($found_posts, function($a, $b) {
+            return strcmp($a->post_title, $b->post_title);
+        });
+        
 
-        $query = new \WP_Query($args);
+        
+        $posts = $found_posts;
+        
         $products = array();
 
-        while ($query->have_posts()) {
-            $query->the_post();
-            $product = wc_get_product(get_the_ID());
-
+        foreach ($posts as $post) {
+            $product_id = $post->ID;
+            $product = wc_get_product($product_id);
+            
             if (!$product || !$product->is_purchasable()) {
                 continue;
             }
 
-            $original_price = $product->get_regular_price();
+            // Get base price: use sale price if on sale, otherwise regular price
+            // This respects WooCommerce sales while avoiding double-discount issues
+            $sale_price = $product->get_sale_price();
+            $original_price = !empty($sale_price) && $sale_price > 0 ? $sale_price : $product->get_regular_price();
             $adjusted_price = $original_price;
 
-            error_log('Product ID: ' . $product->get_id());
-            error_log('Original Price: ' . $original_price);
+            if (defined('AWCOM_DEBUG') && AWCOM_DEBUG) {
+                error_log('Product ID: ' . $product->get_id());
+                error_log('Original Price: ' . $original_price);
+            }
 
-        // Get customer's group
+            // Get customer's group
             global $wpdb;
             $group_id = $wpdb->get_var($wpdb->prepare(
                 "SELECT group_id FROM {$wpdb->prefix}user_groups WHERE user_id = %d",
                 $customer_id
             ));
 
-            error_log('Customer Group ID: ' . ($group_id ? $group_id : 'None'));
+            if (defined('AWCOM_DEBUG') && AWCOM_DEBUG) {
+                error_log('Customer Group ID: ' . ($group_id ? $group_id : 'None'));
+            }
 
             if ($group_id) {
-            // First check for product-specific rules
-                $product_rule = $wpdb->get_row($wpdb->prepare(
-                    "SELECT pr.* 
-                    FROM {$wpdb->prefix}pricing_rules pr
-                    JOIN {$wpdb->prefix}rule_products rp ON pr.rule_id = rp.rule_id
-                    WHERE pr.group_id = %d AND rp.product_id = %d
-                    ORDER BY pr.created_at DESC
-                    LIMIT 1",
-                    $group_id,
-                    $product->get_id()
-                ));
+                // First check for product-specific rules
+                try {
+                    $product_query = $wpdb->prepare(
+                        "SELECT pr.* 
+                        FROM {$wpdb->prefix}pricing_rules pr
+                        JOIN {$wpdb->prefix}rule_products rp ON pr.rule_id = rp.rule_id
+                        WHERE pr.group_id = %d AND rp.product_id = %d
+                        ORDER BY pr.created_at DESC
+                        LIMIT 1",
+                        $group_id,
+                        $product->get_id()
+                    );
+                    
+                    if (defined('AWCOM_DEBUG') && AWCOM_DEBUG) {
+                        error_log('Product Rule Query: ' . $product_query);
+                    }
+                    
+                    $product_rule = $wpdb->get_row($product_query);
+                    
+                    if ($wpdb->last_error) {
+                        error_log('SQL Error (Product Rule): ' . $wpdb->last_error);
+                    }
+                } catch (Exception $e) {
+                    error_log('Exception in product rule query: ' . $e->getMessage());
+                    $product_rule = null;
+                }
 
                 if ($product_rule) {
-                    error_log('Found Product Rule: ' . print_r($product_rule, true));
+                    if (defined('AWCOM_DEBUG') && AWCOM_DEBUG) {
+                        error_log('Found Product Rule: ' . print_r($product_rule, true));
+                    } else {
+                        error_log('Found Product Rule for product ID: ' . $product->get_id());
+                    }
+                    
                     if ($product_rule->discount_type === 'percentage') {
                         $adjusted_price = $original_price - (($product_rule->discount_value / 100) * $original_price);
                     } else {
                         $adjusted_price = $original_price - $product_rule->discount_value;
                     }
                 } else {
-                // Check for category rules
+                    // Check for category rules
                     $category_ids = wp_get_post_terms($product->get_id(), 'product_cat', array('fields' => 'ids'));
                     if (!empty($category_ids)) {
                         $placeholders = implode(',', array_fill(0, count($category_ids), '%d'));
-                        $query = $wpdb->prepare(
-                            "SELECT pr.* 
-                            FROM {$wpdb->prefix}pricing_rules pr
-                            JOIN {$wpdb->prefix}rule_categories rc ON pr.rule_id = rc.rule_id
-                            WHERE pr.group_id = %d AND rc.category_id IN ($placeholders)
-                            ORDER BY pr.created_at DESC
-                            LIMIT 1",
-                            array_merge(array($group_id), $category_ids)
-                        );
-                        $category_rule = $wpdb->get_row($query);
+                        try {
+                            $query_args = array_merge(array($group_id), $category_ids);
+                            $category_query = $wpdb->prepare(
+                                "SELECT pr.* 
+                                FROM {$wpdb->prefix}pricing_rules pr
+                                JOIN {$wpdb->prefix}rule_categories rc ON pr.rule_id = rc.rule_id
+                                WHERE pr.group_id = %d AND rc.category_id IN ($placeholders)
+                                ORDER BY pr.created_at DESC
+                                LIMIT 1",
+                                $query_args
+                            );
+                            
+                            if (defined('AWCOM_DEBUG') && AWCOM_DEBUG) {
+                                error_log('Category Rule Query: ' . $category_query);
+                            }
+                            
+                            $category_rule = $wpdb->get_row($category_query);
+                            
+                            if ($wpdb->last_error) {
+                                error_log('SQL Error (Category Rule): ' . $wpdb->last_error);
+                            }
+                        } catch (Exception $e) {
+                            error_log('Exception in category rule query: ' . $e->getMessage());
+                            $category_rule = null;
+                        }
 
                         if ($category_rule) {
-                            error_log('Found Category Rule: ' . print_r($category_rule, true));
+                            if (defined('AWCOM_DEBUG') && AWCOM_DEBUG) {
+                                error_log('Found Category Rule: ' . print_r($category_rule, true));
+                            } else {
+                                error_log('Found Category Rule for product ID: ' . $product->get_id());
+                            }
+                            
                             if ($category_rule->discount_type === 'percentage') {
                                 $adjusted_price = $original_price - (($category_rule->discount_value / 100) * $original_price);
                             } else {
@@ -320,10 +454,35 @@ class OrderInterface {
                 }
             }
 
-            error_log('Final Adjusted Price: ' . $adjusted_price);
+            if (defined('AWCOM_DEBUG') && AWCOM_DEBUG) {
+                error_log('Final Adjusted Price: ' . $adjusted_price);
+            }
 
-        // Ensure price doesn't go below zero
+            // Ensure price doesn't go below zero
             $adjusted_price = max(0, $adjusted_price);
+
+            // Get stock information
+            $stock_quantity = $product->get_stock_quantity();
+            $stock_status = $product->get_stock_status();
+            $manage_stock = $product->get_manage_stock();
+            
+            // Format stock display
+            $stock_display = '';
+            if ($manage_stock && $stock_quantity !== null) {
+                if ($stock_quantity > 0) {
+                    $stock_display = sprintf(__('%d in stock', 'alynt-wc-customer-order-manager'), $stock_quantity);
+                } else {
+                    $stock_display = __('Out of stock', 'alynt-wc-customer-order-manager');
+                }
+            } elseif ($stock_status === 'instock') {
+                $stock_display = __('In stock', 'alynt-wc-customer-order-manager');
+            } elseif ($stock_status === 'outofstock') {
+                $stock_display = __('Out of stock', 'alynt-wc-customer-order-manager');
+            } elseif ($stock_status === 'onbackorder') {
+                $stock_display = __('On backorder', 'alynt-wc-customer-order-manager');
+            }
+
+
 
             $products[] = array(
                 'id'        => $product->get_id(),
@@ -332,13 +491,19 @@ class OrderInterface {
                 'formatted_price' => wc_price($adjusted_price),
                 'original_price' => $original_price,
                 'formatted_original_price' => wc_price($original_price),
-                'has_discount' => $adjusted_price < $original_price
+                'has_discount' => $adjusted_price < $original_price,
+                'stock_quantity' => $stock_quantity,
+                'stock_status' => $stock_status,
+                'stock_display' => $stock_display,
+                'manage_stock' => $manage_stock
             );
         }
 
         wp_reset_postdata();
 
-        error_log('Final Products Array: ' . print_r($products, true));
+        if (defined('AWCOM_DEBUG') && AWCOM_DEBUG) {
+            error_log('Final Products Array: ' . print_r($products, true));
+        }
 
         wp_send_json($products);
     }
@@ -355,8 +520,17 @@ class OrderInterface {
             wp_die(-1);
         }
 
-    // Get customer's billing address
-        $address = array(
+        // Get customer's shipping address first, fallback to billing if shipping is empty
+        $shipping_address = array(
+            'country'   => get_user_meta($customer_id, 'shipping_country', true),
+            'state'     => get_user_meta($customer_id, 'shipping_state', true),
+            'postcode'  => get_user_meta($customer_id, 'shipping_postcode', true),
+            'city'      => get_user_meta($customer_id, 'shipping_city', true),
+            'address_1' => get_user_meta($customer_id, 'shipping_address_1', true),
+            'address_2' => get_user_meta($customer_id, 'shipping_address_2', true),
+        );
+        
+        $billing_address = array(
             'country'   => get_user_meta($customer_id, 'billing_country', true),
             'state'     => get_user_meta($customer_id, 'billing_state', true),
             'postcode'  => get_user_meta($customer_id, 'billing_postcode', true),
@@ -364,18 +538,26 @@ class OrderInterface {
             'address_1' => get_user_meta($customer_id, 'billing_address_1', true),
             'address_2' => get_user_meta($customer_id, 'billing_address_2', true),
         );
+        
+        // Check if shipping address has key fields populated
+        $has_shipping_address = !empty($shipping_address['address_1']) && 
+                               !empty($shipping_address['city']) && 
+                               !empty($shipping_address['country']);
+        
+        // Use shipping address if available, otherwise use billing address
+        $address = $has_shipping_address ? $shipping_address : $billing_address;
 
-    // Create temporary cart and calculate shipping
+        // Create temporary cart and calculate shipping
         WC()->cart->empty_cart();
 
-    // Add items to cart
+        // Add items to cart
         if (isset($_POST['items']) && is_array($_POST['items'])) {
             foreach ($_POST['items'] as $item) {
                 WC()->cart->add_to_cart($item['product_id'], $item['quantity']);
             }
         }
 
-    // Set customer address for shipping calculations
+        // Set customer address for shipping calculations
         WC()->customer->set_billing_location(
             $address['country'],
             $address['state'],
@@ -391,7 +573,7 @@ class OrderInterface {
         WC()->customer->set_shipping_address_1($address['address_1']);
         WC()->customer->set_shipping_address_2($address['address_2']);
 
-    // Get shipping packages
+        // Get shipping packages
         $packages = array(
             array(
                 'contents'        => WC()->cart->get_cart(),
@@ -408,22 +590,25 @@ class OrderInterface {
             )
         );
 
-    // Debug shipping information
-        error_log('Shipping Debug:');
-        error_log('Customer Address: ' . print_r($address, true));
-        error_log('Cart Contents: ' . print_r(WC()->cart->get_cart(), true));
+        if (defined('AWCOM_DEBUG') && AWCOM_DEBUG) {
+            error_log('Shipping Debug:');
+            error_log('Customer Address: ' . print_r($address, true));
+            error_log('Cart Contents: ' . print_r(WC()->cart->get_cart(), true));
+        }
 
         $shipping_methods = array();
         WC()->shipping->load_shipping_methods($packages[0]);
 
-    // Get all enabled shipping methods
+        // Get all enabled shipping methods
         $enabled_methods = WC()->shipping->get_shipping_methods();
 
         foreach ($enabled_methods as $method) {
             if ($method->is_enabled()) {
-                error_log('Processing shipping method: ' . $method->id);
+                if (defined('AWCOM_DEBUG') && AWCOM_DEBUG) {
+                    error_log('Processing shipping method: ' . $method->id);
+                }
 
-            // Calculate shipping for this method
+                // Calculate shipping for this method
                 $rate = $method->get_rates_for_package($packages[0]);
 
                 if ($rate) {
@@ -437,17 +622,24 @@ class OrderInterface {
                             'taxes'          => $rate_data->taxes,
                         );
 
-                        error_log('Added shipping rate: ' . print_r($shipping_methods[count($shipping_methods)-1], true));
+                        if (defined('AWCOM_DEBUG') && AWCOM_DEBUG) {
+                            error_log('Added shipping rate: ' . print_r($shipping_methods[count($shipping_methods)-1], true));
+                        }
                     }
                 }
             }
         }
 
         if (empty($shipping_methods)) {
-            error_log('No shipping methods available for this order');
+            if (defined('AWCOM_DEBUG') && AWCOM_DEBUG) {
+                error_log('No shipping methods available for this order');
+            }
         }
 
-    // Send response with success status
+        // Clean up: Empty the cart to prevent items from appearing in admin's frontend cart
+        WC()->cart->empty_cart();
+
+        // Send response with success status
         wp_send_json(array(
             'success' => true,
             'methods' => $shipping_methods,
@@ -456,6 +648,78 @@ class OrderInterface {
                 'packages' => $packages
             )
         ));
+    }
+
+    /**
+     * Extend product search to include SKU
+     */
+    public function extend_product_search($search, $wp_query) {
+        global $wpdb;
+        
+        if (!is_admin() || empty($this->search_term)) {
+            return $search;
+        }
+        
+        // Only modify search for product queries
+        if (!isset($wp_query->query_vars['post_type']) || 
+            !in_array('product', (array)$wp_query->query_vars['post_type'])) {
+            return $search;
+        }
+        
+        $search_term = esc_sql(like_escape($this->search_term));
+        
+        // Add SKU search to the existing search
+        if (!empty($search)) {
+            $search = preg_replace(
+                '/\(\(\(.*?\)\)\)/',
+                "((($0) OR (mt1.meta_key = '_sku' AND mt1.meta_value LIKE '%{$search_term}%')))",
+                $search
+            );
+        }
+        
+        return $search;
+    }
+    
+    /**
+     * Join meta table for SKU search
+     */
+    public function extend_product_search_join($join, $wp_query) {
+        global $wpdb;
+        
+        if (!is_admin() || empty($this->search_term)) {
+            return $join;
+        }
+        
+        // Only modify join for product queries
+        if (!isset($wp_query->query_vars['post_type']) || 
+            !in_array('product', (array)$wp_query->query_vars['post_type'])) {
+            return $join;
+        }
+        
+        $join .= " LEFT JOIN {$wpdb->postmeta} mt1 ON ({$wpdb->posts}.ID = mt1.post_id)";
+        
+        return $join;
+    }
+    
+    /**
+     * Group by post ID to avoid duplicates
+     */
+    public function extend_product_search_groupby($groupby, $wp_query) {
+        global $wpdb;
+        
+        if (!is_admin() || empty($this->search_term)) {
+            return $groupby;
+        }
+        
+        // Only modify groupby for product queries
+        if (!isset($wp_query->query_vars['post_type']) || 
+            !in_array('product', (array)$wp_query->query_vars['post_type'])) {
+            return $groupby;
+        }
+        
+        $groupby = "{$wpdb->posts}.ID";
+        
+        return $groupby;
     }
 
 }

@@ -142,6 +142,10 @@ class AdminPages {
                 echo '<div class="notice notice-success is-dismissible"><p>' . 
                 __('Login details email sent successfully.', 'alynt-wc-customer-order-manager') . '</p></div>';
             }
+            if (isset($_GET['notes_updated']) && $_GET['notes_updated'] == '1') {
+                echo '<div class="notice notice-success is-dismissible"><p>' . 
+                __('Customer notes updated successfully.', 'alynt-wc-customer-order-manager') . '</p></div>';
+            }
             ?>
 
             <div id="poststuff">
@@ -176,7 +180,7 @@ class AdminPages {
                                                     ));
                                                     ?>
                                                     <select name="customer_group" id="customer_group" class="regular-text">
-                                                        <option value=""><?php _e('Select a group...', 'alynt-wc-customer-order-manager'); ?></option>
+                                                        <option value=""><?php _e('--Select a group--', 'alynt-wc-customer-order-manager'); ?></option>
                                                         <?php foreach ($groups as $group) : ?>
                                                             <option value="<?php echo esc_attr($group->group_id); ?>" 
                                                                 <?php selected($current_group, $group->group_id); ?>>
@@ -291,6 +295,7 @@ class AdminPages {
                                                 </th>
                                                 <td>
                                                     <select name="billing_country" id="billing_country" class="regular-text">
+                                                        <option value=""><?php _e('--Select--', 'alynt-wc-customer-order-manager'); ?></option>
                                                         <?php
                                                         $countries_obj = new \WC_Countries();
                                                         $countries = $countries_obj->get_countries();
@@ -306,139 +311,266 @@ class AdminPages {
                                             </tr>
                                         </table>
 
-                                        <div class="submit-button-container">
-                                            <?php submit_button(__('Update Customer', 'alynt-wc-customer-order-manager')); ?>
-                                            <a href="<?php echo admin_url('admin.php?page=alynt-wc-customer-order-manager'); ?>" class="button">
-                                                <?php _e('Back to List', 'alynt-wc-customer-order-manager'); ?>
-                                            </a>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
+                                        <!-- Shipping Address Section -->
+                        <h3><?php _e('Shipping Address', 'alynt-wc-customer-order-manager'); ?></h3>
+                        
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row">
+                                    <label for="same_as_billing"><?php _e('Same as billing address', 'alynt-wc-customer-order-manager'); ?></label>
+                                </th>
+                                <td>
+                                    <?php 
+                                    $shipping_address_1 = get_user_meta($customer_id, 'shipping_address_1', true);
+                                    $same_as_billing = empty($shipping_address_1);
+                                    ?>
+                                    <input type="checkbox" name="same_as_billing" id="same_as_billing" value="1" <?php checked($same_as_billing); ?>>
+                                    <span class="description"><?php _e('Check this box if the shipping address is the same as the billing address', 'alynt-wc-customer-order-manager'); ?></span>
+                                </td>
+                            </tr>
+                        </table>
 
-                            <!-- Orders Section -->
-                            <div class="orders-section postbox">
-                                <h2 class="hndle"><?php _e('Orders', 'alynt-wc-customer-order-manager'); ?></h2>
-                                <div class="inside">
-                                    <p>
-                                        <a href="<?php echo esc_url(admin_url('admin.php?page=alynt-wc-customer-order-manager-create-order&customer_id=' . $customer_id)); ?>" 
-                                            class="button button-primary"><?php _e('Create New Order', 'alynt-wc-customer-order-manager'); ?></a>
-                                        </p>
-                                        <?php
-                                    // Display recent orders
-                                        $orders = wc_get_orders(array(
-                                            'customer_id' => $customer_id,
-                                            'limit' => 10,
-                                            'orderby' => 'date',
-                                            'order' => 'DESC',
-                                        ));
+                        <div id="shipping-address-fields" style="<?php echo $same_as_billing ? 'display: none;' : ''; ?>">
+                            <table class="form-table">
+                                <tr>
+                                    <th scope="row">
+                                        <label for="shipping_address_1"><?php _e('Shipping Address 1', 'alynt-wc-customer-order-manager'); ?></label>
+                                    </th>
+                                    <td>
+                                        <input type="text" name="shipping_address_1" id="shipping_address_1" class="regular-text" 
+                                        value="<?php echo esc_attr(get_user_meta($customer_id, 'shipping_address_1', true)); ?>">
+                                    </td>
+                                </tr>
 
-                                        if ($orders) {
-                                            echo '<h3>' . __('Recent Orders', 'alynt-wc-customer-order-manager') . '</h3>';
-                                            echo '<table class="widefat">';
-                                            echo '<thead><tr>';
-                                            echo '<th>' . __('Order', 'alynt-wc-customer-order-manager') . '</th>';
-                                            echo '<th>' . __('Date', 'alynt-wc-customer-order-manager') . '</th>';
-                                            echo '<th>' . __('Status', 'alynt-wc-customer-order-manager') . '</th>';
-                                            echo '<th>' . __('Total', 'alynt-wc-customer-order-manager') . '</th>';
-                                            echo '</tr></thead>';
-                                            echo '<tbody>';
-                                            foreach ($orders as $order) {
-                                                echo '<tr>';
-                                                echo '<td><a href="' . admin_url('post.php?post=' . $order->get_id() . '&action=edit') . '">#' . 
-                                                $order->get_order_number() . '</a></td>';
-                                                echo '<td>' . wc_format_datetime($order->get_date_created()) . '</td>';
-                                                echo '<td>' . wc_get_order_status_name($order->get_status()) . '</td>';
-                                                echo '<td>' . $order->get_formatted_order_total() . '</td>';
-                                                echo '</tr>';
+                                <tr>
+                                    <th scope="row">
+                                        <label for="shipping_address_2"><?php _e('Shipping Address 2', 'alynt-wc-customer-order-manager'); ?></label>
+                                    </th>
+                                    <td>
+                                        <input type="text" name="shipping_address_2" id="shipping_address_2" class="regular-text" 
+                                        value="<?php echo esc_attr(get_user_meta($customer_id, 'shipping_address_2', true)); ?>">
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <th scope="row">
+                                        <label for="shipping_phone"><?php _e('Phone', 'alynt-wc-customer-order-manager'); ?></label>
+                                    </th>
+                                    <td>
+                                        <input type="tel" name="shipping_phone" id="shipping_phone" class="regular-text" 
+                                        value="<?php echo esc_attr(get_user_meta($customer_id, 'shipping_phone', true)); ?>">
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <th scope="row">
+                                        <label for="shipping_city"><?php _e('City', 'alynt-wc-customer-order-manager'); ?></label>
+                                    </th>
+                                    <td>
+                                        <input type="text" name="shipping_city" id="shipping_city" class="regular-text" 
+                                        value="<?php echo esc_attr(get_user_meta($customer_id, 'shipping_city', true)); ?>">
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <th scope="row">
+                                        <label for="shipping_state"><?php _e('State/Province', 'alynt-wc-customer-order-manager'); ?></label>
+                                    </th>
+                                    <td>
+                                        <input type="text" name="shipping_state" id="shipping_state" class="regular-text" 
+                                        value="<?php echo esc_attr(get_user_meta($customer_id, 'shipping_state', true)); ?>">
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <th scope="row">
+                                        <label for="shipping_postcode"><?php _e('Postal Code', 'alynt-wc-customer-order-manager'); ?></label>
+                                    </th>
+                                    <td>
+                                        <input type="text" name="shipping_postcode" id="shipping_postcode" class="regular-text" 
+                                        value="<?php echo esc_attr(get_user_meta($customer_id, 'shipping_postcode', true)); ?>">
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <th scope="row">
+                                        <label for="shipping_country"><?php _e('Country', 'alynt-wc-customer-order-manager'); ?></label>
+                                    </th>
+                                    <td>
+                                        <select name="shipping_country" id="shipping_country" class="regular-text">
+                                            <option value=""><?php _e('--Select--', 'alynt-wc-customer-order-manager'); ?></option>
+                                            <?php
+                                            $countries_obj = new \WC_Countries();
+                                            $countries = $countries_obj->get_countries();
+                                            $current_shipping_country = get_user_meta($customer_id, 'shipping_country', true);
+                                            foreach ($countries as $code => $name) {
+                                                echo '<option value="' . esc_attr($code) . '"' . 
+                                                selected($code, $current_shipping_country, false) . '>' . 
+                                                esc_html($name) . '</option>';
                                             }
-                                            echo '</tbody></table>';
-                                        } else {
-                                            echo '<p>' . __('No orders found for this customer.', 'alynt-wc-customer-order-manager') . '</p>';
-                                        }
-                                        ?>
+                                            ?>
+                                        </select>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <script type="text/javascript">
+                        jQuery(document).ready(function($) {
+                            $('#same_as_billing').change(function() {
+                                if ($(this).is(':checked')) {
+                                    $('#shipping-address-fields').hide();
+                                    // Copy billing address to shipping fields
+                                    $('#shipping_address_1').val($('#billing_address_1').val());
+                                    $('#shipping_address_2').val($('#billing_address_2').val());
+                                    $('#shipping_phone').val($('#phone').val());
+                                    $('#shipping_city').val($('#billing_city').val());
+                                    $('#shipping_state').val($('#billing_state').val());
+                                    $('#shipping_postcode').val($('#billing_postcode').val());
+                                    $('#shipping_country').val($('#billing_country').val());
+                                } else {
+                                    $('#shipping-address-fields').show();
+                                }
+                            });
+                        });
+                        </script>
+
+                                    <div class="submit-button-container">
+                                        <?php submit_button(__('Update Customer', 'alynt-wc-customer-order-manager')); ?>
+                                        <a href="<?php echo admin_url('admin.php?page=alynt-wc-customer-order-manager'); ?>" class="button">
+                                            <?php _e('Back to List', 'alynt-wc-customer-order-manager'); ?>
+                                        </a>
                                     </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Orders Section -->
+                        <div class="orders-section postbox">
+                            <h2 class="hndle"><?php _e('Orders', 'alynt-wc-customer-order-manager'); ?></h2>
+                            <div class="inside">
+                                <p>
+                                    <a href="<?php echo esc_url(admin_url('admin.php?page=alynt-wc-customer-order-manager-create-order&customer_id=' . $customer_id)); ?>" 
+                                        class="button button-primary"><?php _e('Create New Order', 'alynt-wc-customer-order-manager'); ?></a>
+                                    </p>
+                                    <?php
+                                // Display recent orders
+                                    $orders = wc_get_orders(array(
+                                        'customer_id' => $customer_id,
+                                        'limit' => 10,
+                                        'orderby' => 'date',
+                                        'order' => 'DESC',
+                                    ));
+
+                                    if ($orders) {
+                                        echo '<h3>' . __('Recent Orders', 'alynt-wc-customer-order-manager') . '</h3>';
+                                        echo '<table class="widefat">';
+                                        echo '<thead><tr>';
+                                        echo '<th>' . __('Order', 'alynt-wc-customer-order-manager') . '</th>';
+                                        echo '<th>' . __('Date', 'alynt-wc-customer-order-manager') . '</th>';
+                                        echo '<th>' . __('Status', 'alynt-wc-customer-order-manager') . '</th>';
+                                        echo '<th>' . __('Total', 'alynt-wc-customer-order-manager') . '</th>';
+                                        echo '</tr></thead>';
+                                        echo '<tbody>';
+                                        foreach ($orders as $order) {
+                                            echo '<tr>';
+                                            echo '<td><a href="' . admin_url('post.php?post=' . $order->get_id() . '&action=edit') . '">#' . 
+                                            $order->get_order_number() . '</a></td>';
+                                            echo '<td>' . wc_format_datetime($order->get_date_created()) . '</td>';
+                                            echo '<td>' . wc_get_order_status_name($order->get_status()) . '</td>';
+                                            echo '<td>' . $order->get_formatted_order_total() . '</td>';
+                                            echo '</tr>';
+                                        }
+                                        echo '</tbody></table>';
+                                    } else {
+                                        echo '<p>' . __('No orders found for this customer.', 'alynt-wc-customer-order-manager') . '</p>';
+                                    }
+                                    ?>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column -->
+                        <div id="postbox-container-1" class="postbox-container">
+                            <!-- Login Details Box -->
+                            <div class="postbox">
+                                <h2 class="hndle"><span><?php _e('Login Details', 'alynt-wc-customer-order-manager'); ?></span></h2>
+                                <div class="inside">
+                                    <form method="post">
+                                        <?php wp_nonce_field('send_login_details', 'send_login_nonce'); ?>
+                                        <input type="hidden" name="action" value="send_login_details">
+                                        <input type="hidden" name="customer_id" value="<?php echo esc_attr($customer_id); ?>">
+                                        <?php submit_button(__('Send Login Details Email', 'alynt-wc-customer-order-manager'), 'secondary'); ?>
+                                    </form>
+                                    <button type="button" class="button" id="edit-email-template">
+                                        <?php _e('Edit Email Template', 'alynt-wc-customer-order-manager'); ?>
+                                    </button>
                                 </div>
                             </div>
 
-                            <!-- Right Column -->
-                            <div id="postbox-container-1" class="postbox-container">
-                                <!-- Login Details Box -->
-                                <div class="postbox">
-                                    <h2 class="hndle"><span><?php _e('Login Details', 'alynt-wc-customer-order-manager'); ?></span></h2>
-                                    <div class="inside">
-                                        <form method="post">
-                                            <?php wp_nonce_field('send_login_details', 'send_login_nonce'); ?>
-                                            <input type="hidden" name="action" value="send_login_details">
-                                            <input type="hidden" name="customer_id" value="<?php echo esc_attr($customer_id); ?>">
-                                            <?php submit_button(__('Send Login Details Email', 'alynt-wc-customer-order-manager'), 'secondary'); ?>
-                                        </form>
-                                        <button type="button" class="button" id="edit-email-template">
-                                            <?php _e('Edit Email Template', 'alynt-wc-customer-order-manager'); ?>
+                            <!-- Email Template Modal -->
+                            <div id="email-template-modal" style="display:none;">
+                                <div class="email-template-editor">
+                                    <h2><?php _e('Edit Login Email Template', 'alynt-wc-customer-order-manager'); ?></h2>
+                                    <p class="description">
+                                        <?php _e('Available merge tags:', 'alynt-wc-customer-order-manager'); ?>
+                                        <br>
+                                        <code>{customer_first_name}</code> - <?php _e('Customer\'s first name', 'alynt-wc-customer-order-manager'); ?>
+                                        <br>
+                                        <code>{password_reset_link}</code> - <?php _e('Password reset link', 'alynt-wc-customer-order-manager'); ?>
+                                    </p>
+                                    <?php 
+                                    $template = get_option('awcom_login_email_template', ''); 
+                                    if (empty($template)) {
+                                        $template = sprintf(
+                                            __("Hello {customer_first_name},\n\nYou can set your password and login to your account by visiting the following address:\n\n{password_reset_link}\n\nThis link will expire in 24 hours.\n\nRegards,\n%s", 'alynt-wc-customer-order-manager'),
+                                            get_bloginfo('name')
+                                        );
+                                    }
+                                    wp_editor($template, 'login_email_template', array(
+                                        'textarea_rows' => 15
+                                    )); 
+                                    ?>
+                                    <div class="submit-buttons">
+                                        <button type="button" class="button button-primary save-template">
+                                            <?php _e('Save Template', 'alynt-wc-customer-order-manager'); ?>
+                                        </button>
+                                        <button type="button" class="button cancel-edit">
+                                            <?php _e('Cancel', 'alynt-wc-customer-order-manager'); ?>
                                         </button>
                                     </div>
                                 </div>
+                            </div>
 
-                                <!-- Email Template Modal -->
-                                <div id="email-template-modal" style="display:none;">
-                                    <div class="email-template-editor">
-                                        <h2><?php _e('Edit Login Email Template', 'alynt-wc-customer-order-manager'); ?></h2>
-                                        <p class="description">
-                                            <?php _e('Available merge tags:', 'alynt-wc-customer-order-manager'); ?>
-                                            <br>
-                                            <code>{customer_first_name}</code> - <?php _e('Customer\'s first name', 'alynt-wc-customer-order-manager'); ?>
-                                            <br>
-                                            <code>{password_reset_link}</code> - <?php _e('Password reset link', 'alynt-wc-customer-order-manager'); ?>
-                                        </p>
-                                        <?php 
-                                        $template = get_option('awcom_login_email_template', ''); 
-                                        if (empty($template)) {
-                                            $template = sprintf(
-                                                __("Hello {customer_first_name},\n\nYou can set your password and login to your account by visiting the following address:\n\n{password_reset_link}\n\nThis link will expire in 24 hours.\n\nRegards,\n%s", 'alynt-wc-customer-order-manager'),
-                                                get_bloginfo('name')
-                                            );
-                                        }
-                                        wp_editor($template, 'login_email_template', array(
-                                            'textarea_rows' => 15
-                                        )); 
-                                        ?>
-                                        <div class="submit-buttons">
-                                            <button type="button" class="button button-primary save-template">
-                                                <?php _e('Save Template', 'alynt-wc-customer-order-manager'); ?>
-                                            </button>
-                                            <button type="button" class="button cancel-edit">
-                                                <?php _e('Cancel', 'alynt-wc-customer-order-manager'); ?>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Customer Notes Box -->
-                                <div class="postbox">
-                                    <h2 class="hndle"><span><?php _e('Customer Notes', 'alynt-wc-customer-order-manager'); ?></span></h2>
-                                    <div class="inside">
+                            <!-- Customer Notes Box -->
+                            <div class="postbox">
+                                <h2 class="hndle"><span><?php _e('Customer Notes', 'alynt-wc-customer-order-manager'); ?></span></h2>
+                                <div class="inside">
                                         <div class="customer-notes-list">
                                             <?php
+                                            // Migrate old notes if they exist
+                                            $this->migrate_old_customer_notes($customer_id);
+                                            
                                             $notes = get_user_meta($customer_id, '_customer_notes', true);
-                                            if ($notes) {
-                                            $notes = array_reverse($notes); // Show newest first
-                                            foreach ($notes as $index => $note) {
-                                                echo '<div class="customer-note" data-note-index="' . esc_attr($index) . '">';
-                                                echo '<div class="note-content">' . wp_kses_post($note['content']) . '</div>';
-                                                echo '<div class="note-actions">';
-                                                echo '<button type="button" class="button button-small edit-note"><span class="dashicons dashicons-edit"></span> ' . esc_html__('Edit', 'alynt-wc-customer-order-manager') . '</button> ';
-                                                echo '<button type="button" class="button button-small delete-note"><span class="dashicons dashicons-trash"></span> ' . esc_html__('Delete', 'alynt-wc-customer-order-manager') . '</button>';
-                                                echo '</div>';
-                                                echo '<div class="note-meta">';
-                                                echo 'By ' . esc_html($note['author']) . ' on ' . 
-                                                date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $note['date']);
-                                                echo '</div>';
-                                                echo '</div>';
+                                            if ($notes && is_array($notes)) {
+                                                // Don't reverse - keep original order with newest first
+                                                foreach ($notes as $index => $note) {
+                                                    echo '<div class="customer-note" data-note-index="' . esc_attr($index) . '">';
+                                                    echo '<div class="note-content">' . wp_kses_post($note['content']) . '</div>';
+                                                    echo '<div class="note-actions">';
+                                                    echo '<button type="button" class="button button-small edit-note"><span class="dashicons dashicons-edit"></span> ' . esc_html__('Edit', 'alynt-wc-customer-order-manager') . '</button> ';
+                                                    echo '<button type="button" class="button button-small delete-note"><span class="dashicons dashicons-trash"></span> ' . esc_html__('Delete', 'alynt-wc-customer-order-manager') . '</button>';
+                                                    echo '</div>';
+                                                    echo '<div class="note-meta">';
+                                                    echo 'By ' . esc_html($note['author']) . ' on ' . 
+                                                    date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $note['date']);
+                                                    echo '</div>';
+                                                    echo '</div>';
+                                                }
+                                            } else {
+                                                echo '<p>' . __('No notes found.', 'alynt-wc-customer-order-manager') . '</p>';
                                             }
-                                        } else {
-                                            echo '<p>' . __('No notes found.', 'alynt-wc-customer-order-manager') . '</p>';
-                                        }
-                                        ?>
+                                            ?>
                                     </div>
                                     <div class="add-note">
                                         <textarea name="customer_note" placeholder="<?php esc_attr_e('Add a note about this customer...', 'alynt-wc-customer-order-manager'); ?>"></textarea>
@@ -454,6 +586,37 @@ class AdminPages {
             </div>
             <?php
         }
+
+    /**
+     * Migrates old customer notes from 'customer_notes' to '_customer_notes' format
+     */
+    private function migrate_old_customer_notes($customer_id) {
+        // Check if new format notes already exist
+        $new_notes = get_user_meta($customer_id, '_customer_notes', true);
+        if ($new_notes && is_array($new_notes) && !empty($new_notes)) {
+            return; // Already have new format notes, no migration needed
+        }
+
+        // Check for old format notes
+        $old_notes = get_user_meta($customer_id, 'customer_notes', true);
+        if (empty($old_notes)) {
+            return; // No old notes to migrate
+        }
+
+        // Convert old text format to new array format
+        $current_user = wp_get_current_user();
+        $migrated_note = array(
+            'content' => wp_unslash($old_notes),
+            'author' => 'System Migration',
+            'date' => time(),
+        );
+
+        // Save as new format
+        update_user_meta($customer_id, '_customer_notes', array($migrated_note));
+        
+        // Remove old format to prevent duplicate migrations
+        delete_user_meta($customer_id, 'customer_notes');
+    }
 
     /**
      * Enqueues scripts needed for customer notes functionality
@@ -552,7 +715,7 @@ class AdminPages {
         }
 
         $customer_id = isset($_POST['customer_id']) ? intval($_POST['customer_id']) : 0;
-        $note_content = isset($_POST['note']) ? sanitize_textarea_field($_POST['note']) : '';
+        $note_content = isset($_POST['note']) ? wp_unslash(sanitize_textarea_field($_POST['note'])) : '';
 
         if (!$customer_id || !$note_content) {
             wp_send_json_error(array('message' => 'Invalid data'));
@@ -596,7 +759,7 @@ class AdminPages {
 
         $customer_id = isset($_POST['customer_id']) ? intval($_POST['customer_id']) : 0;
         $note_index = isset($_POST['note_index']) ? intval($_POST['note_index']) : -1;
-        $note_content = isset($_POST['note']) ? sanitize_textarea_field($_POST['note']) : '';
+        $note_content = isset($_POST['note']) ? wp_unslash(sanitize_textarea_field($_POST['note'])) : '';
 
         if (!$customer_id || $note_index < 0 || !$note_content) {
             wp_send_json_error(array('message' => 'Invalid data'));
@@ -879,6 +1042,42 @@ public function handle_customer_edit_submission() {
     foreach ($billing_fields as $field) {
         if (isset($_POST[$field])) {
             update_user_meta($customer_id, $field, sanitize_text_field($_POST[$field]));
+        }
+    }
+
+    // Handle shipping address
+    if (isset($_POST['same_as_billing']) && $_POST['same_as_billing'] == '1') {
+        // Copy billing address to shipping address
+        $shipping_fields = array(
+            'shipping_phone' => 'billing_phone',
+            'shipping_address_1' => 'billing_address_1',
+            'shipping_address_2' => 'billing_address_2',
+            'shipping_city' => 'billing_city',
+            'shipping_state' => 'billing_state',
+            'shipping_postcode' => 'billing_postcode',
+            'shipping_country' => 'billing_country'
+        );
+        
+        foreach ($shipping_fields as $shipping_field => $billing_field) {
+            $billing_value = isset($_POST[$billing_field]) ? sanitize_text_field($_POST[$billing_field]) : '';
+            update_user_meta($customer_id, $shipping_field, $billing_value);
+        }
+    } else {
+        // Update shipping information separately
+        $shipping_fields = array(
+            'shipping_address_1',
+            'shipping_address_2',
+            'shipping_phone',
+            'shipping_city',
+            'shipping_state',
+            'shipping_postcode',
+            'shipping_country'
+        );
+        
+        foreach ($shipping_fields as $field) {
+            if (isset($_POST[$field])) {
+                update_user_meta($customer_id, $field, sanitize_text_field($_POST[$field]));
+            }
         }
     }
 

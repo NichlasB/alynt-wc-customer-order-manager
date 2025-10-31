@@ -25,7 +25,23 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 if (response.success) {
-                    // Create new note HTML
+                    // Get the current highest note index and increment it
+                    var highestIndex = -1;
+                    $('.customer-note').each(function() {
+                        var index = parseInt($(this).data('note-index'));
+                        if (index > highestIndex) {
+                            highestIndex = index;
+                        }
+                    });
+                    var newIndex = highestIndex + 1;
+                    
+                    // Update all existing note indices since we're adding to the beginning
+                    $('.customer-note').each(function() {
+                        var currentIndex = parseInt($(this).data('note-index'));
+                        $(this).attr('data-note-index', currentIndex + 1);
+                    });
+
+                    // Create new note HTML with index 0 (newest first)
                     var noteHtml = '<div class="customer-note" data-note-index="0">' +
                         '<div class="note-content">' + response.data.content + '</div>' +
                         '<div class="note-actions">' +
