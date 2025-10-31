@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Alynt WooCommerce Customer and Order Manager
  * Description: Provides a customer management interface for WooCommerce customers and orders.
- * Version: 1.0.3
+ * Version: 1.0.6
  * Author: Alynt
  * Requires at least: 5.0
  * Requires PHP: 7.2
@@ -48,7 +48,7 @@ if (class_exists('YahnisElsts\PluginUpdateChecker\v5\PucFactory')) {
 // Define plugin constants
 define('AWCOM_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('AWCOM_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('AWCOM_VERSION', '1.0.3');
+define('AWCOM_VERSION', '1.0.6');
 
 // Check if WooCommerce is active
 if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
@@ -85,21 +85,28 @@ function awcom_init() {
     // Load text domain for translations
     load_plugin_textdomain('alynt-wc-customer-order-manager', false, dirname(plugin_basename(__FILE__)) . '/languages/');
     
-    // Initialize admin pages
+    // Include required files
+    require_once AWCOM_PLUGIN_PATH . 'includes/class-security.php';
+    require_once AWCOM_PLUGIN_PATH . 'includes/class-order-handler.php';
+    require_once AWCOM_PLUGIN_PATH . 'includes/class-order-payment-access.php';
+    // Frontend order editor disabled - using standard WooCommerce payment flow
+    // require_once AWCOM_PLUGIN_PATH . 'includes/class-frontend-order-editor.php';
+    
+    // Initialize classes that work on both frontend and admin
+    new \AlyntWCOrderManager\OrderHandler();
+    new \AlyntWCOrderManager\OrderPaymentAccess();
+    // Frontend order editor disabled - using standard WooCommerce payment flow
+    // new \AlyntWCOrderManager\FrontendOrderEditor();
+    
+    // Initialize admin pages only in admin
     if (is_admin()) {
-        // Include required files
-        require_once AWCOM_PLUGIN_PATH . 'includes/class-security.php';
         require_once AWCOM_PLUGIN_PATH . 'includes/class-admin-pages.php';
         require_once AWCOM_PLUGIN_PATH . 'includes/class-order-interface.php';
         require_once AWCOM_PLUGIN_PATH . 'includes/class-payment-link.php';
-        require_once AWCOM_PLUGIN_PATH . 'includes/class-order-handler.php';
-        require_once AWCOM_PLUGIN_PATH . 'includes/class-order-payment-access.php';
         
         new \AlyntWCOrderManager\AdminPages();
         new \AlyntWCOrderManager\OrderInterface();
         $payment_link = new \AlyntWCOrderManager\PaymentLink();
-        new \AlyntWCOrderManager\OrderHandler();
-        new \AlyntWCOrderManager\OrderPaymentAccess();
     }
 }
 add_action('plugins_loaded', 'awcom_init');

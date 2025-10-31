@@ -66,6 +66,7 @@ body.wp-admin #wpbody-content #postbox-container-1.postbox-container {
     font-size: 15px;
     margin-bottom: 10px;
     padding: 10px;
+    position: relative;
 }
 
 .customer-note:last-child {

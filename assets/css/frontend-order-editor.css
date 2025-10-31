@@ -1,0 +1,550 @@
+/* Frontend Order Editor Styles */
+
+body .awcom-frontend-order-editor {
+    background: #eae4d6 !important; /* Pearl Bush background */
+    font-family: inherit;
+    min-height: 100vh;
+    padding: 0 20px !important;
+}
+
+body .awcom-frontend-order-editor .container {
+    background: #e1cdb5 !important; /* Grain Brown background */
+    margin: 0 auto;
+    max-width: 1200px;
+    padding: 40px !important;
+}
+
+body .awcom-frontend-order-editor h1 {
+    border-bottom: 3px solid #3b5249 !important; /* Mineral Green border */
+    color: #281408 !important; /* Graphite text */
+    font-size: 2.2em !important;
+    font-weight: bold !important;
+    padding-bottom: 15px !important;
+    text-align: center !important;
+}
+
+.awcom-frontend-order-editor h2 {
+    color: #281408; /* Graphite text */
+    font-size: 22px;
+    font-weight: 500;
+    margin: 30px 0 20px 0;
+}
+
+/* Order Sections */
+body .awcom-order-sections {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 30px !important;
+}
+
+body .awcom-section {
+    background: #eae4d6 !important; /* Pearl Bush background */
+    border: 1px solid #3b5249 !important; /* Mineral Green border */
+    border-radius: 6px !important;
+    padding: 25px !important;
+}
+
+.awcom-section h2 {
+    border-bottom: 1px solid #3b5249; /* Mineral Green border */
+    color: #281408; /* Graphite text */
+    margin-bottom: 20px;
+    margin-top: 0;
+    padding-bottom: 10px;
+}
+
+/* Product Search */
+.awcom-product-search {
+    margin-bottom: 25px;
+}
+
+.awcom-product-search label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #281408; /* Graphite text */
+}
+
+.awcom-product-search .select2-container {
+    width: 100% !important;
+}
+
+.awcom-product-search .select2-selection {
+    border: 2px solid #3b5249 !important; /* Mineral Green border */
+    border-radius: 4px !important;
+    padding: 8px 12px !important;
+    min-height: 44px !important;
+}
+
+.awcom-product-search .select2-selection:focus {
+    border-color: #281408 !important; /* Graphite focus */
+    box-shadow: 0 0 0 2px rgba(40, 20, 8, 0.2) !important;
+}
+
+/* Order Items Table */
+.awcom-order-items-wrapper {
+    overflow-x: auto;
+    border-radius: 6px;
+    border: 1px solid #3b5249; /* Mineral Green border */
+}
+
+.awcom-order-items {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+    background: #eae4d6; /* Pearl Bush background */
+}
+
+.awcom-order-items th {
+    background: #e1cdb5; /* Grain Brown background */
+    color: #281408; /* Graphite text */
+    font-weight: bold;
+    padding: 15px 12px;
+    text-align: left;
+    border-bottom: 2px solid #3b5249; /* Mineral Green border */
+    font-size: 14px;
+}
+
+.awcom-order-items td {
+    padding: 15px 12px;
+    border-bottom: 1px solid #3b5249; /* Mineral Green border */
+    vertical-align: middle;
+    color: #281408; /* Graphite text */
+}
+
+.awcom-order-items tbody tr:hover {
+    background-color: #e1cdb5; /* Grain Brown hover */
+}
+
+.awcom-order-items tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Product Name Column */
+
+.awcom-frontend-order-editor table.shop_table tr>*:first-child {
+    padding-inline-start: 15px;
+}
+
+.awcom-order-items .product-name {
+    font-weight: 500;
+    color: #281408; /* Graphite text */
+    min-width: 200px;
+}
+
+.awcom-order-items .product-name small {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+}
+
+/* Quantity Input */
+.awcom-order-items .product-quantity {
+    width: 100px;
+}
+
+.awcom-order-items .quantity {
+    width: 70px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.awcom-order-items .quantity:focus {
+    border-color: #0073aa;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 115, 170, 0.2);
+}
+
+/* Price Columns */
+.awcom-order-items .product-price,
+.awcom-order-items .product-total {
+    text-align: right;
+    font-weight: 500;
+    color: #333;
+    min-width: 100px;
+}
+
+.awcom-order-items .original-price del {
+    color: #999;
+    margin-right: 5px;
+}
+
+/* Remove Button */
+.awcom-order-items .product-remove {
+    width: 40px;
+    text-align: center;
+}
+
+.awcom-order-items .remove-item {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    line-height: 22px;
+    text-align: center;
+    background: #dc3545;
+    color: #fff;
+    border-radius: 50%;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+
+.awcom-order-items .remove-item:hover {
+    background: #c82333;
+    color: #fff;
+    transform: scale(1.1);
+}
+
+/* Table Footer */
+.awcom-order-items tfoot td {
+    background: #f8f9fa;
+    font-weight: 500;
+    border-top: 2px solid #ddd;
+    padding: 12px;
+}
+
+.awcom-order-items tfoot .order-total td {
+    background: #e9ecef;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* Shipping Section */
+.awcom-shipping-section .shipping-method-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.awcom-shipping-section .shipping-method-list li {
+    margin-bottom: 12px;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.awcom-shipping-section .shipping-method-list li:hover {
+    border-color: #0073aa;
+    background: #f0f8ff;
+}
+
+.awcom-shipping-section .shipping-method-list label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    margin: 0;
+    font-weight: 500;
+}
+
+.awcom-shipping-section .shipping-method-list input[type="radio"] {
+    margin-right: 10px;
+    transform: scale(1.2);
+}
+
+/* Order Notes */
+.awcom-notes-section textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #3b5249; /* Mineral Green border */
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 14px;
+    resize: vertical;
+    min-height: 100px;
+    color: #281408; /* Graphite text */
+    background: #eae4d6; /* Pearl Bush background */
+}
+
+.awcom-notes-section textarea:focus {
+    border-color: #281408; /* Graphite focus */
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(40, 20, 8, 0.2);
+}
+
+/* Action Buttons */
+.awcom-actions-section {
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid #3b5249; /* Mineral Green border */
+}
+
+.awcom-actions-section .button {
+    display: inline-block;
+    padding: 12px 24px;
+    margin: 0 8px;
+    background: #281408; /* Graphite background */
+    color: #eae4d6; /* Pearl Bush text */
+    text-decoration: none;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.awcom-actions-section .button:hover {
+    background: #3b5249; /* Mineral Green hover */
+    transform: translateY(-1px);
+}
+
+.awcom-actions-section .button.alt {
+    background: #3b5249; /* Mineral Green for primary button */
+}
+
+.awcom-actions-section .button.alt:hover {
+    background: #281408; /* Graphite hover */
+}
+
+.awcom-actions-section .button:not(.alt) {
+    background: #eae4d6; /* Pearl Bush background */
+    color: #281408; /* Graphite text */
+    border: 1px solid #3b5249; /* Mineral Green border */
+}
+
+.awcom-actions-section .button:not(.alt):hover {
+    background: #e1cdb5; /* Grain Brown hover */
+    color: #333;
+}
+
+.awcom-actions-section .button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Loading States */
+.awcom-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Paid Order Styles */
+.awcom-paid-order-notice {
+    background: #e1cdb5; /* Grain Brown background */
+    border: 1px solid #3b5249; /* Mineral Green border */
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 20px;
+    color: #281408; /* Graphite text */
+}
+
+.awcom-paid-order-notice p {
+    margin: 0;
+    font-weight: 500;
+}
+
+/* Additional Items Section */
+.awcom-additional-items-section {
+    border: 2px solid #3b5249 !important; /* Stronger border for distinction */
+}
+
+.awcom-additional-items-section h2 {
+    color: #3b5249 !important; /* Mineral Green for section title */
+}
+
+.awcom-additional-items {
+    background: #eae4d6; /* Pearl Bush background */
+}
+
+.awcom-additional-items thead th {
+    background: #3b5249 !important; /* Mineral Green header */
+    color: #eae4d6 !important; /* Pearl Bush text */
+}
+
+.awcom-additional-items tbody tr {
+    background: #eae4d6; /* Pearl Bush background */
+}
+
+.awcom-additional-items tbody tr:hover {
+    background: #e1cdb5; /* Grain Brown hover */
+}
+
+.awcom-additional-items .no-items td {
+    text-align: center;
+    font-style: italic;
+    color: #666;
+    padding: 20px;
+}
+
+/* Paid order quantity display */
+.quantity-display {
+    font-weight: bold;
+    color: #281408; /* Graphite */
+}
+
+.paid-order-note {
+    display: block;
+    color: #3b5249; /* Mineral Green */
+    font-style: italic;
+    margin-top: 2px;
+}
+
+.awcom-loading::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    z-index: 1000;
+    border-radius: inherit;
+}
+
+.loading {
+    color: #666;
+    font-style: italic;
+}
+
+/* Stock Status Indicators */
+.awcom-stock-info {
+    color: #666 !important;
+    font-weight: normal !important;
+}
+
+.awcom-stock-low {
+    color: #ff9800 !important;
+    font-weight: bold !important;
+}
+
+.awcom-stock-out {
+    color: #f44336 !important;
+    font-weight: bold !important;
+}
+
+/* Notices */
+.awcom-order-edit-notices {
+    margin: 20px 0;
+}
+
+.awcom-notice {
+    padding: 15px 20px;
+    margin: 15px 0;
+    border-left: 4px solid;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.awcom-notice.success {
+    border-left-color: #46b450;
+    background: #f7fcf0;
+    color: #5b9025;
+}
+
+.awcom-notice.error {
+    border-left-color: #dc3232;
+    background: #fbeaea;
+    color: #a00;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    body .awcom-frontend-order-editor {
+        padding: 0 !important;
+    }
+    
+    body .awcom-frontend-order-editor .container {
+        padding: 20px 10px !important;
+    }
+
+    body .awcom-section {
+        padding: 10px !important;
+    }
+    
+    body .awcom-frontend-order-editor h1 {
+        font-size: 1.5rem !important;
+    }
+    
+    .awcom-section {
+        padding: 20px 15px;
+    }
+    
+    .awcom-order-items th,
+    .awcom-order-items td {
+        padding: 10px 8px;
+        font-size: 14px;
+    }
+    
+    .awcom-order-items .product-name {
+        min-width: 150px;
+    }
+    
+    .awcom-order-items .quantity {
+        width: 60px;
+    }
+    
+    .awcom-actions-section .button {
+        display: block;
+        margin: 8px 0;
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .awcom-order-items-wrapper {
+        font-size: 12px;
+    }
+    
+    .awcom-order-items th,
+    .awcom-order-items td {
+        padding: 8px 6px;
+    }
+    
+    .awcom-order-items .product-name {
+        min-width: 120px;
+    }
+    
+    .awcom-order-items .quantity {
+        width: 50px;
+        padding: 6px;
+    }
+}
+
+/* WooCommerce Theme Compatibility */
+.woocommerce .awcom-frontend-order-editor {
+    font-family: inherit;
+    color: inherit;
+}
+
+.woocommerce .awcom-frontend-order-editor .button {
+    font-family: inherit;
+}
+
+.woocommerce .awcom-frontend-order-editor .shop_table {
+    /* Inherit WooCommerce table styles */
+    border: 1px solid #ddd;
+}
+
+/* Select2 Customization for Frontend */
+.awcom-frontend-order-editor .select2-container--default .select2-selection--single {
+    height: auto !important;
+    border: 1px solid #ddd !important;
+}
+
+.awcom-frontend-order-editor .select2-container--default .select2-selection--single .select2-selection__rendered {
+    padding: 8px 12px !important;
+    line-height: 1.4 !important;
+}
+
+.awcom-frontend-order-editor .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 100% !important;
+    right: 8px !important;
+}
+
+.awcom-frontend-order-editor .select2-dropdown {
+    border: 1px solid #ddd !important;
+    border-top: none !important;
+}
+
+.awcom-frontend-order-editor .select2-results__option {
+    padding: 8px 12px !important;
+}
+
+.awcom-frontend-order-editor .select2-results__option--highlighted {
+    background-color: #0073aa !important;
+}

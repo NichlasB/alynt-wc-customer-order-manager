@@ -15,10 +15,19 @@ A powerful WordPress plugin that enhances WooCommerce's customer and order manag
   - Custom order status handling
   - Quick payment link copying and sharing
 
+- **Customer Order Editing** ⭐ NEW
+  - Customers can edit pending orders before payment
+  - Add/remove products with real-time search
+  - Change quantities with stock validation
+  - Update shipping methods with automatic recalculation
+  - Mobile-responsive interface with theme integration
+  - Secure access with order key validation
+
 - **Security**
   - Secure data handling
   - Role-based access control
   - Data encryption support
+  - Order key validation for customer access
 
 ## 📋 Requirements
 
@@ -47,6 +56,25 @@ After installation and activation:
 - Click the button to copy the payment URL to your clipboard
 - Share the link with your customer via email, message, or any preferred method
 
+### Customer Order Editing
+When customers receive payment links for pending orders, they can:
+- **Edit Order Contents**: Add or remove products using the search interface
+- **Adjust Quantities**: Change item quantities with real-time stock validation
+- **Update Shipping**: Select different shipping methods with automatic cost calculation
+- **Add Notes**: Include special instructions or requests
+- **Review Changes**: See updated totals before proceeding to payment
+
+**Access Requirements:**
+- Order must be in "Pending" status
+- Valid order key required (automatically included in payment links)
+- Feature can be enabled/disabled by administrators
+
+**Security Features:**
+- Only pending orders can be edited
+- Order key validation prevents unauthorized access
+- Stock validation prevents overselling
+- Customer-specific pricing maintained
+
 ## 🔒 Security
 
 The plugin implements various security measures:
@@ -55,6 +83,15 @@ The plugin implements various security measures:
 - Capability checks for user actions
 
 ## 📝 Changelog
+
+### 1.0.5
+- Added customer order editing functionality for pending orders
+- Customers can now modify orders before payment (add/remove products, change quantities)
+- Real-time shipping calculations and order total updates
+- Mobile-responsive order editing interface with theme integration
+- Stock quantity validation and visual indicators
+- Secure order access with order key validation
+- Customer-specific pricing maintained during order modifications
 
 ### 1.0.4
 - Added ability for administrators and shop managers to process payments on behalf of customers
