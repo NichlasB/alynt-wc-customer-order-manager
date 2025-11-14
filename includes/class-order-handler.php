@@ -8,6 +8,8 @@ use Exception;
 
 class OrderHandler {
     const DEBUG = true;
+    
+    private $shipping_errors = array();
     public function __construct() {
         add_action('admin_init', array($this, 'handle_order_creation'));
         
@@ -265,8 +267,10 @@ foreach ($_POST['items'] as $product_id => $item_data) {
         $this->add_customer_data_to_order($order, $customer_id);
 
         // Add shipping
-        if (!$this->add_shipping_to_order($order, $_POST['shipping_method'])) {
-            $this->redirect_with_error($customer_id, __('Error adding shipping method to order.', 'alynt-wc-customer-order-manager'));
+        try {
+            $this->add_shipping_to_order($order, $_POST['shipping_method']);
+        } catch (Exception $e) {
+            $this->redirect_with_error($customer_id, __('Error adding shipping method: ', 'alynt-wc-customer-order-manager') . $e->getMessage());
             return;
         }
 
@@ -387,6 +391,15 @@ private function add_shipping_to_order($order, $shipping_method) {
         $this->log('Available shipping methods: ' . print_r($available_methods, true));
         $this->log('Selected shipping method: ' . $shipping_method);
 
+        // If no methods available, provide detailed error
+        if (empty($available_methods)) {
+            $error_details = '';
+            if (!empty($this->shipping_errors)) {
+                $error_details = ' Details: ' . implode(' | ', $this->shipping_errors);
+            }
+            throw new Exception('No shipping methods available for this destination.' . $error_details);
+        }
+
         // Parse the shipping method ID
         $parts = explode(':', $shipping_method);
         $method_id = $parts[0] ?? '';
@@ -422,16 +435,19 @@ private function add_shipping_to_order($order, $shipping_method) {
             }
         }
 
-        $this->log('Shipping method not found: ' . $shipping_method);
-        return false;
+        // Method not found in available methods
+        $available_ids = array_column($available_methods, 'id');
+        throw new Exception('Selected shipping method "' . $shipping_method . '" not found. Available: ' . implode(', ', $available_ids));
     } catch (Exception $e) {
         $this->log('Shipping error: ' . $e->getMessage());
-        return false;
+        // Re-throw to pass detailed error message up
+        throw $e;
     }
 }
 
 private function get_available_shipping_methods($order) {
     $methods = array();
+    $errors = array();
 
     try {
         // Build the package
@@ -469,32 +485,108 @@ private function get_available_shipping_methods($order) {
             }
         }
 
+        $this->log('Shipping package destination: ' . print_r($package['destination'], true));
+        $this->log('Shipping package items count: ' . count($package['contents']));
+
         // Calculate shipping for package
         $shipping_zone = WC_Shipping_Zones::get_zone_matching_package($package);
+        $this->log('Matched shipping zone: ' . $shipping_zone->get_zone_name() . ' (ID: ' . $shipping_zone->get_id() . ')');
+        
         $shipping_methods = $shipping_zone->get_shipping_methods(true);
+        $this->log('Enabled shipping methods in zone: ' . count($shipping_methods));
 
         foreach ($shipping_methods as $method) {
             if ($method->is_enabled()) {
-                $rates = $method->get_rates_for_package($package);
-                if ($rates) {
-                    foreach ($rates as $rate_id => $rate) {
-                        $methods[] = array(
-                            'id' => $rate_id,
-                            'method_id' => $method->id,
-                            'instance_id' => $method->get_instance_id(),
-                            'label' => $rate->get_label(),
-                            'cost' => $rate->get_cost(),
-                            'taxes' => $rate->get_taxes()
-                        );
+                $this->log('Processing shipping method: ' . $method->id . ' - ' . $method->get_method_title());
+                $this->log('Method class: ' . get_class($method));
+                $this->log('Method instance ID: ' . $method->get_instance_id());
+                
+                try {
+                    // Check if method has any stored errors before calling
+                    if (method_exists($method, 'get_errors') && is_callable(array($method, 'get_errors'))) {
+                        $pre_errors = $method->get_errors();
+                        if (!empty($pre_errors)) {
+                            $this->log('USPS pre-existing errors: ' . print_r($pre_errors, true));
+                        }
                     }
+                    
+                    // Call get_rates_for_package and capture any output
+                    ob_start();
+                    $rates = $method->get_rates_for_package($package);
+                    $output = ob_get_clean();
+                    
+                    if (!empty($output)) {
+                        $this->log('USPS output during rate calculation: ' . $output);
+                    }
+                    
+                    // Check for errors after the call
+                    if (method_exists($method, 'get_errors') && is_callable(array($method, 'get_errors'))) {
+                        $post_errors = $method->get_errors();
+                        if (!empty($post_errors)) {
+                            $this->log('USPS errors after rate calculation: ' . print_r($post_errors, true));
+                            $errors[] = sprintf('USPS plugin errors: %s', implode(', ', $post_errors));
+                        }
+                    }
+                    
+                    // Check if method has debug property with information
+                    if (property_exists($method, 'debug') && !empty($method->debug)) {
+                        $this->log('USPS debug info: ' . print_r($method->debug, true));
+                    }
+                    
+                    if ($rates) {
+                        $this->log('Found ' . count($rates) . ' rates for method: ' . $method->id);
+                        
+                        foreach ($rates as $rate_id => $rate) {
+                            $methods[] = array(
+                                'id' => $rate_id,
+                                'method_id' => $method->id,
+                                'instance_id' => $method->get_instance_id(),
+                                'label' => $rate->get_label(),
+                                'cost' => $rate->get_cost(),
+                                'taxes' => $rate->get_taxes()
+                            );
+                            $this->log('Added rate: ' . $rate_id . ' - ' . $rate->get_label() . ' ($' . $rate->get_cost() . ')');
+                        }
+                    } else {
+                        $this->log('No rates returned for method: ' . $method->id);
+                        $this->log('USPS returned: ' . var_export($rates, true));
+                        
+                        // Try to get more info about why no rates
+                        if (method_exists($method, 'get_instance_form_fields')) {
+                            $fields = $method->get_instance_form_fields();
+                            $this->log('USPS instance settings fields: ' . print_r(array_keys($fields), true));
+                        }
+                        
+                        $errors[] = sprintf('Shipping method "%s" returned no rates for this destination', $method->get_method_title());
+                    }
+                } catch (Exception $e) {
+                    $error_message = sprintf('Shipping method "%s" error: %s', $method->get_method_title(), $e->getMessage());
+                    $this->log($error_message);
+                    $this->log('Exception trace: ' . $e->getTraceAsString());
+                    $errors[] = $error_message;
+                } catch (\Throwable $t) {
+                    // Catch any fatal errors or PHP 7+ throwables
+                    $error_message = sprintf('Shipping method "%s" fatal error: %s', $method->get_method_title(), $t->getMessage());
+                    $this->log($error_message);
+                    $this->log('Throwable trace: ' . $t->getTraceAsString());
+                    $errors[] = $error_message;
                 }
             }
         }
 
-        $this->log('Available shipping methods calculated: ' . print_r($methods, true));
+        $this->log('Total available shipping methods calculated: ' . count($methods));
+        
+        if (!empty($errors)) {
+            $this->log('Shipping calculation errors: ' . print_r($errors, true));
+        }
     } catch (Exception $e) {
-        $this->log('Error getting shipping methods: ' . $e->getMessage());
+        $error_message = 'Critical error getting shipping methods: ' . $e->getMessage();
+        $this->log($error_message);
+        $errors[] = $error_message;
     }
+
+    // Store errors for later retrieval
+    $this->shipping_errors = $errors;
 
     return $methods;
 }
