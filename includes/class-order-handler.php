@@ -1156,27 +1156,54 @@ public function fix_cart_total($total) {
  * Gets group name directly from database (pricing is handled by Customer Groups plugin)
  */
 public function add_discount_info_to_cart_item($product_name, $cart_item, $cart_item_key) {
-    if (!is_user_logged_in()) {
-        return $product_name;
-    }
-
-    // Get customer's group from database
     global $wpdb;
     $customer_id = get_current_user_id();
+    $display_title = null;
     
-    $group_name = $wpdb->get_var($wpdb->prepare(
-        "SELECT g.group_name 
-        FROM {$wpdb->prefix}customer_groups g
-        JOIN {$wpdb->prefix}user_groups ug ON g.group_id = ug.group_id
-        WHERE ug.user_id = %d",
-        $customer_id
-    ));
+    // First check if user has explicit group assignment
+    if ($customer_id > 0) {
+        $display_title = $wpdb->get_var($wpdb->prepare(
+            "SELECT g.group_name 
+            FROM {$wpdb->prefix}customer_groups g
+            JOIN {$wpdb->prefix}user_groups ug ON g.group_id = ug.group_id
+            WHERE ug.user_id = %d",
+            $customer_id
+        ));
+    }
     
-    // If customer has a group, add the pricing label
-    if ($group_name) {
+    // If no explicit group, check for default group
+    if (!$display_title) {
+        $default_group_id = get_option('wccg_default_group_id', 0);
+        
+        if ($default_group_id) {
+            // Check if default group has active pricing rules
+            $has_active_rule = $wpdb->get_var($wpdb->prepare(
+                "SELECT 1 FROM {$wpdb->prefix}pricing_rules 
+                WHERE group_id = %d AND is_active = 1 
+                LIMIT 1",
+                $default_group_id
+            ));
+            
+            if ($has_active_rule) {
+                // Get custom title or group name
+                $custom_title = get_option('wccg_default_group_custom_title', '');
+                if (!empty($custom_title)) {
+                    $display_title = $custom_title;
+                } else {
+                    $display_title = $wpdb->get_var($wpdb->prepare(
+                        "SELECT group_name FROM {$wpdb->prefix}customer_groups WHERE group_id = %d",
+                        $default_group_id
+                    ));
+                }
+            }
+        }
+    }
+    
+    // If we have a display title, add the pricing label
+    if ($display_title) {
         $discount_text = sprintf(
             '<br><small style="color: #3b5249; font-weight: 500;">%s Pricing Applied</small>',
-            esc_html($group_name)
+            esc_html($display_title)
         );
         return $product_name . $discount_text;
     }
