@@ -212,11 +212,21 @@ class AdminPages {
 
                                             <tr>
                                                 <th scope="row">
-                                                    <label for="email"><?php _e('Email Address', 'alynt-wc-customer-order-manager'); ?> *</label>
+                                                    <label for="email"><?php _e('Account Email', 'alynt-wc-customer-order-manager'); ?> *</label>
                                                 </th>
                                                 <td>
                                                     <input type="email" name="email" id="email" class="regular-text" 
                                                     value="<?php echo esc_attr($customer->user_email); ?>" required>
+                                                </td>
+                                            </tr>
+
+                                            <tr>
+                                                <th scope="row">
+                                                    <label for="billing_email"><?php _e('Billing Email', 'alynt-wc-customer-order-manager'); ?></label>
+                                                </th>
+                                                <td>
+                                                    <input type="email" name="billing_email" id="billing_email" class="regular-text"
+                                                    value="<?php echo esc_attr(get_user_meta($customer_id, 'billing_email', true)); ?>">
                                                 </td>
                                             </tr>
 
@@ -914,6 +924,7 @@ if (is_wp_error($user_id)) {
 
     // Save billing information
 $billing_fields = array(
+    'billing_email',
     'billing_company',
     'billing_phone',
     'billing_address_1',
@@ -1029,6 +1040,7 @@ public function handle_customer_edit_submission() {
 
             // Update billing information
     $billing_fields = array(
+        'billing_email',
         'billing_company',
         'billing_phone',
         'billing_address_1',
@@ -1267,10 +1279,19 @@ public function render_add_page() {
 
                 <tr>
                     <th scope="row">
-                        <label for="email"><?php _e('Email Address', 'alynt-wc-customer-order-manager'); ?> *</label>
+                        <label for="email"><?php _e('Account Email', 'alynt-wc-customer-order-manager'); ?> *</label>
                     </th>
                     <td>
                         <input type="email" name="email" id="email" class="regular-text" required>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
+                        <label for="billing_email"><?php _e('Billing Email', 'alynt-wc-customer-order-manager'); ?></label>
+                    </th>
+                    <td>
+                        <input type="email" name="billing_email" id="billing_email" class="regular-text">
                     </td>
                 </tr>
 
