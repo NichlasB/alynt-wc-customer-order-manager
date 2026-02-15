@@ -344,10 +344,29 @@ class OrderInterface {
                 continue;
             }
 
-            // Get base price: use sale price if on sale, otherwise regular price
-            // This respects WooCommerce sales while avoiding double-discount issues
+            // Get base price: use sale price if on sale, otherwise regular price.
+            // Fall back to get_price() for products where _regular_price may not be set
+            // (e.g., bundled products, composites, or products created by third-party plugins).
             $sale_price = $product->get_sale_price();
-            $original_price = !empty($sale_price) && $sale_price > 0 ? $sale_price : $product->get_regular_price();
+            if (!empty($sale_price) && is_numeric($sale_price) && $sale_price > 0) {
+                $original_price = (float) $sale_price;
+            } else {
+                $regular_price = $product->get_regular_price();
+                if (!empty($regular_price) && is_numeric($regular_price) && $regular_price > 0) {
+                    $original_price = (float) $regular_price;
+                } else {
+                    // Ultimate fallback: use get_price() which reads the _price meta
+                    // This handles products where _regular_price is not set but _price is
+                    $current_price = $product->get_price();
+                    $original_price = (!empty($current_price) && is_numeric($current_price)) ? (float) $current_price : 0.0;
+                }
+            }
+
+            // Skip products with no valid price
+            if ($original_price <= 0) {
+                continue;
+            }
+
             $adjusted_price = $original_price;
 
             if (defined('AWCOM_DEBUG') && AWCOM_DEBUG) {
@@ -355,12 +374,15 @@ class OrderInterface {
                 error_log('Original Price: ' . $original_price);
             }
 
-            // Get customer's group
+            // Get customer's group (explicit assignment or default group)
             global $wpdb;
             $group_id = $wpdb->get_var($wpdb->prepare(
                 "SELECT group_id FROM {$wpdb->prefix}user_groups WHERE user_id = %d",
                 $customer_id
             ));
+            if (!$group_id) {
+                $group_id = get_option('wccg_default_group_id', 0);
+            }
 
             if (defined('AWCOM_DEBUG') && AWCOM_DEBUG) {
                 error_log('Customer Group ID: ' . ($group_id ? $group_id : 'None'));
@@ -374,6 +396,9 @@ class OrderInterface {
                         FROM {$wpdb->prefix}pricing_rules pr
                         JOIN {$wpdb->prefix}rule_products rp ON pr.rule_id = rp.rule_id
                         WHERE pr.group_id = %d AND rp.product_id = %d
+                        AND pr.is_active = 1
+                        AND (pr.start_date IS NULL OR pr.start_date <= UTC_TIMESTAMP())
+                        AND (pr.end_date IS NULL OR pr.end_date >= UTC_TIMESTAMP())
                         ORDER BY pr.created_at DESC
                         LIMIT 1",
                         $group_id,
@@ -389,7 +414,7 @@ class OrderInterface {
                     if ($wpdb->last_error) {
                         error_log('SQL Error (Product Rule): ' . $wpdb->last_error);
                     }
-                } catch (Exception $e) {
+                } catch (\Exception $e) {
                     error_log('Exception in product rule query: ' . $e->getMessage());
                     $product_rule = null;
                 }
@@ -418,6 +443,9 @@ class OrderInterface {
                                 FROM {$wpdb->prefix}pricing_rules pr
                                 JOIN {$wpdb->prefix}rule_categories rc ON pr.rule_id = rc.rule_id
                                 WHERE pr.group_id = %d AND rc.category_id IN ($placeholders)
+                                AND pr.is_active = 1
+                                AND (pr.start_date IS NULL OR pr.start_date <= UTC_TIMESTAMP())
+                                AND (pr.end_date IS NULL OR pr.end_date >= UTC_TIMESTAMP())
                                 ORDER BY pr.created_at DESC
                                 LIMIT 1",
                                 $query_args
@@ -432,7 +460,7 @@ class OrderInterface {
                             if ($wpdb->last_error) {
                                 error_log('SQL Error (Category Rule): ' . $wpdb->last_error);
                             }
-                        } catch (Exception $e) {
+                        } catch (\Exception $e) {
                             error_log('Exception in category rule query: ' . $e->getMessage());
                             $category_rule = null;
                         }
