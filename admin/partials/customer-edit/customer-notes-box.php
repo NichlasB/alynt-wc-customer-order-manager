@@ -1,0 +1,42 @@
+<?php
+/**
+ * Customer notes metabox partial.
+ *
+ * @package Alynt_WC_Customer_Order_Manager
+ */
+
+?>
+<div class="postbox">
+	<h2 class="hndle"><span><?php esc_html_e( 'Customer Notes', 'alynt-wc-customer-order-manager' ); ?></span></h2>
+	<div class="inside">
+		<div class="customer-notes-list" aria-live="polite" aria-atomic="false">
+			<?php
+			$this->migrate_old_customer_notes( $customer_id );
+			$notes = get_user_meta( $customer_id, '_awcom_customer_notes', true );
+			if ( $notes && is_array( $notes ) ) {
+				foreach ( $notes as $index => $note ) {
+					echo '<div class="customer-note" data-note-index="' . esc_attr( $index ) . '">';
+					echo '<div class="note-content">' . wp_kses_post( $note['content'] ) . '</div>';
+					echo '<div class="note-actions">';
+					echo '<button type="button" class="button button-small edit-note"><span class="dashicons dashicons-edit" aria-hidden="true"></span> ' . esc_html__( 'Edit', 'alynt-wc-customer-order-manager' ) . '</button> ';
+					echo '<button type="button" class="button button-small delete-note"><span class="dashicons dashicons-trash" aria-hidden="true"></span> ' . esc_html__( 'Delete', 'alynt-wc-customer-order-manager' ) . '</button>';
+					echo '</div>';
+					$formatted_note_date = date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $note['date'] );
+					/* translators: 1: customer note author, 2: customer note date. */
+					echo '<div class="note-meta">' . esc_html( sprintf( __( 'By %1$s on %2$s', 'alynt-wc-customer-order-manager' ), $note['author'], $formatted_note_date ) ) . '</div>';
+					echo '</div>';
+				}
+			} else {
+				echo '<p>' . esc_html__( 'No notes found.', 'alynt-wc-customer-order-manager' ) . '</p>';
+			}
+			?>
+		</div>
+		<div class="add-note">
+			<label for="customer_note" class="screen-reader-text"><?php esc_html_e( 'Add a note about this customer', 'alynt-wc-customer-order-manager' ); ?></label>
+			<textarea name="customer_note" id="customer_note" placeholder="<?php esc_attr_e( 'Add a note about this customer...', 'alynt-wc-customer-order-manager' ); ?>"></textarea>
+			<button type="button" class="button add-note-button" data-customer-id="<?php echo esc_attr( $customer_id ); ?>">
+				<?php esc_html_e( 'Add Note', 'alynt-wc-customer-order-manager' ); ?>
+			</button>
+		</div>
+	</div>
+</div>

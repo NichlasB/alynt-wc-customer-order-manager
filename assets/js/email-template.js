@@ -1,7 +1,31 @@
 jQuery(function($) {
     var $modal = $('#email-template-modal');
+    var $trigger = $('#edit-email-template');
+    var i18n = awcomEmailVars.i18n || {};
+    var initialContent = '';
+    var isSaving = false;
 
-    $('#edit-email-template').on('click', function() {
+    function formatString(template, value) {
+        return String(template || '').replace('%s', value);
+    }
+
+    function getEditorContent() {
+        if (typeof tinyMCE !== 'undefined' && tinyMCE.get('login_email_template') && !tinyMCE.get('login_email_template').isHidden()) {
+            return tinyMCE.get('login_email_template').getContent();
+        }
+
+        return $('#login_email_template').val();
+    }
+
+    function rememberInitialContent() {
+        initialContent = String(getEditorContent() || '');
+    }
+
+    function hasUnsavedChanges() {
+        return String(getEditorContent() || '') !== initialContent;
+    }
+
+    $trigger.on('click', function() {
         $modal.dialog({
             modal: true,
             width: '80%',
@@ -9,25 +33,45 @@ jQuery(function($) {
             closeOnEscape: true,
             draggable: false,
             resizable: false,
-            title: 'Edit Email Template',
-            // Ensure proper z-index for WordPress admin
+            title: i18n.dialog_title,
+            beforeClose: function() {
+                if (isSaving) {
+                    return false;
+                }
+
+                if (!hasUnsavedChanges()) {
+                    return true;
+                }
+
+                return window.confirm(i18n.unsaved_changes);
+            },
             create: function() {
-                $(this).css("maxWidth", "800px");
+                $(this).css('maxWidth', '800px');
             },
             open: function() {
-                $('.ui-widget-overlay').on('click', function() {
-                    $modal.dialog('close');
-                });
+                $trigger.attr('aria-expanded', 'true');
+                window.setTimeout(rememberInitialContent, 0);
+                $('.ui-widget-overlay')
+                    .off('click.awcomEmailTemplate')
+                    .on('click.awcomEmailTemplate', function() {
+                        $modal.dialog('close');
+                    });
+            },
+            close: function() {
+                $modal.removeAttr('aria-busy');
+                $trigger.attr('aria-expanded', 'false');
+                $trigger.trigger('focus');
             }
         });
 
-        // Initialize or refresh TinyMCE if needed
         if (typeof tinyMCE !== 'undefined') {
             if (tinyMCE.get('login_email_template')) {
                 tinyMCE.execCommand('mceRemoveEditor', false, 'login_email_template');
             }
             tinyMCE.execCommand('mceAddEditor', false, 'login_email_template');
         }
+
+        window.setTimeout(rememberInitialContent, 100);
     });
 
     $('.cancel-edit').on('click', function() {
@@ -37,74 +81,85 @@ jQuery(function($) {
     $('.save-template').on('click', function() {
         var content;
         var $saveButton = $(this);
+        var originalButtonText = $saveButton.data('originalText') || $saveButton.text();
 
         try {
-            // Check if we're in Visual or Text mode
-            if (typeof tinyMCE !== 'undefined' && tinyMCE.get('login_email_template') && !tinyMCE.get('login_email_template').isHidden()) {
-                content = tinyMCE.get('login_email_template').getContent();
-            } else {
-                content = $('#login_email_template').val();
-            }
+            content = getEditorContent();
 
             if (!content) {
-                alert('Please enter some content for the email template.');
+                alert(i18n.empty_content);
                 return;
             }
 
-            // Disable the save button and show loading state
-            $saveButton.prop('disabled', true).addClass('loading');
+            isSaving = true;
+            $modal.attr('aria-busy', 'true');
+            $saveButton
+                .data('originalText', originalButtonText)
+                .prop('disabled', true)
+                .addClass('loading')
+                .text(i18n.saving);
 
             $.ajax({
                 url: awcomEmailVars.ajaxurl,
                 type: 'POST',
                 data: {
-                    action: 'save_login_email_template',
+                    action: 'awcom_save_login_email_template',
                     nonce: awcomEmailVars.nonce,
                     template: content
                 },
                 success: function(response) {
                     if (response.success) {
-                        alert('Template saved successfully');
+                        initialContent = String(content || '');
+                        isSaving = false;
+                        alert(i18n.save_success);
                         $modal.dialog('close');
                     } else {
-                        var errorMessage = response.data && typeof response.data === 'string' 
-                            ? response.data 
-                            : 'Unknown error occurred while saving the template';
-                        alert('Error saving template: ' + errorMessage);
+                        var errorMessage = response.data && typeof response.data === 'string'
+                            ? response.data
+                            : i18n.unknown_error;
+                        alert(formatString(i18n.save_error, errorMessage));
                     }
                 },
-                error: function(xhr, status, error) {
-                    console.error('Ajax error:', {xhr: xhr, status: status, error: error});
-                    var errorMessage = 'Server error occurred while saving the template';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMessage = xhr.responseJSON.message;
+                error: function(xhr) {
+                    var errorMessage = i18n.server_error;
+                    if (xhr.responseJSON) {
+                        if (typeof xhr.responseJSON.data === 'string') {
+                            errorMessage = xhr.responseJSON.data;
+                        } else if (xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
                     }
-                    alert('Error saving template: ' + errorMessage);
+                    alert(formatString(i18n.save_error, errorMessage));
                 },
                 complete: function() {
-                    // Remove loading state and re-enable the save button
-                    $saveButton.prop('disabled', false).removeClass('loading');
+                    isSaving = false;
+                    $modal.removeAttr('aria-busy');
+                    $saveButton
+                        .prop('disabled', false)
+                        .removeClass('loading')
+                        .text($saveButton.data('originalText') || originalButtonText);
                 }
             });
-
         } catch (e) {
-            console.error('Template save error:', e);
-            alert('An error occurred while preparing to save the template: ' + e.message);
-            $saveButton.prop('disabled', false).removeClass('loading');
+            isSaving = false;
+            $modal.removeAttr('aria-busy');
+            alert(formatString(i18n.prepare_error, e.message));
+            $saveButton
+                .prop('disabled', false)
+                .removeClass('loading')
+                .text($saveButton.data('originalText') || originalButtonText);
         }
     });
 
-    // Handle merge tag insertion if needed
     if (typeof awcomEmailVars !== 'undefined' && awcomEmailVars.mergeTags) {
         var $mergeTagsSelect = $('<select>', {
             class: 'merge-tags-select',
             style: 'margin-bottom: 10px;'
         }).append($('<option>', {
             value: '',
-            text: 'Insert Merge Tag...'
+            text: i18n.insert_merge_tag
         }));
 
-        // Add merge tags to select
         $.each(awcomEmailVars.mergeTags, function(tag, description) {
             $mergeTagsSelect.append($('<option>', {
                 value: tag,
@@ -112,13 +167,13 @@ jQuery(function($) {
             }));
         });
 
-        // Insert select before editor
         $('#wp-login_email_template-wrap').before($mergeTagsSelect);
 
-        // Handle merge tag insertion
         $mergeTagsSelect.on('change', function() {
             var tag = $(this).val();
-            if (!tag) return;
+            if (!tag) {
+                return;
+            }
 
             if (typeof tinyMCE !== 'undefined' && tinyMCE.get('login_email_template') && !tinyMCE.get('login_email_template').isHidden()) {
                 tinyMCE.get('login_email_template').execCommand('mceInsertContent', false, tag);
