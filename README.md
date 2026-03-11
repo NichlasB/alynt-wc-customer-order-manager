@@ -82,9 +82,33 @@ The plugin implements various security measures:
 - WordPress nonce verification
 - Capability checks for user actions
 
+## ❓ FAQ
+
+**Does this plugin work without WooCommerce?**
+No. WooCommerce must be installed and activated. The plugin will display an admin notice and will not load if WooCommerce is missing.
+
+**What user roles can access the plugin?**
+Administrators and Shop Managers. All plugin screens and AJAX endpoints enforce this check via the `Security::user_can_access()` helper.
+
+**Will this plugin conflict with other plugins that use Composer?**
+The plugin checks for an existing Composer autoloader before loading its own to prevent conflicts in environments with multiple Composer-dependent plugins.
+
+**Where is customer order editing data stored?**
+Order-level pricing is stored in WooCommerce order meta (`_has_custom_pricing`, `_locked_total`, etc.). Customer notes are stored in user meta (`_customer_notes`). See [docs/SETTINGS.md](docs/SETTINGS.md) for the full reference.
+
+---
+
 ## 📝 Changelog
 
-### 1.0.5
+See [CHANGELOG.md](CHANGELOG.md) for the full version history.
+
+### 1.0.6 (2026-03-11)
+- Added PHPDoc blocks for all classes, traits, and public methods
+- Added CHANGELOG.md, docs/SETTINGS.md, and docs/HOOKS.md
+- Fixed plugin header (added License, License URI, Text Domain, Domain Path fields)
+- Fixed documentation link in plugin row meta (was pointing to `#`)
+
+### 1.0.5 (2025-02-10)
 - Added customer order editing functionality for pending orders
 - Customers can now modify orders before payment (add/remove products, change quantities)
 - Real-time shipping calculations and order total updates
@@ -93,7 +117,7 @@ The plugin implements various security measures:
 - Secure order access with order key validation
 - Customer-specific pricing maintained during order modifications
 
-### 1.0.4
+### 1.0.4 (2025-01-30)
 - Added ability for administrators and shop managers to process payments on behalf of customers
 - Added secure access to order payment forms for authorized roles
 - Added streamlined payment processing workflow for customer service
@@ -101,7 +125,6 @@ The plugin implements various security measures:
 ### 1.0.3 (2025-01-27)
 - Fixed potential Composer autoloader conflicts with other plugins
 - Improved plugin compatibility in multi-plugin environments
-
 
 ### 1.0.2 (2025-01-24)
 - Added "Copy Payment Link" button to order details for quick payment link sharing
@@ -114,7 +137,7 @@ The plugin implements various security measures:
 - Added plugin update functionality through WordPress admin panel
 - Improved plugin distribution with vendor files included
 
-### 1.0.0
+### 1.0.0 (2025-01-20)
 - Initial release
 - Customer management interface
 - Order handling capabilities

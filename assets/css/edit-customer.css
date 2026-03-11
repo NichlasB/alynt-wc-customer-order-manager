@@ -69,6 +69,10 @@ body.wp-admin #wpbody-content #postbox-container-1.postbox-container {
     position: relative;
 }
 
+.customer-note.is-busy {
+    opacity: 0.65;
+}
+
 .customer-note:last-child {
     border-bottom: none;
     margin-bottom: 0;
@@ -132,4 +136,33 @@ body.wp-admin #wpbody-content #postbox-container-1.postbox-container {
 
 .add-note-button {
     width: 100%;
+}
+
+.save-template.loading {
+    color: transparent !important;
+    position: relative;
+}
+
+.save-template.loading::after {
+    animation: awcom-spin 0.8s linear infinite;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-left-color: #000;
+    border-radius: 50%;
+    content: "";
+    height: 16px;
+    left: 50%;
+    margin: -8px 0 0 -8px;
+    position: absolute;
+    top: 50%;
+    width: 16px;
+}
+
+@keyframes awcom-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }

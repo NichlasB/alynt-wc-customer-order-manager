@@ -1,4 +1,20 @@
 jQuery(document).ready(function($) {
+    var i18n = awcomCustomerNotes.i18n || {};
+
+    function formatString(template) {
+        var replacements = Array.prototype.slice.call(arguments, 1);
+
+        return replacements.reduce(function(result, replacement, index) {
+            return String(result)
+                .replace('%' + (index + 1) + '$s', replacement)
+                .replace('%s', replacement);
+        }, String(template || ''));
+    }
+
+    function getResponseMessage(response) {
+        return response && response.data && response.data.message ? response.data.message : '';
+    }
+
     // Add note functionality
     $('.add-note-button').on('click', function() {
         var button = $(this);
@@ -7,12 +23,12 @@ jQuery(document).ready(function($) {
         var noteContent = textarea.val().trim();
 
         if (!noteContent) {
-            alert('Please enter a note');
+            alert(i18n.empty_note);
             return;
         }
 
         $.ajax({
-            url: ajaxurl,
+            url: awcomCustomerNotes.ajaxurl,
             type: 'POST',
             data: {
                 action: 'awcom_add_customer_note',
@@ -21,7 +37,7 @@ jQuery(document).ready(function($) {
                 nonce: awcomCustomerNotes.nonce
             },
             beforeSend: function() {
-                button.prop('disabled', true);
+                button.prop('disabled', true).attr('aria-busy', 'true');
             },
             success: function(response) {
                 if (response.success) {
@@ -33,8 +49,7 @@ jQuery(document).ready(function($) {
                             highestIndex = index;
                         }
                     });
-                    var newIndex = highestIndex + 1;
-                    
+
                     // Update all existing note indices since we're adding to the beginning
                     $('.customer-note').each(function() {
                         var currentIndex = parseInt($(this).data('note-index'));
@@ -45,10 +60,10 @@ jQuery(document).ready(function($) {
                     var noteHtml = '<div class="customer-note" data-note-index="0">' +
                         '<div class="note-content">' + response.data.content + '</div>' +
                         '<div class="note-actions">' +
-                        '<button type="button" class="button button-small edit-note"><span class="dashicons dashicons-edit"></span> Edit</button> ' +
-                        '<button type="button" class="button button-small delete-note"><span class="dashicons dashicons-trash"></span> Delete</button>' +
+                        '<button type="button" class="button button-small edit-note"><span class="dashicons dashicons-edit" aria-hidden="true"></span> ' + i18n.edit_label + '</button> ' +
+                        '<button type="button" class="button button-small delete-note"><span class="dashicons dashicons-trash" aria-hidden="true"></span> ' + i18n.delete_label + '</button>' +
                         '</div>' +
-                        '<div class="note-meta">By ' + response.data.author + ' on ' + response.data.date + '</div>' +
+                        '<div class="note-meta">' + formatString(i18n.note_meta, response.data.author, response.data.date) + '</div>' +
                         '</div>';
 
                     // Add new note to the top of the list
@@ -58,14 +73,15 @@ jQuery(document).ready(function($) {
                     // Remove "No notes found" message if it exists
                     $('.customer-notes-list > p').remove();
                 } else {
-                    alert('Error adding note: ' + response.data.message);
+                    var addErrorMessage = getResponseMessage(response);
+                    alert(addErrorMessage ? formatString(i18n.add_error, addErrorMessage) : i18n.add_error_generic);
                 }
             },
             error: function() {
-                alert('Error adding note. Please try again.');
+                alert(i18n.add_error_generic);
             },
             complete: function() {
-                button.prop('disabled', false);
+                button.prop('disabled', false).removeAttr('aria-busy');
             }
         });
     });
@@ -80,26 +96,34 @@ jQuery(document).ready(function($) {
         var editForm = $('<div class="edit-note-form">' +
             '<textarea class="edit-note-textarea">' + noteContent + '</textarea>' +
             '<div class="edit-note-actions">' +
-            '<button type="button" class="button button-primary save-note">Save</button> ' +
-            '<button type="button" class="button cancel-edit">Cancel</button>' +
+            '<button type="button" class="button button-primary save-note">' + i18n.save_label + '</button> ' +
+            '<button type="button" class="button cancel-edit">' + i18n.cancel_label + '</button>' +
             '</div>' +
             '</div>');
 
         // Replace note content with edit form
         noteDiv.find('.note-content').hide().after(editForm);
         noteDiv.find('.note-actions').hide();
+        editForm.find('textarea').trigger('focus');
 
         // Handle save
         editForm.find('.save-note').on('click', function() {
             var newContent = editForm.find('textarea').val().trim();
+            var $saveButton = $(this);
+            var $cancelButton = editForm.find('.cancel-edit');
             if (!newContent) {
-                alert('Please enter a note');
+                alert(i18n.empty_note);
                 return;
             }
 
             $.ajax({
-                url: ajaxurl,
+                url: awcomCustomerNotes.ajaxurl,
                 type: 'POST',
+                beforeSend: function() {
+                    noteDiv.addClass('is-busy').attr('aria-busy', 'true');
+                    $saveButton.prop('disabled', true).attr('aria-busy', 'true');
+                    $cancelButton.prop('disabled', true);
+                },
                 data: {
                     action: 'awcom_edit_customer_note',
                     customer_id: awcomCustomerNotes.customer_id,
@@ -113,11 +137,17 @@ jQuery(document).ready(function($) {
                         editForm.remove();
                         noteDiv.find('.note-actions').show();
                     } else {
-                        alert('Error updating note: ' + response.data.message);
+                        var updateErrorMessage = getResponseMessage(response);
+                        alert(updateErrorMessage ? formatString(i18n.update_error, updateErrorMessage) : i18n.update_error_generic);
                     }
                 },
                 error: function() {
-                    alert('Error updating note. Please try again.');
+                    alert(i18n.update_error_generic);
+                },
+                complete: function() {
+                    noteDiv.removeClass('is-busy').removeAttr('aria-busy');
+                    $saveButton.prop('disabled', false).removeAttr('aria-busy');
+                    $cancelButton.prop('disabled', false);
                 }
             });
         });
@@ -132,7 +162,9 @@ jQuery(document).ready(function($) {
 
     // Delete note functionality
     $(document).on('click', '.delete-note', function() {
-        if (!confirm(awcomCustomerNotes.confirm_delete)) {
+        var $deleteButton = $(this);
+
+        if (!confirm(i18n.confirm_delete)) {
             return;
         }
 
@@ -140,8 +172,13 @@ jQuery(document).ready(function($) {
         var noteIndex = noteDiv.data('note-index');
 
         $.ajax({
-            url: ajaxurl,
+            url: awcomCustomerNotes.ajaxurl,
             type: 'POST',
+            beforeSend: function() {
+                noteDiv.addClass('is-busy').attr('aria-busy', 'true');
+                noteDiv.find('button').prop('disabled', true);
+                $deleteButton.attr('aria-busy', 'true');
+            },
             data: {
                 action: 'awcom_delete_customer_note',
                 customer_id: awcomCustomerNotes.customer_id,
@@ -154,15 +191,23 @@ jQuery(document).ready(function($) {
                         $(this).remove();
                         // Show "No notes found" if this was the last note
                         if ($('.customer-note').length === 0) {
-                            $('.customer-notes-list').html('<p>No notes found.</p>');
+                            $('.customer-notes-list').html('<p>' + i18n.no_notes + '</p>');
                         }
                     });
                 } else {
-                    alert('Error deleting note: ' + response.data.message);
+                    var deleteErrorMessage = getResponseMessage(response);
+                    alert(deleteErrorMessage ? formatString(i18n.delete_error, deleteErrorMessage) : i18n.delete_error_generic);
                 }
             },
             error: function() {
-                alert('Error deleting note. Please try again.');
+                alert(i18n.delete_error_generic);
+            },
+            complete: function() {
+                if ($.contains(document, noteDiv[0])) {
+                    noteDiv.removeClass('is-busy').removeAttr('aria-busy');
+                    noteDiv.find('button').prop('disabled', false);
+                }
+                $deleteButton.removeAttr('aria-busy');
             }
         });
     });
