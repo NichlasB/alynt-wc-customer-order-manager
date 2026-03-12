@@ -188,6 +188,22 @@ function awcom_run_upgrade_tasks() {
 	update_option( 'awcom_version', AWCOM_VERSION, false );
 }
 
+if ( ! function_exists( 'awcom_get_order_edit_url' ) ) {
+	function awcom_get_order_edit_url( $order_id ) {
+		$order_id = absint( $order_id );
+
+		if ( $order_id <= 0 ) {
+			return admin_url( 'edit.php?post_type=shop_order' );
+		}
+
+		if ( class_exists( '\\Automattic\\WooCommerce\\Utilities\\OrderUtil' ) && \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled() ) {
+			return admin_url( 'admin.php?page=wc-orders&action=edit&id=' . $order_id );
+		}
+
+		return admin_url( 'post.php?post=' . $order_id . '&action=edit' );
+	}
+}
+
 /**
  * Run on plugin activation.
  *

@@ -11,6 +11,47 @@ class PricingRuleLookup {
 	private static $rule_lookups = array();
 	private static $group_display_titles = array();
 
+	public static function get_product_base_price( $product ) {
+		if ( ! is_object( $product ) ) {
+			return 0.0;
+		}
+
+		$sale_price = method_exists( $product, 'get_sale_price' ) ? $product->get_sale_price() : '';
+		if ( ! empty( $sale_price ) && is_numeric( $sale_price ) && $sale_price > 0 ) {
+			return (float) $sale_price;
+		}
+
+		$regular_price = method_exists( $product, 'get_regular_price' ) ? $product->get_regular_price() : '';
+		if ( ! empty( $regular_price ) && is_numeric( $regular_price ) && $regular_price > 0 ) {
+			return (float) $regular_price;
+		}
+
+		$current_price = method_exists( $product, 'get_price' ) ? $product->get_price() : '';
+
+		return ( ! empty( $current_price ) && is_numeric( $current_price ) ) ? (float) $current_price : 0.0;
+	}
+
+	public static function get_adjusted_price( $original_price, $matching_rule ) {
+		$original_price = is_numeric( $original_price ) ? (float) $original_price : 0.0;
+
+		if ( $original_price <= 0 || ! is_object( $matching_rule ) ) {
+			return max( 0, $original_price );
+		}
+
+		$discount_type  = isset( $matching_rule->discount_type ) ? (string) $matching_rule->discount_type : '';
+		$discount_value = isset( $matching_rule->discount_value ) && is_numeric( $matching_rule->discount_value )
+			? (float) $matching_rule->discount_value
+			: 0.0;
+
+		if ( 'percentage' === $discount_type ) {
+			$adjusted_price = $original_price - ( ( $discount_value / 100 ) * $original_price );
+		} else {
+			$adjusted_price = $original_price - $discount_value;
+		}
+
+		return max( 0, $adjusted_price );
+	}
+
 	public static function get_customer_group_id( $customer_id, $use_default = false ) {
 		$customer_id = absint( $customer_id );
 		$cache_key   = ( $use_default ? 'default:' : 'direct:' ) . $customer_id;

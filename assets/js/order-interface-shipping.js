@@ -5,12 +5,33 @@ jQuery(function($) {
     api.shippingRequestId = 0;
     api.shippingUpdateTimer = null;
 
+    function escapeHtml(value) {
+        return String(value === null || typeof value === 'undefined' ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function getFormattedCostText(method) {
+        if (method && method.formatted_cost_text !== null && typeof method.formatted_cost_text !== 'undefined') {
+            return String(method.formatted_cost_text);
+        }
+
+        if (method && method.formatted_cost !== null && typeof method.formatted_cost !== 'undefined') {
+            return String(method.formatted_cost).replace(/<[^>]*>/g, '');
+        }
+
+        return '';
+    }
+
     api.renderShippingMessage = function(message, type, retryable) {
         var cssClass = type === 'warning' ? 'no-shipping' : 'error';
-        var html = '<p class="' + cssClass + '">' + message + '</p>';
+        var html = '<p class="' + escapeHtml(cssClass) + '">' + escapeHtml(message) + '</p>';
 
         if (retryable) {
-            html += '<p><button type="button" class="button retry-shipping">' + awcomOrderVars.i18n.retry_shipping + '</button></p>';
+            html += '<p><button type="button" class="button retry-shipping">' + escapeHtml(awcomOrderVars.i18n.retry_shipping) + '</button></p>';
         }
 
         $('#shipping-methods').attr('aria-busy', 'false').html(html);
@@ -37,7 +58,7 @@ jQuery(function($) {
         });
 
         var previouslySelected = $('input[name="shipping_method"]:checked').val();
-        $('#shipping-methods').attr('aria-busy', 'true').html('<p class="loading">' + awcomOrderVars.i18n.calculating + '</p>');
+        $('#shipping-methods').attr('aria-busy', 'true').html('<p class="loading">' + escapeHtml(awcomOrderVars.i18n.calculating) + '</p>');
 
         if (api.shippingRequest && api.shippingRequest.readyState !== 4) {
             api.shippingRequest.abort();
@@ -72,10 +93,13 @@ jQuery(function($) {
                 if (methods.length > 0) {
                     html += '<ul class="shipping-method-list">';
                     methods.forEach(function(method) {
+                        var methodLabel = escapeHtml(method.label);
+                        var methodCost = escapeHtml(getFormattedCostText(method));
+
                         html += '<li>';
                         html += '<label>';
-                        html += '<input type="radio" name="shipping_method" value="' + method.id + '" data-cost="' + method.cost + '">';
-                        html += method.label + ' (' + method.formatted_cost + ')';
+                        html += '<input type="radio" name="shipping_method" value="' + escapeHtml(method.id) + '" data-cost="' + escapeHtml(method.cost) + '">';
+                        html += methodLabel + ' (' + methodCost + ')';
                         html += '</label>';
                         html += '</li>';
                     });
@@ -89,8 +113,9 @@ jQuery(function($) {
 
                 var methodRestored = false;
                 if (previouslySelected) {
-                    var selector = '#shipping-methods input[name="shipping_method"][value="' + previouslySelected + '"]';
-                    var matchingMethod = $(selector);
+                    var matchingMethod = $('#shipping-methods input[name="shipping_method"]').filter(function() {
+                        return $(this).val() === previouslySelected;
+                    });
                     if (matchingMethod.length > 0) {
                         matchingMethod.prop('checked', true);
                         methodRestored = true;

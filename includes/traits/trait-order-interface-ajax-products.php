@@ -142,18 +142,7 @@ trait OrderInterfaceAjaxProductsTrait {
 					continue;
 				}
 
-				$sale_price = $product->get_sale_price();
-				if ( ! empty( $sale_price ) && is_numeric( $sale_price ) && $sale_price > 0 ) {
-					$original_price = (float) $sale_price;
-				} else {
-					$regular_price = $product->get_regular_price();
-					if ( ! empty( $regular_price ) && is_numeric( $regular_price ) && $regular_price > 0 ) {
-						$original_price = (float) $regular_price;
-					} else {
-						$current_price  = $product->get_price();
-						$original_price = ( ! empty( $current_price ) && is_numeric( $current_price ) ) ? (float) $current_price : 0.0;
-					}
-				}
+				$original_price = PricingRuleLookup::get_product_base_price( $product );
 
 				if ( $original_price <= 0 ) {
 					continue;
@@ -161,15 +150,10 @@ trait OrderInterfaceAjaxProductsTrait {
 
 				$adjusted_price = $original_price;
 
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Pricing lookups require direct access to plugin-managed tables.
 				$matching_rule = $group_id ? PricingRuleLookup::get_matching_rule( $product->get_id(), $rule_lookup ) : null;
 
 				if ( $matching_rule ) {
-					if ( 'percentage' === $matching_rule->discount_type ) {
-						$adjusted_price = $original_price - ( ( $matching_rule->discount_value / 100 ) * $original_price );
-					} else {
-						$adjusted_price = $original_price - $matching_rule->discount_value;
-					}
+					$adjusted_price = PricingRuleLookup::get_adjusted_price( $original_price, $matching_rule );
 				}
 
 				$adjusted_price = max( 0, $adjusted_price );

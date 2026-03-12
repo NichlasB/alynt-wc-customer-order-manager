@@ -15,6 +15,110 @@ jQuery(document).ready(function($) {
         return response && response.data && response.data.message ? response.data.message : '';
     }
 
+    function getXhrResponseMessage(xhr) {
+        return xhr && xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message
+            ? xhr.responseJSON.data.message
+            : '';
+    }
+
+    function showOperationError(messageTemplate, genericMessage, detailMessage) {
+        alert(detailMessage ? formatString(messageTemplate, detailMessage) : genericMessage);
+    }
+
+    function getNoteId(noteDiv) {
+        return String(noteDiv.data('note-id') || '');
+    }
+
+    function buildNoteElement(noteData) {
+        var actions = $('<div></div>', { 'class': 'note-actions' });
+        var editButton = $('<button></button>', {
+            type: 'button',
+            'class': 'button button-small edit-note'
+        });
+        var deleteButton = $('<button></button>', {
+            type: 'button',
+            'class': 'button button-small delete-note'
+        });
+
+        editButton
+            .append($('<span></span>', {
+                'class': 'dashicons dashicons-edit',
+                'aria-hidden': 'true'
+            }))
+            .append(document.createTextNode(' ' + i18n.edit_label));
+
+        deleteButton
+            .append($('<span></span>', {
+                'class': 'dashicons dashicons-trash',
+                'aria-hidden': 'true'
+            }))
+            .append(document.createTextNode(' ' + i18n.delete_label));
+
+        actions
+            .append(editButton)
+            .append(document.createTextNode(' '))
+            .append(deleteButton);
+
+        return $('<div></div>', {
+            'class': 'customer-note',
+            'data-note-id': noteData.id
+        })
+            .append($('<div></div>', {
+                'class': 'note-content',
+                text: noteData.content
+            }))
+            .append(actions)
+            .append($('<div></div>', {
+                'class': 'note-meta',
+                text: formatString(i18n.note_meta, noteData.author, noteData.date)
+            }));
+    }
+
+    function buildEditForm(noteContent) {
+        return $('<div></div>', { 'class': 'edit-note-form' })
+            .append($('<textarea></textarea>', {
+                'class': 'edit-note-textarea'
+            }).val(noteContent))
+            .append(
+                $('<div></div>', { 'class': 'edit-note-actions' })
+                    .append($('<button></button>', {
+                        type: 'button',
+                        'class': 'button button-primary save-note',
+                        text: i18n.save_label
+                    }))
+                    .append(document.createTextNode(' '))
+                    .append($('<button></button>', {
+                        type: 'button',
+                        'class': 'button cancel-edit',
+                        text: i18n.cancel_label
+                    }))
+            );
+    }
+
+    function syncShippingFieldsFromBilling() {
+        $('#shipping_address_1').val($('#billing_address_1').val());
+        $('#shipping_address_2').val($('#billing_address_2').val());
+        $('#shipping_phone').val($('#phone').val());
+        $('#shipping_city').val($('#billing_city').val());
+        $('#shipping_state').val($('#billing_state').val());
+        $('#shipping_postcode').val($('#billing_postcode').val());
+        $('#shipping_country').val($('#billing_country').val());
+    }
+
+    function toggleShippingFields() {
+        if (!$('#same_as_billing').length || !$('#shipping-address-fields').length) {
+            return;
+        }
+
+        if ($('#same_as_billing').is(':checked')) {
+            $('#shipping-address-fields').hide();
+            syncShippingFieldsFromBilling();
+            return;
+        }
+
+        $('#shipping-address-fields').show();
+    }
+
     // Add note functionality
     $('.add-note-button').on('click', function() {
         var button = $(this);
@@ -41,44 +145,18 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 if (response.success) {
-                    // Get the current highest note index and increment it
-                    var highestIndex = -1;
-                    $('.customer-note').each(function() {
-                        var index = parseInt($(this).data('note-index'));
-                        if (index > highestIndex) {
-                            highestIndex = index;
-                        }
-                    });
-
-                    // Update all existing note indices since we're adding to the beginning
-                    $('.customer-note').each(function() {
-                        var currentIndex = parseInt($(this).data('note-index'));
-                        $(this).attr('data-note-index', currentIndex + 1);
-                    });
-
-                    // Create new note HTML with index 0 (newest first)
-                    var noteHtml = '<div class="customer-note" data-note-index="0">' +
-                        '<div class="note-content">' + response.data.content + '</div>' +
-                        '<div class="note-actions">' +
-                        '<button type="button" class="button button-small edit-note"><span class="dashicons dashicons-edit" aria-hidden="true"></span> ' + i18n.edit_label + '</button> ' +
-                        '<button type="button" class="button button-small delete-note"><span class="dashicons dashicons-trash" aria-hidden="true"></span> ' + i18n.delete_label + '</button>' +
-                        '</div>' +
-                        '<div class="note-meta">' + formatString(i18n.note_meta, response.data.author, response.data.date) + '</div>' +
-                        '</div>';
-
-                    // Add new note to the top of the list
-                    $('.customer-notes-list').prepend(noteHtml);
+                    $('.customer-notes-list').prepend(buildNoteElement(response.data));
                     textarea.val('');
 
-                    // Remove "No notes found" message if it exists
                     $('.customer-notes-list > p').remove();
                 } else {
                     var addErrorMessage = getResponseMessage(response);
-                    alert(addErrorMessage ? formatString(i18n.add_error, addErrorMessage) : i18n.add_error_generic);
+                    showOperationError(i18n.add_error, i18n.add_error_generic, addErrorMessage);
                 }
             },
-            error: function() {
-                alert(i18n.add_error_generic);
+            error: function(xhr) {
+                var addErrorMessage = getXhrResponseMessage(xhr);
+                showOperationError(i18n.add_error, i18n.add_error_generic, addErrorMessage);
             },
             complete: function() {
                 button.prop('disabled', false).removeAttr('aria-busy');
@@ -90,16 +168,10 @@ jQuery(document).ready(function($) {
     $(document).on('click', '.edit-note', function() {
         var noteDiv = $(this).closest('.customer-note');
         var noteContent = noteDiv.find('.note-content').text();
-        var noteIndex = noteDiv.data('note-index');
+        var noteId = getNoteId(noteDiv);
 
         // Create edit form
-        var editForm = $('<div class="edit-note-form">' +
-            '<textarea class="edit-note-textarea">' + noteContent + '</textarea>' +
-            '<div class="edit-note-actions">' +
-            '<button type="button" class="button button-primary save-note">' + i18n.save_label + '</button> ' +
-            '<button type="button" class="button cancel-edit">' + i18n.cancel_label + '</button>' +
-            '</div>' +
-            '</div>');
+        var editForm = buildEditForm(noteContent);
 
         // Replace note content with edit form
         noteDiv.find('.note-content').hide().after(editForm);
@@ -119,17 +191,17 @@ jQuery(document).ready(function($) {
             $.ajax({
                 url: awcomCustomerNotes.ajaxurl,
                 type: 'POST',
+                data: {
+                    action: 'awcom_edit_customer_note',
+                    customer_id: awcomCustomerNotes.customer_id,
+                    note_id: noteId,
+                    note: newContent,
+                    nonce: awcomCustomerNotes.nonce
+                },
                 beforeSend: function() {
                     noteDiv.addClass('is-busy').attr('aria-busy', 'true');
                     $saveButton.prop('disabled', true).attr('aria-busy', 'true');
                     $cancelButton.prop('disabled', true);
-                },
-                data: {
-                    action: 'awcom_edit_customer_note',
-                    customer_id: awcomCustomerNotes.customer_id,
-                    note_index: noteIndex,
-                    note: newContent,
-                    nonce: awcomCustomerNotes.nonce
                 },
                 success: function(response) {
                     if (response.success) {
@@ -138,11 +210,12 @@ jQuery(document).ready(function($) {
                         noteDiv.find('.note-actions').show();
                     } else {
                         var updateErrorMessage = getResponseMessage(response);
-                        alert(updateErrorMessage ? formatString(i18n.update_error, updateErrorMessage) : i18n.update_error_generic);
+                        showOperationError(i18n.update_error, i18n.update_error_generic, updateErrorMessage);
                     }
                 },
-                error: function() {
-                    alert(i18n.update_error_generic);
+                error: function(xhr) {
+                    var updateErrorMessage = getXhrResponseMessage(xhr);
+                    showOperationError(i18n.update_error, i18n.update_error_generic, updateErrorMessage);
                 },
                 complete: function() {
                     noteDiv.removeClass('is-busy').removeAttr('aria-busy');
@@ -169,38 +242,38 @@ jQuery(document).ready(function($) {
         }
 
         var noteDiv = $(this).closest('.customer-note');
-        var noteIndex = noteDiv.data('note-index');
+        var noteId = getNoteId(noteDiv);
 
         $.ajax({
             url: awcomCustomerNotes.ajaxurl,
             type: 'POST',
+            data: {
+                action: 'awcom_delete_customer_note',
+                customer_id: awcomCustomerNotes.customer_id,
+                note_id: noteId,
+                nonce: awcomCustomerNotes.nonce
+            },
             beforeSend: function() {
                 noteDiv.addClass('is-busy').attr('aria-busy', 'true');
                 noteDiv.find('button').prop('disabled', true);
                 $deleteButton.attr('aria-busy', 'true');
             },
-            data: {
-                action: 'awcom_delete_customer_note',
-                customer_id: awcomCustomerNotes.customer_id,
-                note_index: noteIndex,
-                nonce: awcomCustomerNotes.nonce
-            },
             success: function(response) {
                 if (response.success) {
                     noteDiv.fadeOut(300, function() {
                         $(this).remove();
-                        // Show "No notes found" if this was the last note
                         if ($('.customer-note').length === 0) {
                             $('.customer-notes-list').html('<p>' + i18n.no_notes + '</p>');
                         }
                     });
                 } else {
                     var deleteErrorMessage = getResponseMessage(response);
-                    alert(deleteErrorMessage ? formatString(i18n.delete_error, deleteErrorMessage) : i18n.delete_error_generic);
+                    showOperationError(i18n.delete_error, i18n.delete_error_generic, deleteErrorMessage);
                 }
             },
-            error: function() {
-                alert(i18n.delete_error_generic);
+            error: function(xhr) {
+                var deleteErrorMessage = getXhrResponseMessage(xhr);
+                showOperationError(i18n.delete_error, i18n.delete_error_generic, deleteErrorMessage);
             },
             complete: function() {
                 if ($.contains(document, noteDiv[0])) {
@@ -211,4 +284,7 @@ jQuery(document).ready(function($) {
             }
         });
     });
+
+    $('#same_as_billing').on('change', toggleShippingFields);
+    toggleShippingFields();
 });

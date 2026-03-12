@@ -5,7 +5,10 @@
  * @package Alynt_WC_Customer_Order_Manager
  */
 
+defined( 'ABSPATH' ) || exit;
+
 $same_as_billing = '1' === $form_values['same_as_billing'];
+$shipping_fields_class = $same_as_billing ? 'awcom-is-hidden' : '';
 ?>
 <h3><?php esc_html_e( 'Shipping Address', 'alynt-wc-customer-order-manager' ); ?></h3>
 
@@ -19,7 +22,7 @@ $same_as_billing = '1' === $form_values['same_as_billing'];
 	</tr>
 </table>
 
-<div id="shipping-address-fields" style="<?php echo esc_attr( $same_as_billing ? 'display: none;' : '' ); ?>">
+<div id="shipping-address-fields" class="<?php echo esc_attr( $shipping_fields_class ); ?>">
 	<table class="form-table">
 		<tr>
 			<th scope="row"><label for="shipping_address_1"><?php esc_html_e( 'Shipping Address 1', 'alynt-wc-customer-order-manager' ); ?></label></th>
@@ -60,22 +63,3 @@ $same_as_billing = '1' === $form_values['same_as_billing'];
 		</tr>
 	</table>
 </div>
-
-<script type="text/javascript">
-jQuery(document).ready(function($) {
-	$('#same_as_billing').change(function() {
-		if ($(this).is(':checked')) {
-			$('#shipping-address-fields').hide();
-			$('#shipping_address_1').val($('#billing_address_1').val());
-			$('#shipping_address_2').val($('#billing_address_2').val());
-			$('#shipping_phone').val($('#phone').val());
-			$('#shipping_city').val($('#billing_city').val());
-			$('#shipping_state').val($('#billing_state').val());
-			$('#shipping_postcode').val($('#billing_postcode').val());
-			$('#shipping_country').val($('#billing_country').val());
-		} else {
-			$('#shipping-address-fields').show();
-		}
-	});
-});
-</script>

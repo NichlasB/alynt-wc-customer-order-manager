@@ -142,7 +142,7 @@ class CustomerListTable extends \WP_List_Table {
 	protected function column_cb( $item ) {
 		return sprintf(
 			'<input type="checkbox" name="customers[]" value="%s" />',
-			$item->ID
+			esc_attr( $item->ID )
 		);
 	}
 
@@ -162,12 +162,12 @@ class CustomerListTable extends \WP_List_Table {
 			'edit'   => sprintf(
 				'<a href="%s">%s</a>',
 				esc_url( $edit_link ),
-				__( 'Edit', 'alynt-wc-customer-order-manager' )
+				esc_html__( 'Edit', 'alynt-wc-customer-order-manager' )
 			),
 			'delete' => sprintf(
 				'<a href="#" class="delete-customer" data-id="%s">%s</a>',
-				$item->ID,
-				__( 'Delete', 'alynt-wc-customer-order-manager' )
+				esc_attr( $item->ID ),
+				esc_html__( 'Delete', 'alynt-wc-customer-order-manager' )
 			),
 		);
 
@@ -190,12 +190,16 @@ class CustomerListTable extends \WP_List_Table {
 	protected function column_orders( $item ) {
 		$count = $this->get_order_count( $item->ID );
 		$url   = admin_url( 'edit.php?post_type=shop_order&_customer_user=' . $item->ID );
+		$order_count_label = sprintf(
+			/* translators: %d: number of customer orders. */
+			_n( '%d order', '%d orders', $count, 'alynt-wc-customer-order-manager' ),
+			number_format_i18n( $count )
+		);
 
 		return sprintf(
 			'<a href="%s">%s</a>',
 			esc_url( $url ),
-			/* translators: %d: number of customer orders. */
-			sprintf( _n( '%d order', '%d orders', $count, 'alynt-wc-customer-order-manager' ), $count )
+			esc_html( $order_count_label )
 		);
 	}
 
@@ -211,7 +215,7 @@ class CustomerListTable extends \WP_List_Table {
 	public function column_default( $item, $column_name ) {
 		switch ( $column_name ) {
 			case 'company':
-				return get_user_meta( $item->ID, 'billing_company', true );
+				return esc_html( get_user_meta( $item->ID, 'billing_company', true ) );
 
 			case 'email':
 				return '<a href="mailto:' . esc_attr( $item->user_email ) . '">' .
@@ -231,7 +235,7 @@ class CustomerListTable extends \WP_List_Table {
 						get_user_meta( $item->ID, 'billing_postcode', true ),
 					)
 				);
-				return implode( ', ', $address_parts );
+				return esc_html( implode( ', ', $address_parts ) );
 
 			case 'created':
 				return date_i18n(
@@ -275,20 +279,24 @@ class CustomerListTable extends \WP_List_Table {
 		);
 
 		// Handle sorting.
-		$orderby = isset( $_REQUEST['orderby'] ) ? sanitize_key( wp_unslash( $_REQUEST['orderby'] ) ) : '';
-		if ( ! empty( $orderby ) ) {
+		$allowed_orderby = array( 'customer_name', 'email', 'created' );
+		$orderby         = isset( $_REQUEST['orderby'] ) ? sanitize_key( wp_unslash( $_REQUEST['orderby'] ) ) : '';
+		if ( in_array( $orderby, $allowed_orderby, true ) ) {
 			switch ( $orderby ) {
 				case 'customer_name':
 					// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- WP_User_Query sorting by first name requires meta_key.
 					$args['meta_key'] = 'first_name';
 					$args['orderby']  = 'meta_value';
 					break;
+				case 'created':
+					$args['orderby'] = 'registered';
+					break;
 				default:
-					$args['orderby'] = $orderby;
+					$args['orderby'] = 'email';
 			}
 
 			$order         = isset( $_REQUEST['order'] ) ? strtoupper( sanitize_text_field( wp_unslash( $_REQUEST['order'] ) ) ) : 'ASC';
-			$args['order'] = $order;
+			$args['order'] = in_array( $order, array( 'ASC', 'DESC' ), true ) ? $order : 'ASC';
 		} else {
 			$args['orderby'] = 'registered';
 			$args['order']   = 'DESC';
@@ -347,13 +355,14 @@ class CustomerListTable extends \WP_List_Table {
 		/* phpcs:disable WordPress.Security.NonceVerification.Recommended -- Reading list table filter query args only. */
 		$current = isset( $_REQUEST['customer_status'] ) ? sanitize_key( wp_unslash( $_REQUEST['customer_status'] ) ) : 'all';
 		/* phpcs:enable */
-		$all_class    = 'all' === $current ? ' class="current"' : '';
+		$all_class    = 'all' === $current ? 'current' : '';
+		$class_attr   = '' !== $all_class ? ' class="' . esc_attr( $all_class ) . '"' : '';
 		$views['all'] = sprintf(
-			'<a href="%s"%s>%s <span class="count">(%d)</span></a>',
-			admin_url( 'admin.php?page=alynt-wc-customer-order-manager' ),
-			$all_class,
-			__( 'All', 'alynt-wc-customer-order-manager' ),
-			$total_customers
+			'<a href="%s"%s>%s <span class="count">(%s)</span></a>',
+			esc_url( admin_url( 'admin.php?page=alynt-wc-customer-order-manager' ) ),
+			$class_attr,
+			esc_html__( 'All', 'alynt-wc-customer-order-manager' ),
+			esc_html( number_format_i18n( $total_customers ) )
 		);
 
 		return $views;

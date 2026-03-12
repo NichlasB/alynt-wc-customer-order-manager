@@ -5,28 +5,9 @@
  * @package Alynt_WC_Customer_Order_Manager
  */
 
-global $wpdb;
-$groups_table = $wpdb->prefix . 'customer_groups';
-// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admin-only lookup for configured customer groups.
-$table_exists = $wpdb->get_var(
-	$wpdb->prepare(
-		'SHOW TABLES LIKE %s',
-		$wpdb->esc_like( $groups_table )
-	)
-);
-$groups       = array();
-if ( $table_exists === $groups_table ) {
-	// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admin-only lookup for configured customer groups.
-	$groups = $wpdb->get_results(
-		$wpdb->prepare(
-			"SELECT group_id, group_name FROM {$groups_table} WHERE group_id >= %d ORDER BY group_name ASC",
-			0
-		)
-	);
-}
-if ( ! is_array( $groups ) ) {
-	$groups = array();
-}
+defined( 'ABSPATH' ) || exit;
+
+$groups       = $this->get_customer_groups();
 $countries_obj = new \WC_Countries();
 $countries     = $countries_obj->get_countries();
 ?>

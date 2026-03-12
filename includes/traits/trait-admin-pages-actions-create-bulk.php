@@ -84,7 +84,7 @@ trait AdminPagesActionsCreateBulkTrait {
 				continue;
 			}
 
-			$deleted = wp_delete_user( $customer_id );
+			$deleted = $this->delete_customer_account( $customer_id );
 			if ( $deleted ) {
 				++$deleted_count;
 			} else {
@@ -107,6 +107,32 @@ trait AdminPagesActionsCreateBulkTrait {
 		}
 
 		$this->redirect_to_admin_page( 'alynt-wc-customer-order-manager', $redirect_args );
+	}
+
+	private function delete_customer_account( $customer_id ) {
+		$customer_id = absint( $customer_id );
+
+		if ( $customer_id <= 0 ) {
+			return false;
+		}
+
+		$customer = get_user_by( 'id', $customer_id );
+
+		if ( ! $customer || ! in_array( 'customer', (array) $customer->roles, true ) ) {
+			return false;
+		}
+
+		if ( is_multisite() ) {
+			$removed = remove_user_from_blog( $customer_id, get_current_blog_id() );
+
+			if ( $removed ) {
+				$this->cleanup_customer_group_assignment( $customer_id );
+			}
+
+			return (bool) $removed;
+		}
+
+		return (bool) wp_delete_user( $customer_id );
 	}
 
 	/**

@@ -56,6 +56,7 @@ trait AdminPagesRenderAddTrait {
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- The decoded value is sanitized immediately for display.
 		$error_message = isset( $_GET['error'] ) ? sanitize_text_field( rawurldecode( wp_unslash( $_GET['error'] ) ) ) : '';
 		/* phpcs:enable */
+		$groups = $this->get_customer_groups();
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Add New Customer', 'alynt-wc-customer-order-manager' ); ?></h1>
@@ -81,30 +82,6 @@ trait AdminPagesRenderAddTrait {
 							<label for="customer_group"><?php esc_html_e( 'Customer Group', 'alynt-wc-customer-order-manager' ); ?></label>
 						</th>
 						<td>
-							<?php
-							global $wpdb;
-							$groups_table = $wpdb->prefix . 'customer_groups';
-							// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admin-only lookup for configured customer groups.
-							$table_exists = $wpdb->get_var(
-								$wpdb->prepare(
-									'SHOW TABLES LIKE %s',
-									$wpdb->esc_like( $groups_table )
-								)
-							);
-							$groups       = array();
-							if ( $table_exists === $groups_table ) {
-								// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admin-only lookup for configured customer groups.
-								$groups = $wpdb->get_results(
-									$wpdb->prepare(
-										"SELECT group_id, group_name FROM {$groups_table} WHERE group_id >= %d ORDER BY group_name ASC",
-										0
-									)
-								);
-							}
-							if ( ! is_array( $groups ) ) {
-								$groups = array();
-							}
-							?>
 							<select name="customer_group" id="customer_group" class="regular-text">
 								<?php if ( ! empty( $groups ) ) : ?>
 									<option value=""><?php esc_html_e( '- None (unassigned) -', 'alynt-wc-customer-order-manager' ); ?></option>

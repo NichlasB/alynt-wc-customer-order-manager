@@ -118,11 +118,13 @@ trait OrderHandlerAdminCreateTrait {
 			);
 		}
 
+		$order = null;
+
 		try {
 			$order = wc_create_order(
 				array(
 					'customer_id' => $customer_id,
-					'created_via' => 'alynt_wc_customer_order_manager',
+					'created_via' => self::ORDER_CREATED_VIA,
 				)
 			);
 
@@ -158,18 +160,7 @@ trait OrderHandlerAdminCreateTrait {
 				$quantity   = $validated_item['quantity'];
 
 				try {
-					$sale_price = $product->get_sale_price();
-					if ( ! empty( $sale_price ) && is_numeric( $sale_price ) && $sale_price > 0 ) {
-						$original_price = (float) $sale_price;
-					} else {
-						$regular_price = $product->get_regular_price();
-						if ( ! empty( $regular_price ) && is_numeric( $regular_price ) && $regular_price > 0 ) {
-							$original_price = (float) $regular_price;
-						} else {
-							$current_price  = $product->get_price();
-							$original_price = ( ! empty( $current_price ) && is_numeric( $current_price ) ) ? (float) $current_price : 0.0;
-						}
-					}
+					$original_price = PricingRuleLookup::get_product_base_price( $product );
 
 					$adjusted_price       = $original_price;
 					$discount_description = '';
@@ -178,8 +169,9 @@ trait OrderHandlerAdminCreateTrait {
 						$matching_rule = PricingRuleLookup::get_matching_rule( $product_id, $rule_lookup );
 
 						if ( $matching_rule ) {
+							$adjusted_price = PricingRuleLookup::get_adjusted_price( $original_price, $matching_rule );
+
 							if ( 'percentage' === $matching_rule->discount_type ) {
-								$adjusted_price       = $original_price - ( ( $matching_rule->discount_value / 100 ) * $original_price );
 								$discount_description = sprintf(
 									/* translators: 1: customer group name, 2: discount percentage. */
 									__( '%1$s Group Discount: %2$s%%', 'alynt-wc-customer-order-manager' ),
@@ -187,7 +179,6 @@ trait OrderHandlerAdminCreateTrait {
 									$matching_rule->discount_value
 								);
 							} else {
-								$adjusted_price       = $original_price - $matching_rule->discount_value;
 								$discount_description = sprintf(
 									/* translators: 1: customer group name, 2: discount amount. */
 									__( '%1$s Group Discount: %2$s', 'alynt-wc-customer-order-manager' ),
@@ -210,11 +201,11 @@ trait OrderHandlerAdminCreateTrait {
 						)
 					);
 
-					$item->add_meta_data( '_awcom_custom_price', $adjusted_price, true );
-					$item->add_meta_data( '_awcom_custom_subtotal_price', $original_price, true );
+					$item->add_meta_data( self::ITEM_META_CUSTOM_PRICE, $adjusted_price, true );
+					$item->add_meta_data( self::ITEM_META_CUSTOM_SUBTOTAL_PRICE, $original_price, true );
 
 					if ( $adjusted_price < $original_price ) {
-						$item->add_meta_data( '_awcom_discount_description', $discount_description );
+						$item->add_meta_data( self::ITEM_META_DISCOUNT_DESCRIPTION, $discount_description );
 
 						$discount_amount = ( $original_price - $adjusted_price ) * $quantity;
 						$item->set_subtotal( $original_price * $quantity );
@@ -243,6 +234,8 @@ trait OrderHandlerAdminCreateTrait {
 						)
 					);
 
+					$this->cleanup_failed_order_creation( $order );
+
 					$this->redirect_with_error(
 						$customer_id,
 						sprintf(
@@ -269,6 +262,8 @@ trait OrderHandlerAdminCreateTrait {
 					)
 				);
 
+				$this->cleanup_failed_order_creation( $order );
+
 				$this->redirect_with_error(
 					$customer_id,
 					__( 'Could not add the selected shipping method. Please refresh the shipping options and try again.', 'alynt-wc-customer-order-manager' )
@@ -292,9 +287,9 @@ trait OrderHandlerAdminCreateTrait {
 				$this->log( 'Warning: No shipping items found in order' );
 			}
 
-			$order->update_meta_data( '_awcom_has_custom_pricing', 'yes' );
-			$order->update_meta_data( '_awcom_pricing_locked', 'yes' );
-			$order->update_meta_data( '_awcom_locked_total', $order->get_total() );
+			$order->update_meta_data( self::ORDER_META_HAS_CUSTOM_PRICING, 'yes' );
+			$order->update_meta_data( self::ORDER_META_PRICING_LOCKED, 'yes' );
+			$order->update_meta_data( self::ORDER_META_LOCKED_TOTAL, $order->get_total() );
 
 			$this->log( 'Order Creation: Locked total for order #' . $order->get_id() . ' at ' . $order->get_total() );
 
@@ -309,7 +304,7 @@ trait OrderHandlerAdminCreateTrait {
 
 			$this->log_order_creation( $order->get_id(), $customer_id );
 
-			wp_safe_redirect( admin_url( 'post.php?post=' . $order->get_id() . '&action=edit' ) );
+			wp_safe_redirect( awcom_get_order_edit_url( $order->get_id() ) );
 			exit;
 		} catch ( \Exception $e ) {
 			$this->log_order_handler_error(
@@ -319,6 +314,8 @@ trait OrderHandlerAdminCreateTrait {
 					$e->getMessage()
 				)
 			);
+
+			$this->cleanup_failed_order_creation( $order );
 
 			$this->redirect_with_error(
 				$customer_id,

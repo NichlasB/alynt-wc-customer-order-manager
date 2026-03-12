@@ -31,10 +31,11 @@ class Security {
 			return false;
 		}
 
-		$user          = wp_get_current_user();
-		$allowed_roles = array( 'administrator', 'shop_manager' );
+		if ( current_user_can( 'manage_woocommerce' ) ) {
+			return true;
+		}
 
-		return array_intersect( $allowed_roles, $user->roles ) ? true : false;
+		return current_user_can( 'manage_options' );
 	}
 
 	/**

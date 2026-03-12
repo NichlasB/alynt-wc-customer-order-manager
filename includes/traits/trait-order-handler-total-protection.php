@@ -40,13 +40,13 @@ trait OrderHandlerTotalProtectionTrait {
 			return;
 		}
 
-		if ( $order->get_created_via() === 'alynt_wc_customer_order_manager' ) {
+		if ( $order->get_created_via() === self::ORDER_CREATED_VIA ) {
 			$this->log( 'Preventing total recalculation for order #' . $order->get_id() . ' to preserve customer group pricing' );
 			remove_action( 'woocommerce_order_before_calculate_totals', array( $this, 'prevent_total_recalculation' ), 10 );
 			return false;
 		}
 
-		if ( $order->get_meta( '_awcom_has_custom_pricing' ) === 'yes' ) {
+		if ( $order->get_meta( self::ORDER_META_HAS_CUSTOM_PRICING ) === 'yes' ) {
 			$this->log( 'Preventing total recalculation for order #' . $order->get_id() . ' - has custom pricing flag' );
 			remove_action( 'woocommerce_order_before_calculate_totals', array( $this, 'prevent_total_recalculation' ), 10 );
 			return false;
@@ -70,7 +70,7 @@ trait OrderHandlerTotalProtectionTrait {
 			return;
 		}
 
-		if ( $order->get_created_via() !== 'alynt_wc_customer_order_manager' && $order->get_meta( '_awcom_has_custom_pricing' ) !== 'yes' ) {
+		if ( $order->get_created_via() !== self::ORDER_CREATED_VIA && $order->get_meta( self::ORDER_META_HAS_CUSTOM_PRICING ) !== 'yes' ) {
 			return;
 		}
 
@@ -78,8 +78,8 @@ trait OrderHandlerTotalProtectionTrait {
 		$needs_save = false;
 
 		foreach ( $order->get_items() as $item_id => $item ) {
-			$custom_price          = $item->get_meta( '_awcom_custom_price', true );
-			$custom_subtotal_price = $item->get_meta( '_awcom_custom_subtotal_price', true );
+			$custom_price          = $item->get_meta( self::ITEM_META_CUSTOM_PRICE, true );
+			$custom_subtotal_price = $item->get_meta( self::ITEM_META_CUSTOM_SUBTOTAL_PRICE, true );
 
 			if ( $custom_price && $custom_subtotal_price ) {
 				$quantity = $item->get_quantity();
@@ -122,7 +122,7 @@ trait OrderHandlerTotalProtectionTrait {
 			return $subtotal;
 		}
 
-		if ( $order->get_created_via() === 'alynt_wc_customer_order_manager' || $order->get_meta( '_awcom_has_custom_pricing' ) === 'yes' ) {
+		if ( $order->get_created_via() === self::ORDER_CREATED_VIA || $order->get_meta( self::ORDER_META_HAS_CUSTOM_PRICING ) === 'yes' ) {
 			return $subtotal;
 		}
 
@@ -144,7 +144,7 @@ trait OrderHandlerTotalProtectionTrait {
 			return $total;
 		}
 
-		if ( $order->get_created_via() === 'alynt_wc_customer_order_manager' || $order->get_meta( '_awcom_has_custom_pricing' ) === 'yes' ) {
+		if ( $order->get_created_via() === self::ORDER_CREATED_VIA || $order->get_meta( self::ORDER_META_HAS_CUSTOM_PRICING ) === 'yes' ) {
 			return $total;
 		}
 
@@ -173,8 +173,8 @@ trait OrderHandlerTotalProtectionTrait {
 			return $total;
 		}
 
-		if ( $order->get_created_via() === 'alynt_wc_customer_order_manager' || $order->get_meta( '_awcom_has_custom_pricing' ) === 'yes' ) {
-			$locked_total = $order->get_meta( '_awcom_locked_total' );
+		if ( $order->get_created_via() === self::ORDER_CREATED_VIA || $order->get_meta( self::ORDER_META_HAS_CUSTOM_PRICING ) === 'yes' ) {
+			$locked_total = $order->get_meta( self::ORDER_META_LOCKED_TOTAL );
 
 			if ( $locked_total ) {
 				$this->log( 'Order Total Lock: Returning locked total ' . $locked_total . ' for order #' . $order->get_id() . ' (passed in: ' . $total . ')' );
@@ -198,7 +198,7 @@ trait OrderHandlerTotalProtectionTrait {
 
 			$this->log( 'Order Total Lock: Calculated total from items: ' . $calculated_total . ' (passed in total was: ' . $total . ')' );
 
-			$order->update_meta_data( '_awcom_locked_total', $calculated_total );
+			$order->update_meta_data( self::ORDER_META_LOCKED_TOTAL, $calculated_total );
 			$order->save_meta_data();
 
 			return $calculated_total;

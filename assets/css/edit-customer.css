@@ -2,6 +2,18 @@
 
 /* Adjust column widths */
 
+.awcom-is-hidden {
+    display: none;
+}
+
+.awcom-email-template-modal {
+    display: none;
+}
+
+.merge-tags-select {
+    margin-bottom: 10px;
+}
+
 #post-body-content {
     width: 95% !important;
 }

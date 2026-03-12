@@ -2,27 +2,26 @@ jQuery(function($) {
     window.awcomOrderInterface = window.awcomOrderInterface || {};
     var api = window.awcomOrderInterface;
     api.productSearchErrorMessage = '';
-
-    $('<style>')
-        .text(
-            '.awcom-order-items .original-price del { color: #999; margin-right: 5px; }' +
-            '.awcom-order-items .price-discount { color: #4CAF50; font-size: 0.9em; margin-left: 5px; }' +
-            '.awcom-stock-info { color: #666; font-weight: normal; }' +
-            '.awcom-stock-low { color: #b45309; font-weight: bold; }' +
-            '.awcom-stock-out { color: #b91c1c; font-weight: bold; }' +
-            '.select2-results__option .awcom-out-of-stock { color: #b91c1c; }' +
-            '.select2-results__option .awcom-low-stock { color: #b45309; }'
-        )
-        .appendTo('head');
+    api.lowStockThreshold = 5;
 
     api.formatPrice = function(price) {
-        return accounting.formatMoney(price, {
-            symbol: awcomOrderVars.currency_symbol,
-            decimal: '.',
-            thousand: ',',
-            precision: 2,
-            format: '%s%v',
-        });
+        var normalizedPrice = Number(price);
+
+        if (!Number.isFinite(normalizedPrice)) {
+            normalizedPrice = 0;
+        }
+
+        if (typeof window.accounting !== 'undefined' && typeof window.accounting.formatMoney === 'function') {
+            return window.accounting.formatMoney(normalizedPrice, {
+                symbol: awcomOrderVars.currency_symbol,
+                decimal: '.',
+                thousand: ',',
+                precision: 2,
+                format: '%s%v',
+            });
+        }
+
+        return awcomOrderVars.currency_symbol + normalizedPrice.toFixed(2);
     };
 
     api.updateLineTotal = function(row) {
@@ -92,7 +91,29 @@ jQuery(function($) {
         return $invalidField;
     };
 
+    api.findProductRow = function(productId) {
+        var normalizedProductId = parseInt(productId, 10);
+
+        return $('.awcom-order-items tbody tr').filter(function() {
+            return parseInt($(this).attr('data-product-id'), 10) === normalizedProductId;
+        }).first();
+    };
+
     api.addProductToOrder = function(product) {
+        var existingRow = api.findProductRow(product.id);
+
+        if (existingRow.length) {
+            var $quantityField = existingRow.find('input.quantity');
+            var currentQuantity = parseInt($quantityField.val(), 10);
+
+            if (!Number.isFinite(currentQuantity) || currentQuantity < 1) {
+                currentQuantity = 1;
+            }
+
+            $quantityField.val(currentQuantity + 1).trigger('change').trigger('focus');
+            return;
+        }
+
         var row = $('<tr></tr>');
         row.attr('data-product-id', product.id);
         row.attr('data-price', product.price);
@@ -112,7 +133,7 @@ jQuery(function($) {
             var stockClass = '';
             if (product.stock_status === 'outofstock' || (product.manage_stock && product.stock_quantity === 0)) {
                 stockClass = 'awcom-stock-out';
-            } else if (product.manage_stock && product.stock_quantity !== null && product.stock_quantity <= 5) {
+            } else if (product.manage_stock && product.stock_quantity !== null && product.stock_quantity <= api.lowStockThreshold) {
                 stockClass = 'awcom-stock-low';
             }
             productNameWithStock += '<br><small class="awcom-stock-info ' + stockClass + '">' + product.stock_display + '</small>';
@@ -131,6 +152,12 @@ jQuery(function($) {
     };
 
     api.initProductSelect = function() {
+        if (typeof $.fn.select2 !== 'function') {
+            $('#awcom-add-product').prop('disabled', true);
+            api.showOrderNotice('error', awcomOrderVars.i18n.product_search_unavailable);
+            return;
+        }
+
         $('#awcom-add-product').select2({
             ajax: {
                 url: awcomOrderVars.ajaxurl,
@@ -176,7 +203,7 @@ jQuery(function($) {
 
                         if (item.stock_status === 'outofstock' || (item.manage_stock && item.stock_quantity === 0)) {
                             stockClass = 'awcom-out-of-stock';
-                        } else if (item.manage_stock && item.stock_quantity !== null && item.stock_quantity <= 5) {
+                        } else if (item.manage_stock && item.stock_quantity !== null && item.stock_quantity <= api.lowStockThreshold) {
                             stockClass = 'awcom-low-stock';
                         }
 

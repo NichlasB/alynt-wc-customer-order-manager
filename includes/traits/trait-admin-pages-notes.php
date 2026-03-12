@@ -50,6 +50,120 @@ trait AdminPagesNotesTrait {
 		delete_user_meta( $customer_id, 'customer_notes' );
 	}
 
+	private function send_notes_ajax_error( $message, $status = 400 ) {
+		wp_send_json_error( array( 'message' => $message ), $status );
+	}
+
+	private function get_valid_notes_customer( $customer_id ) {
+		$customer_id = absint( $customer_id );
+
+		if ( $customer_id <= 0 ) {
+			return false;
+		}
+
+		$customer = get_user_by( 'id', $customer_id );
+
+		if ( ! $customer || ! in_array( 'customer', (array) $customer->roles, true ) ) {
+			return false;
+		}
+
+		return $customer;
+	}
+
+	private function validate_notes_ajax_request() {
+		if ( false === check_ajax_referer( 'awcom_customer_notes', 'nonce', false ) ) {
+			$this->send_notes_ajax_error( __( 'Your session expired. Refresh the page and try again.', 'alynt-wc-customer-order-manager' ), 403 );
+		}
+
+		if ( ! Security::user_can_access() ) {
+			$this->send_notes_ajax_error( __( 'Permission denied.', 'alynt-wc-customer-order-manager' ), 403 );
+		}
+	}
+
+	private function get_customer_notes( $customer_id ) {
+		$stored_notes = get_user_meta( $customer_id, '_awcom_customer_notes', true );
+
+		if ( ! is_array( $stored_notes ) ) {
+			return array();
+		}
+
+		$normalized_notes = array();
+		$notes_changed    = false;
+
+		foreach ( $stored_notes as $stored_note ) {
+			if ( ! is_array( $stored_note ) ) {
+				$notes_changed = true;
+				continue;
+			}
+
+			$note_content = isset( $stored_note['content'] ) ? sanitize_textarea_field( wp_unslash( (string) $stored_note['content'] ) ) : '';
+
+			if ( '' === $note_content ) {
+				$notes_changed = true;
+				continue;
+			}
+
+			$note_id = isset( $stored_note['id'] ) ? sanitize_text_field( wp_unslash( (string) $stored_note['id'] ) ) : '';
+
+			if ( '' === $note_id ) {
+				$note_id       = wp_generate_uuid4();
+				$notes_changed = true;
+			}
+
+			$note_author = isset( $stored_note['author'] ) ? sanitize_text_field( wp_unslash( (string) $stored_note['author'] ) ) : '';
+
+			if ( '' === $note_author ) {
+				$note_author   = __( 'Unknown', 'alynt-wc-customer-order-manager' );
+				$notes_changed = true;
+			}
+
+			$note_date = isset( $stored_note['date'] ) && is_numeric( $stored_note['date'] ) ? (int) $stored_note['date'] : time();
+
+			if ( ! isset( $stored_note['date'] ) || ! is_numeric( $stored_note['date'] ) ) {
+				$notes_changed = true;
+			}
+
+			$normalized_note = array(
+				'id'      => $note_id,
+				'content' => $note_content,
+				'author'  => $note_author,
+				'date'    => $note_date,
+			);
+
+			if ( ! empty( $stored_note['edited'] ) ) {
+				$normalized_note['edited'] = true;
+			}
+
+			if ( isset( $stored_note['edit_date'] ) && is_numeric( $stored_note['edit_date'] ) ) {
+				$normalized_note['edit_date'] = (int) $stored_note['edit_date'];
+			}
+
+			$normalized_notes[] = $normalized_note;
+		}
+
+		if ( $notes_changed ) {
+			update_user_meta( $customer_id, '_awcom_customer_notes', $normalized_notes );
+		}
+
+		return $normalized_notes;
+	}
+
+	private function find_customer_note_index( array $notes, $note_id ) {
+		$note_id = sanitize_text_field( (string) $note_id );
+
+		if ( '' === $note_id ) {
+			return -1;
+		}
+
+		foreach ( $notes as $index => $note ) {
+			if ( isset( $note['id'] ) && $note_id === $note['id'] ) {
+				return (int) $index;
+			}
+		}
+
+		return -1;
+	}
+
 	/**
 	 * Enqueue the customer notes script and edit-customer stylesheet.
 	 *
@@ -127,30 +241,24 @@ trait AdminPagesNotesTrait {
 	 * @return void Sends JSON response and exits.
 	 */
 	public function handle_add_customer_note() {
-		check_ajax_referer( 'awcom_customer_notes', 'nonce' );
+		$this->validate_notes_ajax_request();
 
-		if ( ! Security::user_can_access() ) {
-			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'alynt-wc-customer-order-manager' ) ) );
-		}
-
-		$customer_id  = isset( $_POST['customer_id'] ) ? intval( $_POST['customer_id'] ) : 0;
+		$customer_id  = isset( $_POST['customer_id'] ) ? absint( wp_unslash( $_POST['customer_id'] ) ) : 0;
 		$note_content = isset( $_POST['note'] ) ? sanitize_textarea_field( wp_unslash( $_POST['note'] ) ) : '';
 
-		if ( ! $customer_id || ! $note_content ) {
-			wp_send_json_error( array( 'message' => __( 'Invalid data.', 'alynt-wc-customer-order-manager' ) ) );
+		if ( ! $this->get_valid_notes_customer( $customer_id ) || ! $note_content ) {
+			$this->send_notes_ajax_error( __( 'Invalid data.', 'alynt-wc-customer-order-manager' ) );
 		}
 
 		$current_user = wp_get_current_user();
 		$note         = array(
+			'id'      => wp_generate_uuid4(),
 			'content' => $note_content,
 			'author'  => $current_user->display_name,
 			'date'    => time(),
 		);
 
-		$notes = get_user_meta( $customer_id, '_awcom_customer_notes', true );
-		if ( ! is_array( $notes ) ) {
-			$notes = array();
-		}
+		$notes = $this->get_customer_notes( $customer_id );
 
 		array_unshift( $notes, $note );
 		update_user_meta( $customer_id, '_awcom_customer_notes', $notes );
@@ -162,6 +270,7 @@ trait AdminPagesNotesTrait {
 
 		wp_send_json_success(
 			array(
+				'id'      => $note['id'],
 				'content' => $note['content'],
 				'author'  => $note['author'],
 				'date'    => $formatted_date,
@@ -180,27 +289,24 @@ trait AdminPagesNotesTrait {
 	 * @return void Sends JSON response and exits.
 	 */
 	public function handle_edit_customer_note() {
-		check_ajax_referer( 'awcom_customer_notes', 'nonce' );
+		$this->validate_notes_ajax_request();
 
-		if ( ! Security::user_can_access() ) {
-			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'alynt-wc-customer-order-manager' ) ) );
-		}
-
-		$customer_id  = isset( $_POST['customer_id'] ) ? intval( $_POST['customer_id'] ) : 0;
-		$note_index   = isset( $_POST['note_index'] ) ? intval( $_POST['note_index'] ) : -1;
+		$customer_id  = isset( $_POST['customer_id'] ) ? absint( wp_unslash( $_POST['customer_id'] ) ) : 0;
+		$note_id      = isset( $_POST['note_id'] ) ? sanitize_text_field( wp_unslash( $_POST['note_id'] ) ) : '';
+		$note_index   = isset( $_POST['note_index'] ) ? intval( wp_unslash( $_POST['note_index'] ) ) : -1;
 		$note_content = isset( $_POST['note'] ) ? sanitize_textarea_field( wp_unslash( $_POST['note'] ) ) : '';
 
-		if ( ! $customer_id || $note_index < 0 || ! $note_content ) {
-			wp_send_json_error( array( 'message' => __( 'Invalid data.', 'alynt-wc-customer-order-manager' ) ) );
+		if ( ! $this->get_valid_notes_customer( $customer_id ) || ! $note_content || ( '' === $note_id && $note_index < 0 ) ) {
+			$this->send_notes_ajax_error( __( 'Invalid data.', 'alynt-wc-customer-order-manager' ) );
 		}
 
-		$notes = get_user_meta( $customer_id, '_awcom_customer_notes', true );
-		if ( ! is_array( $notes ) ) {
-			wp_send_json_error( array( 'message' => __( 'Notes not found.', 'alynt-wc-customer-order-manager' ) ) );
+		$notes = $this->get_customer_notes( $customer_id );
+		if ( '' !== $note_id ) {
+			$note_index = $this->find_customer_note_index( $notes, $note_id );
 		}
 
 		if ( ! isset( $notes[ $note_index ] ) ) {
-			wp_send_json_error( array( 'message' => __( 'Note not found.', 'alynt-wc-customer-order-manager' ) ) );
+			$this->send_notes_ajax_error( __( 'Note not found.', 'alynt-wc-customer-order-manager' ), 404 );
 		}
 
 		$notes[ $note_index ]['content']   = $note_content;
@@ -208,7 +314,12 @@ trait AdminPagesNotesTrait {
 		$notes[ $note_index ]['edit_date'] = time();
 		update_user_meta( $customer_id, '_awcom_customer_notes', $notes );
 
-		wp_send_json_success( array( 'content' => $note_content ) );
+		wp_send_json_success(
+			array(
+				'id'      => $notes[ $note_index ]['id'],
+				'content' => $note_content,
+			)
+		);
 	}
 
 	/**
@@ -221,26 +332,23 @@ trait AdminPagesNotesTrait {
 	 * @return void Sends JSON response and exits.
 	 */
 	public function handle_delete_customer_note() {
-		check_ajax_referer( 'awcom_customer_notes', 'nonce' );
+		$this->validate_notes_ajax_request();
 
-		if ( ! Security::user_can_access() ) {
-			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'alynt-wc-customer-order-manager' ) ) );
+		$customer_id = isset( $_POST['customer_id'] ) ? absint( wp_unslash( $_POST['customer_id'] ) ) : 0;
+		$note_id     = isset( $_POST['note_id'] ) ? sanitize_text_field( wp_unslash( $_POST['note_id'] ) ) : '';
+		$note_index  = isset( $_POST['note_index'] ) ? intval( wp_unslash( $_POST['note_index'] ) ) : -1;
+
+		if ( ! $this->get_valid_notes_customer( $customer_id ) || ( '' === $note_id && $note_index < 0 ) ) {
+			$this->send_notes_ajax_error( __( 'Invalid data.', 'alynt-wc-customer-order-manager' ) );
 		}
 
-		$customer_id = isset( $_POST['customer_id'] ) ? intval( $_POST['customer_id'] ) : 0;
-		$note_index  = isset( $_POST['note_index'] ) ? intval( $_POST['note_index'] ) : -1;
-
-		if ( ! $customer_id || $note_index < 0 ) {
-			wp_send_json_error( array( 'message' => __( 'Invalid data.', 'alynt-wc-customer-order-manager' ) ) );
-		}
-
-		$notes = get_user_meta( $customer_id, '_awcom_customer_notes', true );
-		if ( ! is_array( $notes ) ) {
-			wp_send_json_error( array( 'message' => __( 'Notes not found.', 'alynt-wc-customer-order-manager' ) ) );
+		$notes = $this->get_customer_notes( $customer_id );
+		if ( '' !== $note_id ) {
+			$note_index = $this->find_customer_note_index( $notes, $note_id );
 		}
 
 		if ( ! isset( $notes[ $note_index ] ) ) {
-			wp_send_json_error( array( 'message' => __( 'Note not found.', 'alynt-wc-customer-order-manager' ) ) );
+			$this->send_notes_ajax_error( __( 'Note not found.', 'alynt-wc-customer-order-manager' ), 404 );
 		}
 
 		unset( $notes[ $note_index ] );

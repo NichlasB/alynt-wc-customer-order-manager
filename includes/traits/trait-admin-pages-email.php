@@ -100,15 +100,17 @@ trait AdminPagesEmailTrait {
 	 * @return void Sends JSON response and exits.
 	 */
 	public function save_login_email_template() {
-		check_ajax_referer( 'awcom_email_template', 'nonce' );
+		if ( false === check_ajax_referer( 'awcom_email_template', 'nonce', false ) ) {
+			wp_send_json_error( array( 'message' => __( 'Your session expired. Refresh the page and try again.', 'alynt-wc-customer-order-manager' ) ), 403 );
+		}
 
 		// phpcs:ignore WordPress.WP.Capabilities.Unknown -- WooCommerce registers this capability.
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_send_json_error( __( 'Permission denied.', 'alynt-wc-customer-order-manager' ), 403 );
+			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'alynt-wc-customer-order-manager' ) ), 403 );
 		}
 
 		if ( ! isset( $_POST['template'] ) ) {
-			wp_send_json_error( __( 'No template content received.', 'alynt-wc-customer-order-manager' ), 400 );
+			wp_send_json_error( array( 'message' => __( 'No template content received.', 'alynt-wc-customer-order-manager' ) ), 400 );
 		}
 
 		$template         = wp_kses_post( wp_unslash( $_POST['template'] ) );
@@ -118,7 +120,7 @@ trait AdminPagesEmailTrait {
 		if ( $updated ) {
 			wp_send_json_success( __( 'Template saved successfully.', 'alynt-wc-customer-order-manager' ) );
 		} else {
-			wp_send_json_error( __( 'Failed to save template.', 'alynt-wc-customer-order-manager' ), 500 );
+			wp_send_json_error( array( 'message' => __( 'Failed to save template.', 'alynt-wc-customer-order-manager' ) ), 500 );
 		}
 	}
 }

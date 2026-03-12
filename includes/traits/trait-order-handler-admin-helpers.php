@@ -196,12 +196,17 @@ trait OrderHandlerAdminHelpersTrait {
 			foreach ( $order->get_items() as $item ) {
 				$product = $item->get_product();
 				if ( $product ) {
+					$is_variation = $product->is_type( 'variation' );
+					$product_id   = $is_variation ? $product->get_parent_id() : $product->get_id();
+					$variation_id = $is_variation ? $product->get_id() : 0;
+					$variation    = $is_variation && method_exists( $product, 'get_variation_attributes' ) ? $product->get_variation_attributes() : array();
+
 					$package['contents'][]     = array(
 						'data'              => $product,
 						'quantity'          => $item->get_quantity(),
-						'product_id'        => $product->get_id(),
-						'variation_id'      => $product->get_id(),
-						'variation'         => array(),
+						'product_id'        => $product_id,
+						'variation_id'      => $variation_id,
+						'variation'         => $variation,
 						'line_total'        => $item->get_total(),
 						'line_tax'          => $item->get_total_tax(),
 						'line_subtotal'     => $item->get_subtotal(),
