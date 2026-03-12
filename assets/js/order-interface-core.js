@@ -158,7 +158,9 @@ jQuery(function($) {
             return;
         }
 
-        $('#awcom-add-product').select2({
+        var $productSelect = $('#awcom-add-product');
+
+        $productSelect.select2({
             ajax: {
                 url: awcomOrderVars.ajaxurl,
                 dataType: 'json',
@@ -241,7 +243,7 @@ jQuery(function($) {
             width: '100%',
         });
 
-        $('#awcom-add-product').on('select2:select', function(e) {
+        $productSelect.on('select2:select', function(e) {
             var product = e.params.data;
             api.addProductToOrder(product);
             $(this).val(null).trigger('change');
