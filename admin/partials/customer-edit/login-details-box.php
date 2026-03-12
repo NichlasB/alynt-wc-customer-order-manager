@@ -5,6 +5,8 @@
  * @package Alynt_WC_Customer_Order_Manager
  */
 
+defined( 'ABSPATH' ) || exit;
+
 ?>
 <div class="postbox">
 	<h2 class="hndle"><span><?php esc_html_e( 'Login Details', 'alynt-wc-customer-order-manager' ); ?></span></h2>

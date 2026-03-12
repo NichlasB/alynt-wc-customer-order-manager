@@ -18,6 +18,19 @@ defined( 'ABSPATH' ) || exit;
  */
 trait OrderHandlerCartDisplayTrait {
 
+	public function enqueue_cart_display_styles() {
+		if ( is_admin() ) {
+			return;
+		}
+
+		wp_enqueue_style(
+			'awcom-cart-display',
+			AWCOM_PLUGIN_URL . 'assets/css/cart-display.css',
+			array(),
+			AWCOM_VERSION
+		);
+	}
+
 	/**
 	 * Return the custom per-unit price HTML for a cart item.
 	 *
@@ -167,7 +180,7 @@ trait OrderHandlerCartDisplayTrait {
 
 		if ( $display_title ) {
 			$discount_text = sprintf(
-				'<br><small style="color: #3b5249; font-weight: 500;">%s Pricing Applied</small>',
+				'<br><small class="awcom-discount-label">%s Pricing Applied</small>',
 				esc_html( $display_title )
 			);
 			return $product_name . $discount_text;

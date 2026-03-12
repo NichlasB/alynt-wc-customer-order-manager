@@ -54,14 +54,15 @@ trait OrderInterfaceAjaxShippingTrait {
 			);
 		}
 
-		if ( ! get_user_by( 'id', $customer_id ) ) {
+		$customer = get_user_by( 'id', $customer_id );
+		if ( ! $customer || ! in_array( 'customer', (array) $customer->roles, true ) ) {
 			$this->send_order_interface_error(
 				__( 'Choose a valid customer before calculating shipping.', 'alynt-wc-customer-order-manager' ),
 				400
 			);
 		}
 
-		if ( ! function_exists( 'WC' ) || ! WC()->cart || ! WC()->customer || ! WC()->shipping ) {
+		if ( ! class_exists( '\\WC_Shipping_Zones' ) || ! function_exists( 'wc_get_product' ) ) {
 			$this->send_order_interface_error(
 				__( 'Shipping is not available right now. Please refresh the page and try again.', 'alynt-wc-customer-order-manager' ),
 				500,
@@ -167,79 +168,18 @@ trait OrderInterfaceAjaxShippingTrait {
 
 		$shipping_methods  = array();
 		$had_method_errors = false;
-		$cart              = WC()->cart;
-		$customer          = WC()->customer;
-		$shipping          = WC()->shipping;
-
-		$cart->empty_cart();
+		$package           = $this->build_shipping_package( $customer_id, $items, $address, $had_method_errors );
 
 		try {
-			$added_items = 0;
-			foreach ( $items as $item ) {
-				$product_id = isset( $item['product_id'] ) ? absint( $item['product_id'] ) : 0;
-				$quantity   = isset( $item['quantity'] ) ? absint( $item['quantity'] ) : 0;
-
-				if ( $product_id <= 0 || $quantity < 1 ) {
-					continue;
-				}
-
-				$added = $cart->add_to_cart( $product_id, $quantity );
-				if ( $added ) {
-					++$added_items;
-					continue;
-				}
-
-				$had_method_errors = true;
-				$this->log_order_interface_error(
-					sprintf(
-						'Shipping calculation skipped invalid cart item product #%1$d with quantity %2$d.',
-						$product_id,
-						$quantity
-					)
-				);
-			}
-
-			if ( 0 === $added_items ) {
-				$cart->empty_cart();
+			if ( empty( $package['contents'] ) ) {
 				$this->send_order_interface_error(
 					__( 'Add at least one valid item before calculating shipping.', 'alynt-wc-customer-order-manager' ),
 					400
 				);
 			}
 
-			$customer->set_billing_location(
-				$address['country'],
-				$address['state'],
-				$address['postcode'],
-				$address['city']
-			);
-			$customer->set_shipping_location(
-				$address['country'],
-				$address['state'],
-				$address['postcode'],
-				$address['city']
-			);
-			$customer->set_shipping_address_1( $address['address_1'] );
-			$customer->set_shipping_address_2( $address['address_2'] );
-
-			$packages = array(
-				array(
-					'contents'        => $cart->get_cart(),
-					'contents_cost'   => $cart->get_cart_contents_total(),
-					'applied_coupons' => $cart->get_applied_coupons(),
-					'destination'     => array(
-						'country'   => $address['country'],
-						'state'     => $address['state'],
-						'postcode'  => $address['postcode'],
-						'city'      => $address['city'],
-						'address'   => $address['address_1'],
-						'address_2' => $address['address_2'],
-					),
-				),
-			);
-
-			$shipping->load_shipping_methods( $packages[0] );
-			$enabled_methods = $shipping->get_shipping_methods();
+			$shipping_zone    = \WC_Shipping_Zones::get_zone_matching_package( $package );
+			$enabled_methods  = $shipping_zone->get_shipping_methods( true );
 
 			foreach ( $enabled_methods as $method ) {
 				if ( ! $method->is_enabled() ) {
@@ -247,7 +187,28 @@ trait OrderInterfaceAjaxShippingTrait {
 				}
 
 				try {
-					$rates = $method->get_rates_for_package( $packages[0] );
+					if ( method_exists( $method, 'get_errors' ) && is_callable( array( $method, 'get_errors' ) ) ) {
+						$pre_errors = $method->get_errors();
+						if ( ! empty( $pre_errors ) ) {
+							$had_method_errors = true;
+						}
+					}
+
+					ob_start();
+					$rates  = $method->get_rates_for_package( $package );
+					$output = ob_get_clean();
+
+					if ( ! empty( $output ) ) {
+						$had_method_errors = true;
+						$this->log_order_interface_error( 'Shipping method output during admin calculation: ' . $output );
+					}
+
+					if ( method_exists( $method, 'get_errors' ) && is_callable( array( $method, 'get_errors' ) ) ) {
+						$post_errors = $method->get_errors();
+						if ( ! empty( $post_errors ) ) {
+							$had_method_errors = true;
+						}
+					}
 				} catch ( \Throwable $throwable ) {
 					$had_method_errors = true;
 					$this->log_order_interface_error(
@@ -265,18 +226,19 @@ trait OrderInterfaceAjaxShippingTrait {
 				}
 
 				foreach ( $rates as $rate_id => $rate_data ) {
+					$rate_cost = is_object( $rate_data ) && method_exists( $rate_data, 'get_cost' ) ? $rate_data->get_cost() : $rate_data->cost;
 					$shipping_methods[] = array(
 						'id'             => $rate_id,
 						'method_id'      => $method->id,
-						'label'          => $rate_data->label,
-						'cost'           => $rate_data->cost,
-						'formatted_cost' => wc_price( $rate_data->cost ),
-						'taxes'          => $rate_data->taxes,
+						'label'          => is_object( $rate_data ) && method_exists( $rate_data, 'get_label' ) ? $rate_data->get_label() : $rate_data->label,
+						'cost'           => $rate_cost,
+						'formatted_cost' => wc_price( $rate_cost ),
+						'formatted_cost_text' => wp_strip_all_tags( html_entity_decode( wc_price( $rate_cost ), ENT_QUOTES, get_bloginfo( 'charset' ) ) ),
+						'taxes'          => is_object( $rate_data ) && method_exists( $rate_data, 'get_taxes' ) ? $rate_data->get_taxes() : $rate_data->taxes,
 					);
 				}
 			}
 		} catch ( \Throwable $throwable ) {
-			$cart->empty_cart();
 			$this->log_order_interface_error( 'Shipping calculation failed: ' . $throwable->getMessage() );
 			$this->send_order_interface_error(
 				__( 'We could not calculate shipping methods right now. Please try again.', 'alynt-wc-customer-order-manager' ),
@@ -284,8 +246,6 @@ trait OrderInterfaceAjaxShippingTrait {
 				true
 			);
 		}
-
-		$cart->empty_cart();
 
 		if ( empty( $shipping_methods ) ) {
 			if ( $had_method_errors ) {
@@ -305,5 +265,65 @@ trait OrderInterfaceAjaxShippingTrait {
 		set_transient( $shipping_cache_key, $shipping_methods, MINUTE_IN_SECONDS );
 
 		wp_send_json_success( array( 'methods' => $shipping_methods ) );
+	}
+
+	private function build_shipping_package( $customer_id, array $items, array $address, &$had_method_errors ) {
+		$package = array(
+			'contents'        => array(),
+			'contents_cost'   => 0,
+			'applied_coupons' => array(),
+			'destination'     => array(
+				'country'   => $address['country'],
+				'state'     => $address['state'],
+				'postcode'  => $address['postcode'],
+				'city'      => $address['city'],
+				'address'   => $address['address_1'],
+				'address_2' => $address['address_2'],
+			),
+			'user'            => array( 'ID' => absint( $customer_id ) ),
+		);
+
+		foreach ( $items as $item ) {
+			$product_id = isset( $item['product_id'] ) ? absint( $item['product_id'] ) : 0;
+			$quantity   = isset( $item['quantity'] ) ? absint( $item['quantity'] ) : 0;
+
+			if ( $product_id <= 0 || $quantity < 1 ) {
+				continue;
+			}
+
+			$product = wc_get_product( $product_id );
+			if ( ! $product ) {
+				$had_method_errors = true;
+				$this->log_order_interface_error(
+					sprintf(
+						'Shipping calculation skipped invalid cart item product #%1$d with quantity %2$d.',
+						$product_id,
+						$quantity
+					)
+				);
+				continue;
+			}
+
+			$line_total = is_numeric( $product->get_price() ) ? (float) $product->get_price() * $quantity : 0;
+			$is_variation = $product->is_type( 'variation' );
+			$product_id   = $is_variation ? $product->get_parent_id() : $product->get_id();
+			$variation_id = $is_variation ? $product->get_id() : 0;
+			$variation    = $is_variation && method_exists( $product, 'get_variation_attributes' ) ? $product->get_variation_attributes() : array();
+
+			$package['contents'][] = array(
+				'data'              => $product,
+				'quantity'          => $quantity,
+				'product_id'        => $product_id,
+				'variation_id'      => $variation_id,
+				'variation'         => $variation,
+				'line_total'        => $line_total,
+				'line_tax'          => 0,
+				'line_subtotal'     => $line_total,
+				'line_subtotal_tax' => 0,
+			);
+			$package['contents_cost'] += $line_total;
+		}
+
+		return $package;
 	}
 }

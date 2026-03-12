@@ -2,6 +2,18 @@
     margin-bottom: 20px;
 }
 
+.awcom-product-search-field {
+    width: 100%;
+}
+
+.awcom-order-notes {
+    width: 100%;
+}
+
+.awcom-shipping-details {
+    margin-top: 20px;
+}
+
 .select2-container {
     width: 100% !important;
 }
@@ -63,6 +75,40 @@
 
 .awcom-order-items tfoot td {
     font-weight: bold;
+}
+
+.awcom-order-items .original-price del {
+    color: #999;
+    margin-right: 5px;
+}
+
+.awcom-order-items .price-discount {
+    color: #4CAF50;
+    font-size: 0.9em;
+    margin-left: 5px;
+}
+
+.awcom-stock-info {
+    color: #666;
+    font-weight: normal;
+}
+
+.awcom-stock-low {
+    color: #b45309;
+    font-weight: bold;
+}
+
+.awcom-stock-out {
+    color: #b91c1c;
+    font-weight: bold;
+}
+
+.select2-results__option .awcom-out-of-stock {
+    color: #b91c1c;
+}
+
+.select2-results__option .awcom-low-stock {
+    color: #b45309;
 }
 
 /* Improved Select2 Styling */

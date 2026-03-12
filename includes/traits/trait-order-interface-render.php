@@ -80,7 +80,7 @@ trait OrderInterfaceRenderTrait {
 								<div class="inside">
 									<div class="awcom-product-search">
 										<label for="awcom-add-product" class="screen-reader-text"><?php esc_html_e( 'Search for a product to add', 'alynt-wc-customer-order-manager' ); ?></label>
-										<select id="awcom-add-product" style="width: 100%;">
+										<select id="awcom-add-product" class="awcom-product-search-field">
 											<option></option>
 										</select>
 									</div>
@@ -123,7 +123,7 @@ trait OrderInterfaceRenderTrait {
 								<h2 class="hndle"><span><?php esc_html_e( 'Order Notes', 'alynt-wc-customer-order-manager' ); ?></span></h2>
 								<div class="inside">
 									<label for="order_notes" class="screen-reader-text"><?php esc_html_e( 'Order Notes (optional)', 'alynt-wc-customer-order-manager' ); ?></label>
-									<textarea name="order_notes" id="order_notes" rows="5" style="width: 100%;"
+									<textarea name="order_notes" id="order_notes" rows="5" class="awcom-order-notes"
 									placeholder="<?php esc_attr_e( 'Add any notes about this order (optional)', 'alynt-wc-customer-order-manager' ); ?>"></textarea>
 								</div>
 							</div>
@@ -185,7 +185,7 @@ trait OrderInterfaceRenderTrait {
 										);
 
 										if ( $is_different ) {
-											echo '<div class="shipping-details" style="margin-top: 20px;">';
+											echo '<div class="shipping-details awcom-shipping-details">';
 											echo '<h4>' . esc_html__( 'Shipping Address', 'alynt-wc-customer-order-manager' ) . '</h4>';
 											echo '<div class="address">';
 											echo wp_kses_post( WC()->countries->get_formatted_address( $shipping_address ) );

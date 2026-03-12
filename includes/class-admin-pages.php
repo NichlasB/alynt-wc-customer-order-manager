@@ -112,6 +112,39 @@ class AdminPages {
 		return is_array( $data ) ? $data : array();
 	}
 
+	/**
+	 * Fetch configured customer groups from the shared customer_groups table.
+	 *
+	 * @since 1.0.6
+	 *
+	 * @return array
+	 */
+	protected function get_customer_groups() {
+		global $wpdb;
+		$groups_table = $wpdb->prefix . 'customer_groups';
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admin-only lookup for configured customer groups.
+		$table_exists = $wpdb->get_var(
+			$wpdb->prepare(
+				'SHOW TABLES LIKE %s',
+				$wpdb->esc_like( $groups_table )
+			)
+		);
+
+		if ( $table_exists !== $groups_table ) {
+			return array();
+		}
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admin-only lookup for configured customer groups.
+		$groups = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT group_id, group_name FROM {$groups_table} WHERE group_id >= %d ORDER BY group_name ASC",
+				0
+			)
+		);
+
+		return is_array( $groups ) ? $groups : array();
+	}
+
 	public function cleanup_customer_group_assignment( $user_id ) {
 		$user_id = absint( $user_id );
 

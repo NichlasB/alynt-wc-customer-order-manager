@@ -5,6 +5,8 @@
  * @package Alynt_WC_Customer_Order_Manager
  */
 
+defined( 'ABSPATH' ) || exit;
+
 ?>
 <div class="orders-section postbox">
 	<h2 class="hndle"><?php esc_html_e( 'Orders', 'alynt-wc-customer-order-manager' ); ?></h2>
@@ -34,7 +36,7 @@
 
 			foreach ( $orders as $customer_order ) {
 				echo '<tr>';
-				echo '<td><a href="' . esc_url( admin_url( 'post.php?post=' . $customer_order->get_id() . '&action=edit' ) ) . '">#' . esc_html( $customer_order->get_order_number() ) . '</a></td>';
+				echo '<td><a href="' . esc_url( awcom_get_order_edit_url( $customer_order->get_id() ) ) . '">#' . esc_html( $customer_order->get_order_number() ) . '</a></td>';
 				echo '<td>' . esc_html( wc_format_datetime( $customer_order->get_date_created() ) ) . '</td>';
 				echo '<td>' . esc_html( wc_get_order_status_name( $customer_order->get_status() ) ) . '</td>';
 				echo '<td>' . wp_kses_post( $customer_order->get_formatted_order_total() ) . '</td>';

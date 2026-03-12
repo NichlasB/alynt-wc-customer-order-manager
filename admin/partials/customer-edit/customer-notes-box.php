@@ -5,6 +5,8 @@
  * @package Alynt_WC_Customer_Order_Manager
  */
 
+defined( 'ABSPATH' ) || exit;
+
 ?>
 <div class="postbox">
 	<h2 class="hndle"><span><?php esc_html_e( 'Customer Notes', 'alynt-wc-customer-order-manager' ); ?></span></h2>
@@ -12,10 +14,10 @@
 		<div class="customer-notes-list" aria-live="polite" aria-atomic="false">
 			<?php
 			$this->migrate_old_customer_notes( $customer_id );
-			$notes = get_user_meta( $customer_id, '_awcom_customer_notes', true );
+			$notes = $this->get_customer_notes( $customer_id );
 			if ( $notes && is_array( $notes ) ) {
-				foreach ( $notes as $index => $note ) {
-					echo '<div class="customer-note" data-note-index="' . esc_attr( $index ) . '">';
+				foreach ( $notes as $note ) {
+					echo '<div class="customer-note" data-note-id="' . esc_attr( $note['id'] ) . '">';
 					echo '<div class="note-content">' . wp_kses_post( $note['content'] ) . '</div>';
 					echo '<div class="note-actions">';
 					echo '<button type="button" class="button button-small edit-note"><span class="dashicons dashicons-edit" aria-hidden="true"></span> ' . esc_html__( 'Edit', 'alynt-wc-customer-order-manager' ) . '</button> ';

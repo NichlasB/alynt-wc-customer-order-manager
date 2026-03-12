@@ -5,8 +5,10 @@
  * @package Alynt_WC_Customer_Order_Manager
  */
 
+defined( 'ABSPATH' ) || exit;
+
 ?>
-<div id="email-template-modal" style="display:none;">
+<div id="email-template-modal" class="awcom-email-template-modal">
 	<div class="email-template-editor">
 		<h2><?php esc_html_e( 'Edit Login Email Template', 'alynt-wc-customer-order-manager' ); ?></h2>
 		<p class="description">

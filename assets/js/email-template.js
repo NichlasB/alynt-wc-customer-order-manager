@@ -123,12 +123,15 @@ jQuery(function($) {
                 error: function(xhr) {
                     var errorMessage = i18n.server_error;
                     if (xhr.responseJSON) {
-                        if (typeof xhr.responseJSON.data === 'string') {
+                        if (xhr.responseJSON.data && typeof xhr.responseJSON.data.message === 'string') {
+                            errorMessage = xhr.responseJSON.data.message;
+                        } else if (typeof xhr.responseJSON.data === 'string') {
                             errorMessage = xhr.responseJSON.data;
                         } else if (xhr.responseJSON.message) {
                             errorMessage = xhr.responseJSON.message;
                         }
                     }
+
                     alert(formatString(i18n.save_error, errorMessage));
                 },
                 complete: function() {
@@ -153,8 +156,7 @@ jQuery(function($) {
 
     if (typeof awcomEmailVars !== 'undefined' && awcomEmailVars.mergeTags) {
         var $mergeTagsSelect = $('<select>', {
-            class: 'merge-tags-select',
-            style: 'margin-bottom: 10px;'
+            class: 'merge-tags-select'
         }).append($('<option>', {
             value: '',
             text: i18n.insert_merge_tag

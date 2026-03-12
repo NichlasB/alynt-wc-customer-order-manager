@@ -184,6 +184,7 @@ class OrderInterface {
 					'search_products'      => __( 'Search for a product...', 'alynt-wc-customer-order-manager' ),
 					'no_products'          => __( 'No products found', 'alynt-wc-customer-order-manager' ),
 					'product_search_error' => __( 'Could not load matching products. Please try again.', 'alynt-wc-customer-order-manager' ),
+					'product_search_unavailable' => __( 'Product search is unavailable because required scripts did not load. Refresh the page and try again.', 'alynt-wc-customer-order-manager' ),
 					'remove_item'          => __( 'Remove item', 'alynt-wc-customer-order-manager' ),
 					'calculating'          => __( 'Calculating...', 'alynt-wc-customer-order-manager' ),
 					'no_shipping'          => __( 'No shipping methods available', 'alynt-wc-customer-order-manager' ),

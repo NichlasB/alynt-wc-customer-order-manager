@@ -5,6 +5,8 @@
  * @package Alynt_WC_Customer_Order_Manager
  */
 
+defined( 'ABSPATH' ) || exit;
+
 /**
  * Customer edit page wrapper.
  *
