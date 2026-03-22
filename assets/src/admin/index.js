@@ -1,0 +1,9 @@
+import '../../css/edit-customer.css';
+import '../../js/customer-list.js';
+import '../../js/customer-notes.js';
+import '../../js/email-template.js';
+import '../../css/order-interface.css';
+import '../../js/order-interface-core.js';
+import '../../js/order-interface-shipping.js';
+import '../../css/payment-link.css';
+import '../../js/payment-link.js';

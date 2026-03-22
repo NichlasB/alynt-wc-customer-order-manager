@@ -1,5 +1,21 @@
 {
+  "name": "alynt/alynt-wc-customer-order-manager",
+  "description": "Alynt WooCommerce Customer and Order Manager",
+  "type": "wordpress-plugin",
+  "license": "GPL-2.0-or-later",
   "require": {
-    "yahnis-elsts/plugin-update-checker": "^5.5"
+    "php": ">=7.2"
+  },
+  "require-dev": {
+    "squizlabs/php_codesniffer": "^3.7",
+    "wp-coding-standards/wpcs": "^3.0",
+    "phpunit/phpunit": "^9.6",
+    "brain/monkey": "^2.6",
+    "dealerdirect/phpcodesniffer-composer-installer": "^1.0"
+  },
+  "config": {
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
   }
 }

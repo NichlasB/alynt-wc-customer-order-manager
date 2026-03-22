@@ -4,6 +4,7 @@
  * Description:       Provides a customer management interface for WooCommerce customers and orders.
  * Version:           1.0.6
  * Author:            Alynt
+ * GitHub Plugin URI: NichlasB/alynt-wc-customer-order-manager
  * Requires at least: 5.0
  * Requires PHP:      7.2
  * Requires Plugins:  woocommerce
@@ -18,49 +19,13 @@
 
 defined( 'ABSPATH' ) || exit;
 
-// Plugin Update Checker.
-$composer_autoloader_path = __DIR__ . '/vendor/autoload.php';
-
-if ( file_exists( $composer_autoloader_path ) ) {
-	require_once $composer_autoloader_path;
-} elseif ( is_admin() ) {
-	add_action( 'admin_notices', 'awcom_render_missing_update_checker_notice' );
-}
-
-use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
-
-if ( class_exists( 'YahnisElsts\PluginUpdateChecker\v5\PucFactory' ) ) {
-	$my_update_checker = PucFactory::buildUpdateChecker(
-		'https://github.com/NichlasB/alynt-wc-customer-order-manager',
-		__FILE__,
-		'alynt-wc-customer-order-manager'
-	);
-
-	// Set the branch that contains the stable release.
-	$my_update_checker->setBranch( 'main' );
-	// Enable GitHub releases.
-	$my_update_checker->getVcsApi()->enableReleaseAssets();
-}
-
 // Define plugin constants.
 define( 'AWCOM_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 define( 'AWCOM_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'AWCOM_VERSION', '1.0.6' );
 
-/**
- * Display a warning when the plugin update checker dependencies are missing.
- *
- * @since 1.0.6
- *
- * @return void
- */
-function awcom_render_missing_update_checker_notice() {
-	?>
-	<div class="notice notice-warning">
-		<p><?php esc_html_e( 'The plugin update checker could not be loaded because plugin dependencies are missing. GitHub update checks may be unavailable until they are restored.', 'alynt-wc-customer-order-manager' ); ?></p>
-	</div>
-	<?php
-}
+require_once AWCOM_PLUGIN_PATH . 'includes/class-activator.php';
+require_once AWCOM_PLUGIN_PATH . 'includes/class-deactivator.php';
 
 /**
  * Display setup warnings that were captured during activation.
@@ -214,7 +179,7 @@ if ( ! function_exists( 'awcom_get_order_edit_url' ) ) {
  *
  * @return void
  */
-register_activation_hook( __FILE__, 'awcom_activate' );
+register_activation_hook( __FILE__, array( '\\AlyntWCOrderManager\\Activator', 'activate' ) );
 /**
  * Handle plugin activation tasks.
  *
@@ -262,7 +227,7 @@ function awcom_activate() {
  *
  * @return void
  */
-register_deactivation_hook( __FILE__, 'awcom_deactivate' );
+register_deactivation_hook( __FILE__, array( '\\AlyntWCOrderManager\\Deactivator', 'deactivate' ) );
 /**
  * Handle plugin deactivation tasks.
  *
