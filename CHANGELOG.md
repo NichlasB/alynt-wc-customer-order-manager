@@ -51,10 +51,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [1.0.1] - 2025-01-24
 
 ### Added
-- GitHub Update Checker integration for automatic plugin updates
 - Documentation in README.md and README.txt
-- Plugin update functionality through WordPress admin panel
-- Improved plugin distribution with vendor files included
 
 ## [1.0.0] - 2025-01-20
 

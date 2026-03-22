@@ -105,10 +105,7 @@ Customers can modify pending orders by adding or removing products, changing ite
 * Documentation: Updated documentation with new features
 
 = 1.0.1 - 2025-01-24 =
-* Enhancement: Added GitHub Update Checker integration
-* Enhancement: Added automatic plugin updates through WordPress admin panel
 * Enhancement: Added comprehensive documentation
-* Enhancement: Improved plugin distribution with required dependencies
 * Documentation: Added detailed installation and configuration guides
 * Documentation: Added troubleshooting section
 

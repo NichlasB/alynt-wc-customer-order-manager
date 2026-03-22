@@ -132,10 +132,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 - Updated documentation with new features
 
 ### 1.0.1 (2025-01-24)
-- Added GitHub Update Checker integration for automatic plugin updates
 - Added documentation in README.md and README.txt
-- Added plugin update functionality through WordPress admin panel
-- Improved plugin distribution with vendor files included
 
 ### 1.0.0 (2025-01-20)
 - Initial release
