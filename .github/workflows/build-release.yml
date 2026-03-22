@@ -39,6 +39,7 @@ jobs:
           fi
 
       - name: Create plugin zip
+        id: package
         run: |
           PLUGIN_SLUG="alynt-wc-customer-order-manager"
           VERSION="${{ github.event.release.tag_name }}"
@@ -73,11 +74,11 @@ jobs:
           cd build
           zip -r ${PLUGIN_SLUG}-${VERSION}.zip ${PLUGIN_SLUG}
 
-          echo "ZIP_FILE=${PLUGIN_SLUG}-${VERSION}.zip" >> $GITHUB_ENV
+          echo "zip_file=build/${PLUGIN_SLUG}-${VERSION}.zip" >> "$GITHUB_OUTPUT"
 
       - name: Upload release asset
         uses: softprops/action-gh-release@v2
         with:
-          files: build/${{ env.ZIP_FILE }}
+          files: ${{ steps.package.outputs.zip_file }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
