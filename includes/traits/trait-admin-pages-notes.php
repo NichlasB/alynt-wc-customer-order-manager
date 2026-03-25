@@ -76,7 +76,7 @@ trait AdminPagesNotesTrait {
 		}
 
 		if ( ! Security::user_can_access() ) {
-			$this->send_notes_ajax_error( __( 'Permission denied.', 'alynt-wc-customer-order-manager' ), 403 );
+			$this->send_notes_ajax_error( __( 'You do not have permission to manage customer notes.', 'alynt-wc-customer-order-manager' ), 403 );
 		}
 	}
 
@@ -206,24 +206,31 @@ trait AdminPagesNotesTrait {
 				'ajaxurl'     => admin_url( 'admin-ajax.php' ),
 				'customer_id' => $customer_id,
 				'i18n'        => array(
-					'confirm_delete'       => __( 'Are you sure you want to delete this note?', 'alynt-wc-customer-order-manager' ),
-					'empty_note'           => __( 'Please enter a note.', 'alynt-wc-customer-order-manager' ),
+					'delete_note_title'    => __( 'Delete Note?', 'alynt-wc-customer-order-manager' ),
+					'delete_note_action'   => __( 'Delete Note', 'alynt-wc-customer-order-manager' ),
+					/* translators: %s: note preview text. */
+					'delete_note_message'  => __( 'This will permanently delete this note: "%s". This cannot be undone.', 'alynt-wc-customer-order-manager' ),
+					'empty_note'           => __( 'Enter a note before you save it.', 'alynt-wc-customer-order-manager' ),
 					'edit_label'           => __( 'Edit', 'alynt-wc-customer-order-manager' ),
 					'delete_label'         => __( 'Delete', 'alynt-wc-customer-order-manager' ),
 					'save_label'           => __( 'Save', 'alynt-wc-customer-order-manager' ),
 					'cancel_label'         => __( 'Cancel', 'alynt-wc-customer-order-manager' ),
-					'no_notes'             => __( 'No notes found.', 'alynt-wc-customer-order-manager' ),
+					'no_notes_title'       => __( 'No Notes Yet', 'alynt-wc-customer-order-manager' ),
+					'no_notes_description' => __( 'Notes added for this customer will appear here for your team.', 'alynt-wc-customer-order-manager' ),
+					'add_first_note'       => __( 'Add First Note', 'alynt-wc-customer-order-manager' ),
+					'note_added'           => __( 'Note added successfully.', 'alynt-wc-customer-order-manager' ),
+					'note_updated'         => __( 'Note updated successfully.', 'alynt-wc-customer-order-manager' ),
 					/* translators: 1: customer note author, 2: customer note date. */
 					'note_meta'            => __( 'By %1$s on %2$s', 'alynt-wc-customer-order-manager' ),
 					/* translators: %s: server-provided error details while adding a customer note. */
-					'add_error'            => __( 'Error adding note: %s', 'alynt-wc-customer-order-manager' ),
-					'add_error_generic'    => __( 'Error adding note. Please try again.', 'alynt-wc-customer-order-manager' ),
+					'add_error'            => __( 'Could not add the note. %s', 'alynt-wc-customer-order-manager' ),
+					'add_error_generic'    => __( 'Could not add the note. Please try again.', 'alynt-wc-customer-order-manager' ),
 					/* translators: %s: server-provided error details while updating a customer note. */
-					'update_error'         => __( 'Error updating note: %s', 'alynt-wc-customer-order-manager' ),
-					'update_error_generic' => __( 'Error updating note. Please try again.', 'alynt-wc-customer-order-manager' ),
+					'update_error'         => __( 'Could not update the note. %s', 'alynt-wc-customer-order-manager' ),
+					'update_error_generic' => __( 'Could not update the note. Please try again.', 'alynt-wc-customer-order-manager' ),
 					/* translators: %s: server-provided error details while deleting a customer note. */
-					'delete_error'         => __( 'Error deleting note: %s', 'alynt-wc-customer-order-manager' ),
-					'delete_error_generic' => __( 'Error deleting note. Please try again.', 'alynt-wc-customer-order-manager' ),
+					'delete_error'         => __( 'Could not delete the note. %s', 'alynt-wc-customer-order-manager' ),
+					'delete_error_generic' => __( 'Could not delete the note. Please try again.', 'alynt-wc-customer-order-manager' ),
 				),
 			)
 		);
@@ -247,7 +254,7 @@ trait AdminPagesNotesTrait {
 		$note_content = isset( $_POST['note'] ) ? sanitize_textarea_field( wp_unslash( $_POST['note'] ) ) : '';
 
 		if ( ! $this->get_valid_notes_customer( $customer_id ) || ! $note_content ) {
-			$this->send_notes_ajax_error( __( 'Invalid data.', 'alynt-wc-customer-order-manager' ) );
+			$this->send_notes_ajax_error( __( 'The note could not be saved because some required information was missing. Refresh the page and try again.', 'alynt-wc-customer-order-manager' ) );
 		}
 
 		$current_user = wp_get_current_user();
@@ -297,7 +304,7 @@ trait AdminPagesNotesTrait {
 		$note_content = isset( $_POST['note'] ) ? sanitize_textarea_field( wp_unslash( $_POST['note'] ) ) : '';
 
 		if ( ! $this->get_valid_notes_customer( $customer_id ) || ! $note_content || ( '' === $note_id && $note_index < 0 ) ) {
-			$this->send_notes_ajax_error( __( 'Invalid data.', 'alynt-wc-customer-order-manager' ) );
+			$this->send_notes_ajax_error( __( 'The note could not be updated because some required information was missing. Refresh the page and try again.', 'alynt-wc-customer-order-manager' ) );
 		}
 
 		$notes = $this->get_customer_notes( $customer_id );
@@ -306,7 +313,7 @@ trait AdminPagesNotesTrait {
 		}
 
 		if ( ! isset( $notes[ $note_index ] ) ) {
-			$this->send_notes_ajax_error( __( 'Note not found.', 'alynt-wc-customer-order-manager' ), 404 );
+			$this->send_notes_ajax_error( __( 'This note could not be found. Refresh the page and try again.', 'alynt-wc-customer-order-manager' ), 404 );
 		}
 
 		$notes[ $note_index ]['content']   = $note_content;
@@ -339,7 +346,7 @@ trait AdminPagesNotesTrait {
 		$note_index  = isset( $_POST['note_index'] ) ? intval( wp_unslash( $_POST['note_index'] ) ) : -1;
 
 		if ( ! $this->get_valid_notes_customer( $customer_id ) || ( '' === $note_id && $note_index < 0 ) ) {
-			$this->send_notes_ajax_error( __( 'Invalid data.', 'alynt-wc-customer-order-manager' ) );
+			$this->send_notes_ajax_error( __( 'The note could not be deleted because some required information was missing. Refresh the page and try again.', 'alynt-wc-customer-order-manager' ) );
 		}
 
 		$notes = $this->get_customer_notes( $customer_id );
@@ -348,7 +355,7 @@ trait AdminPagesNotesTrait {
 		}
 
 		if ( ! isset( $notes[ $note_index ] ) ) {
-			$this->send_notes_ajax_error( __( 'Note not found.', 'alynt-wc-customer-order-manager' ), 404 );
+			$this->send_notes_ajax_error( __( 'This note could not be found. Refresh the page and try again.', 'alynt-wc-customer-order-manager' ), 404 );
 		}
 
 		unset( $notes[ $note_index ] );

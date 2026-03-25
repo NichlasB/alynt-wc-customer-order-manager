@@ -7,8 +7,59 @@
         return String(template || '').replace('%s', value);
     }
 
-    function showCopyFailedMessage(text) {
-        alert(formatString(i18n.copy_failed, text));
+    function getFeedbackElement(button) {
+        var actions = button.closest('.payment-link-actions');
+
+        return actions ? actions.querySelector('.awcom-payment-link-feedback') : null;
+    }
+
+    function clearFeedback(button) {
+        var feedback = getFeedbackElement(button);
+
+        if (!feedback) {
+            return;
+        }
+
+        feedback.hidden = true;
+        feedback.className = 'awcom-payment-link-feedback';
+        feedback.removeAttribute('role');
+        feedback.removeAttribute('tabindex');
+        feedback.innerHTML = '';
+    }
+
+    function showFeedback(button, type, message) {
+        var feedback = getFeedbackElement(button);
+        var paragraph;
+
+        if (!feedback) {
+            return;
+        }
+
+        feedback.hidden = false;
+        feedback.className = 'awcom-payment-link-feedback notice inline ' + (type === 'success' ? 'notice-success' : 'notice-error');
+        feedback.setAttribute('role', type === 'success' ? 'status' : 'alert');
+        feedback.setAttribute('tabindex', '-1');
+        feedback.innerHTML = '';
+
+        paragraph = document.createElement('p');
+        paragraph.textContent = message;
+        feedback.appendChild(paragraph);
+        feedback.focus();
+    }
+
+    function setBusyState(button, isBusy) {
+        button.disabled = Boolean(isBusy);
+
+        if (isBusy) {
+            button.classList.add('is-busy');
+            button.setAttribute('aria-disabled', 'true');
+            button.setAttribute('aria-busy', 'true');
+            return;
+        }
+
+        button.classList.remove('is-busy');
+        button.removeAttribute('aria-disabled');
+        button.removeAttribute('aria-busy');
     }
 
     function fallbackCopy(text) {
@@ -21,13 +72,9 @@
         textarea.select();
 
         try {
-            if (document.execCommand('copy')) {
-                alert(i18n.copied);
-            } else {
-                showCopyFailedMessage(text);
-            }
+            return document.execCommand('copy');
         } catch (err) {
-            showCopyFailedMessage(text);
+            return false;
         } finally {
             document.body.removeChild(textarea);
         }
@@ -44,19 +91,36 @@
 
         var link = button.getAttribute('data-payment-link');
 
+        clearFeedback(button);
+
         if (!link) {
-            alert(i18n.no_payment_link);
+            showFeedback(button, 'error', i18n.no_payment_link);
             return;
         }
 
+        setBusyState(button, true);
+
         if (navigator.clipboard && window.isSecureContext) {
             navigator.clipboard.writeText(link).then(function() {
-                alert(i18n.copied);
+                showFeedback(button, 'success', i18n.copied);
             }).catch(function() {
-                fallbackCopy(link);
+                if (fallbackCopy(link)) {
+                    showFeedback(button, 'success', i18n.copied);
+                    return;
+                }
+
+                showFeedback(button, 'error', formatString(i18n.copy_failed, link));
+            }).finally(function() {
+                setBusyState(button, false);
             });
         } else {
-            fallbackCopy(link);
+            if (fallbackCopy(link)) {
+                showFeedback(button, 'success', i18n.copied);
+            } else {
+                showFeedback(button, 'error', formatString(i18n.copy_failed, link));
+            }
+
+            setBusyState(button, false);
         }
     });
 })();

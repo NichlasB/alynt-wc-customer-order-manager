@@ -69,7 +69,7 @@ class PaymentLink {
 
 		// Enqueue Dashicons.
 		wp_enqueue_style( 'dashicons' );
-		wp_enqueue_style( 'awcom-payment-link', plugins_url( '../assets/css/payment-link.css', __FILE__ ), array(), '1.0.1' );
+		wp_enqueue_style( 'awcom-payment-link', plugins_url( '../assets/css/payment-link.css', __FILE__ ), array(), AWCOM_VERSION );
 		wp_enqueue_script(
 			'awcom-payment-link',
 			plugins_url( '../assets/js/payment-link.js', __FILE__ ),
@@ -130,10 +130,11 @@ class PaymentLink {
 				<?php echo esc_html( $section_title ); ?>
 			</h3>
 			<div class="wc-order-data-row">
-				<button type="button" class="button button-primary awcom-copy-payment-link" data-payment-link="<?php echo esc_attr( $link ); ?>">
+				<button type="button" class="button button-secondary awcom-copy-payment-link" data-payment-link="<?php echo esc_attr( $link ); ?>">
 					<span class="dashicons dashicons-clipboard"></span>
 					<?php echo esc_html( $button_text ); ?>
 				</button>
+				<div class="awcom-payment-link-feedback" hidden></div>
 			</div>
 		</div>
 		<?php

@@ -16,8 +16,8 @@ $shipping_fields_class = $same_as_billing ? 'awcom-is-hidden' : '';
 	<tr>
 		<th scope="row"><label for="same_as_billing"><?php esc_html_e( 'Same as billing address', 'alynt-wc-customer-order-manager' ); ?></label></th>
 		<td>
-			<input type="checkbox" name="same_as_billing" id="same_as_billing" value="1" <?php checked( $same_as_billing ); ?>>
-			<span class="description"><?php esc_html_e( 'Check this box if the shipping address is the same as the billing address', 'alynt-wc-customer-order-manager' ); ?></span>
+			<input type="checkbox" name="same_as_billing" id="same_as_billing" value="1" aria-describedby="same-as-billing-description" <?php checked( $same_as_billing ); ?>>
+			<p id="same-as-billing-description" class="description"><?php esc_html_e( 'Select this option to copy the billing address into the shipping address fields.', 'alynt-wc-customer-order-manager' ); ?></p>
 		</td>
 	</tr>
 </table>

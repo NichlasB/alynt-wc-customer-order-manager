@@ -11,6 +11,7 @@ defined( 'ABSPATH' ) || exit;
 <div id="email-template-modal" class="awcom-email-template-modal">
 	<div class="email-template-editor">
 		<h2><?php esc_html_e( 'Edit Login Email Template', 'alynt-wc-customer-order-manager' ); ?></h2>
+		<div id="awcom-email-template-feedback" class="awcom-email-template-feedback" hidden></div>
 		<p class="description">
 			<?php esc_html_e( 'Available merge tags:', 'alynt-wc-customer-order-manager' ); ?><br>
 			<code>{customer_first_name}</code> - <?php esc_html_e( 'Customer\'s first name', 'alynt-wc-customer-order-manager' ); ?><br>

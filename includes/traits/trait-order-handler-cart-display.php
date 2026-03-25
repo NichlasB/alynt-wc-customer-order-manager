@@ -180,8 +180,12 @@ trait OrderHandlerCartDisplayTrait {
 
 		if ( $display_title ) {
 			$discount_text = sprintf(
-				'<br><small class="awcom-discount-label">%s Pricing Applied</small>',
-				esc_html( $display_title )
+				'<br><small class="awcom-discount-label">%s</small>',
+				sprintf(
+					/* translators: %s: customer group display title. */
+					__( '%s pricing applied', 'alynt-wc-customer-order-manager' ),
+					esc_html( $display_title )
+				)
 			);
 			return $product_name . $discount_text;
 		}

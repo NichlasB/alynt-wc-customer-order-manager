@@ -33,6 +33,14 @@ trait AdminPagesRenderAddTrait {
 			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'alynt-wc-customer-order-manager' ) );
 		}
 
+		wp_enqueue_style(
+			'awcom-edit-customer',
+			AWCOM_PLUGIN_URL . 'assets/css/edit-customer.css',
+			array( 'dashicons' ),
+			AWCOM_VERSION
+		);
+
+		$form_state = $this->pull_form_state( 'awcom_add_customer_form' );
 		$form_values = array_merge(
 			array(
 				'customer_group'    => 0,
@@ -48,9 +56,12 @@ trait AdminPagesRenderAddTrait {
 				'billing_state'     => '',
 				'billing_postcode'  => '',
 				'billing_country'   => 'US',
+				'validation_errors' => array(),
 			),
-			$this->pull_form_state( 'awcom_add_customer_form' )
+			$form_state
 		);
+		$validation_errors = isset( $form_values['validation_errors'] ) && is_array( $form_values['validation_errors'] ) ? $form_values['validation_errors'] : array();
+		$first_invalid_field = ! empty( $validation_errors ) ? array_key_first( $validation_errors ) : '';
 		/* phpcs:disable WordPress.Security.NonceVerification.Recommended -- Reading redirect notice query args only. */
 		$created_flag = isset( $_GET['created'] ) ? sanitize_key( wp_unslash( $_GET['created'] ) ) : '';
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- The decoded value is sanitized immediately for display.
@@ -71,11 +82,13 @@ trait AdminPagesRenderAddTrait {
 					esc_html( $error_message ) . '</p></div>';
 			}
 			?>
+			<hr class="wp-header-end">
 
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="awcom-customer-form">
 				<?php wp_nonce_field( 'create_customer', 'awcom_customer_nonce' ); ?>
 				<input type="hidden" name="action" value="awcom_create_customer">
 
+				<h2><?php esc_html_e( 'Account Details', 'alynt-wc-customer-order-manager' ); ?></h2>
 				<table class="form-table">
 					<tr>
 						<th scope="row">
@@ -104,7 +117,10 @@ trait AdminPagesRenderAddTrait {
 							<label for="first_name"><?php esc_html_e( 'First Name', 'alynt-wc-customer-order-manager' ); ?> *</label>
 						</th>
 						<td>
-							<input type="text" name="first_name" id="first_name" class="regular-text" value="<?php echo esc_attr( $form_values['first_name'] ); ?>" required>
+							<input type="text" name="first_name" id="first_name" class="regular-text" value="<?php echo esc_attr( $form_values['first_name'] ); ?>" required aria-required="true" <?php echo isset( $validation_errors['first_name'] ) ? 'aria-invalid="true" aria-describedby="awcom-first-name-error"' : ''; ?> <?php echo 'first_name' === $first_invalid_field ? 'autofocus' : ''; ?>>
+							<?php if ( isset( $validation_errors['first_name'] ) ) : ?>
+								<p id="awcom-first-name-error" class="awcom-field-error description" role="alert"><?php echo esc_html( $validation_errors['first_name'] ); ?></p>
+							<?php endif; ?>
 						</td>
 					</tr>
 					<tr>
@@ -112,7 +128,10 @@ trait AdminPagesRenderAddTrait {
 							<label for="last_name"><?php esc_html_e( 'Last Name', 'alynt-wc-customer-order-manager' ); ?> *</label>
 						</th>
 						<td>
-							<input type="text" name="last_name" id="last_name" class="regular-text" value="<?php echo esc_attr( $form_values['last_name'] ); ?>" required>
+							<input type="text" name="last_name" id="last_name" class="regular-text" value="<?php echo esc_attr( $form_values['last_name'] ); ?>" required aria-required="true" <?php echo isset( $validation_errors['last_name'] ) ? 'aria-invalid="true" aria-describedby="awcom-last-name-error"' : ''; ?> <?php echo 'last_name' === $first_invalid_field ? 'autofocus' : ''; ?>>
+							<?php if ( isset( $validation_errors['last_name'] ) ) : ?>
+								<p id="awcom-last-name-error" class="awcom-field-error description" role="alert"><?php echo esc_html( $validation_errors['last_name'] ); ?></p>
+							<?php endif; ?>
 						</td>
 					</tr>
 					<tr>
@@ -120,9 +139,16 @@ trait AdminPagesRenderAddTrait {
 							<label for="email"><?php esc_html_e( 'Account Email', 'alynt-wc-customer-order-manager' ); ?> *</label>
 						</th>
 						<td>
-							<input type="email" name="email" id="email" class="regular-text" value="<?php echo esc_attr( $form_values['email'] ); ?>" required>
+							<input type="email" name="email" id="email" class="regular-text" value="<?php echo esc_attr( $form_values['email'] ); ?>" required aria-required="true" <?php echo isset( $validation_errors['email'] ) ? 'aria-invalid="true" aria-describedby="awcom-email-error"' : ''; ?> <?php echo 'email' === $first_invalid_field ? 'autofocus' : ''; ?>>
+							<?php if ( isset( $validation_errors['email'] ) ) : ?>
+								<p id="awcom-email-error" class="awcom-field-error description" role="alert"><?php echo esc_html( $validation_errors['email'] ); ?></p>
+							<?php endif; ?>
 						</td>
 					</tr>
+				</table>
+
+				<h2><?php esc_html_e( 'Billing Address', 'alynt-wc-customer-order-manager' ); ?></h2>
+				<table class="form-table">
 					<tr>
 						<th scope="row">
 							<label for="billing_email"><?php esc_html_e( 'Billing Email', 'alynt-wc-customer-order-manager' ); ?></label>

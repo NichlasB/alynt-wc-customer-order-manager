@@ -19,9 +19,21 @@
     justify-content: center;
 }
 
+.awcom-copy-payment-link.is-busy {
+    opacity: 0.8;
+}
+
 .awcom-copy-payment-link .dashicons {
     margin-right: 5px;
     font-size: 16px;
     width: 16px;
     height: 16px;
+}
+
+.awcom-payment-link-feedback {
+    margin-top: 12px;
+}
+
+.awcom-payment-link-feedback[hidden] {
+    display: none;
 }

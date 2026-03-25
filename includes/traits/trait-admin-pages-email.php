@@ -74,14 +74,17 @@ trait AdminPagesEmailTrait {
 					'dialog_title'     => __( 'Edit Email Template', 'alynt-wc-customer-order-manager' ),
 					'empty_content'    => __( 'Please enter some content for the email template.', 'alynt-wc-customer-order-manager' ),
 					'save_success'     => __( 'Template saved successfully.', 'alynt-wc-customer-order-manager' ),
-					'unknown_error'    => __( 'Unknown error occurred while saving the template.', 'alynt-wc-customer-order-manager' ),
-					'server_error'     => __( 'Server error occurred while saving the template.', 'alynt-wc-customer-order-manager' ),
+					'unknown_error'    => __( 'Something unexpected happened while saving the template. Please try again.', 'alynt-wc-customer-order-manager' ),
+					'server_error'     => __( 'The email template could not be saved. Please try again.', 'alynt-wc-customer-order-manager' ),
 					'saving'           => __( 'Saving...', 'alynt-wc-customer-order-manager' ),
+					'discard_title'    => __( 'Discard Changes?', 'alynt-wc-customer-order-manager' ),
+					'discard_action'   => __( 'Discard Changes', 'alynt-wc-customer-order-manager' ),
+					'cancel_label'     => __( 'Cancel', 'alynt-wc-customer-order-manager' ),
 					'unsaved_changes'  => __( 'Discard your unsaved email template changes?', 'alynt-wc-customer-order-manager' ),
 					/* translators: %s: error message returned while saving the email template. */
-					'save_error'       => __( 'Error saving template: %s', 'alynt-wc-customer-order-manager' ),
+					'save_error'       => __( 'The email template could not be saved. %s', 'alynt-wc-customer-order-manager' ),
 					/* translators: %s: error message thrown while preparing the email template request. */
-					'prepare_error'    => __( 'An error occurred while preparing to save the template: %s', 'alynt-wc-customer-order-manager' ),
+					'prepare_error'    => __( 'The email template could not be prepared for saving. %s', 'alynt-wc-customer-order-manager' ),
 					'insert_merge_tag' => __( 'Insert Merge Tag...', 'alynt-wc-customer-order-manager' ),
 				),
 			)
@@ -106,11 +109,11 @@ trait AdminPagesEmailTrait {
 
 		// phpcs:ignore WordPress.WP.Capabilities.Unknown -- WooCommerce registers this capability.
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'alynt-wc-customer-order-manager' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'You do not have permission to edit this email template.', 'alynt-wc-customer-order-manager' ) ), 403 );
 		}
 
 		if ( ! isset( $_POST['template'] ) ) {
-			wp_send_json_error( array( 'message' => __( 'No template content received.', 'alynt-wc-customer-order-manager' ) ), 400 );
+			wp_send_json_error( array( 'message' => __( 'The email template could not be saved because no content was received. Refresh the page and try again.', 'alynt-wc-customer-order-manager' ) ), 400 );
 		}
 
 		$template         = wp_kses_post( wp_unslash( $_POST['template'] ) );
@@ -120,7 +123,7 @@ trait AdminPagesEmailTrait {
 		if ( $updated ) {
 			wp_send_json_success( __( 'Template saved successfully.', 'alynt-wc-customer-order-manager' ) );
 		} else {
-			wp_send_json_error( array( 'message' => __( 'Failed to save template.', 'alynt-wc-customer-order-manager' ) ), 500 );
+			wp_send_json_error( array( 'message' => __( 'The email template could not be saved. Please try again.', 'alynt-wc-customer-order-manager' ) ), 500 );
 		}
 	}
 }

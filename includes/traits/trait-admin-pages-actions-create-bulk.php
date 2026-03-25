@@ -168,7 +168,21 @@ trait AdminPagesActionsCreateBulkTrait {
 			);
 		}
 
-		if ( empty( $form_data['first_name'] ) || empty( $form_data['last_name'] ) || empty( $form_data['email'] ) ) {
+		$validation_errors = array();
+		if ( empty( $form_data['first_name'] ) ) {
+			$validation_errors['first_name'] = __( 'Enter a first name to continue.', 'alynt-wc-customer-order-manager' );
+		}
+
+		if ( empty( $form_data['last_name'] ) ) {
+			$validation_errors['last_name'] = __( 'Enter a last name to continue.', 'alynt-wc-customer-order-manager' );
+		}
+
+		if ( empty( $form_data['email'] ) ) {
+			$validation_errors['email'] = __( 'Enter an account email address to continue.', 'alynt-wc-customer-order-manager' );
+		}
+
+		if ( ! empty( $validation_errors ) ) {
+			$form_data['validation_errors'] = $validation_errors;
 			$this->redirect_to_add_customer_with_error(
 				__( 'Please fill in all required fields.', 'alynt-wc-customer-order-manager' ),
 				$form_data
@@ -176,6 +190,9 @@ trait AdminPagesActionsCreateBulkTrait {
 		}
 
 		if ( email_exists( $form_data['email'] ) ) {
+			$form_data['validation_errors'] = array(
+				'email' => __( 'This email address is already registered. Use a different email address and try again.', 'alynt-wc-customer-order-manager' ),
+			);
 			$this->redirect_to_add_customer_with_error(
 				__( 'This email address is already registered.', 'alynt-wc-customer-order-manager' ),
 				$form_data
