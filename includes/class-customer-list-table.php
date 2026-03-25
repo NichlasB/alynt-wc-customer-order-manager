@@ -167,8 +167,9 @@ class CustomerListTable extends \WP_List_Table {
 				esc_html__( 'Edit', 'alynt-wc-customer-order-manager' )
 			),
 			'delete' => sprintf(
-				'<a href="#" class="delete-customer" data-id="%s">%s</a>',
+				'<a href="#" class="delete-customer button-link-delete" data-id="%1$s" data-name="%2$s">%3$s</a>',
 				esc_attr( $item->ID ),
+				esc_attr( trim( $name ) ),
 				esc_html__( 'Delete', 'alynt-wc-customer-order-manager' )
 			),
 		);

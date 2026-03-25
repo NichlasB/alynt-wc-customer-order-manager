@@ -10,6 +10,20 @@
     width: 100%;
 }
 
+#awcom-order-interface-notice:focus {
+    outline: 2px solid #2271b1;
+    outline-offset: 2px;
+}
+
+.awcom-inline-error {
+    color: #b32d2e;
+    margin: 8px 0 0;
+}
+
+#awcom-create-order-form [aria-invalid="true"] {
+    border-color: #d63638;
+}
+
 .awcom-shipping-details {
     margin-top: 20px;
 }

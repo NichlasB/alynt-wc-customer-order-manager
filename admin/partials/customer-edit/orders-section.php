@@ -11,11 +11,8 @@ defined( 'ABSPATH' ) || exit;
 <div class="orders-section postbox">
 	<h2 class="hndle"><?php esc_html_e( 'Orders', 'alynt-wc-customer-order-manager' ); ?></h2>
 	<div class="inside">
-		<p>
-			<a href="<?php echo esc_url( admin_url( 'admin.php?page=alynt-wc-customer-order-manager-create-order&customer_id=' . $customer_id ) ); ?>"
-				class="button button-primary"><?php esc_html_e( 'Create New Order', 'alynt-wc-customer-order-manager' ); ?></a>
-		</p>
 		<?php
+		$create_order_url = admin_url( 'admin.php?page=alynt-wc-customer-order-manager-create-order&customer_id=' . $customer_id );
 		$orders = wc_get_orders(
 			array(
 				'customer_id' => $customer_id,
@@ -26,6 +23,7 @@ defined( 'ABSPATH' ) || exit;
 		);
 
 		if ( $orders ) {
+			echo '<p><a href="' . esc_url( $create_order_url ) . '" class="button button-primary">' . esc_html__( 'Create New Order', 'alynt-wc-customer-order-manager' ) . '</a></p>';
 			echo '<h3>' . esc_html__( 'Recent Orders', 'alynt-wc-customer-order-manager' ) . '</h3>';
 			echo '<table class="widefat" aria-label="' . esc_attr__( 'Recent Orders', 'alynt-wc-customer-order-manager' ) . '"><thead><tr>';
 			echo '<th scope="col">' . esc_html__( 'Order', 'alynt-wc-customer-order-manager' ) . '</th>';
@@ -44,7 +42,11 @@ defined( 'ABSPATH' ) || exit;
 			}
 			echo '</tbody></table>';
 		} else {
-			echo '<p>' . esc_html__( 'No orders found for this customer.', 'alynt-wc-customer-order-manager' ) . '</p>';
+			echo '<div class="awcom-empty-state awcom-orders-empty-state">';
+			echo '<h3>' . esc_html__( 'No Orders Yet', 'alynt-wc-customer-order-manager' ) . '</h3>';
+			echo '<p>' . esc_html__( 'Orders created for this customer will appear here.', 'alynt-wc-customer-order-manager' ) . '</p>';
+			echo '<a href="' . esc_url( $create_order_url ) . '" class="button button-primary">' . esc_html__( 'Create First Order', 'alynt-wc-customer-order-manager' ) . '</a>';
+			echo '</div>';
 		}
 		?>
 	</div>

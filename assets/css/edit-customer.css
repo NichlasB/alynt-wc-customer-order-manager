@@ -102,6 +102,10 @@ body.wp-admin #wpbody-content #postbox-container-1.postbox-container {
     opacity: 1;
 }
 
+.customer-note:focus-within .note-actions {
+    opacity: 1;
+}
+
 .note-actions .button-small {
     align-items: center;
     display: inline-flex;
@@ -109,6 +113,17 @@ body.wp-admin #wpbody-content #postbox-container-1.postbox-container {
     height: 22px;
     line-height: 20px;
     padding: 0 5px;
+}
+
+.note-actions .button-link-delete {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.note-actions .spinner {
+    float: none;
+    margin: 0 0 0 6px;
 }
 
 .note-actions .dashicons {
@@ -146,8 +161,51 @@ body.wp-admin #wpbody-content #postbox-container-1.postbox-container {
     width: 100%;
 }
 
+.add-note textarea[aria-invalid="true"],
+.edit-note-textarea[aria-invalid="true"] {
+    border-color: #b32d2e;
+}
+
 .add-note-button {
     width: 100%;
+}
+
+.add-note .spinner {
+    float: none;
+    margin: 8px 0 0;
+}
+
+.awcom-note-feedback {
+    margin: 0 0 15px;
+}
+
+.awcom-note-feedback[hidden] {
+    display: none;
+}
+
+.awcom-field-error,
+.awcom-note-inline-error {
+    color: #b32d2e;
+    margin-top: 6px;
+}
+
+.awcom-empty-state {
+    padding: 12px;
+    border: 1px dashed #c3c4c7;
+    border-radius: 4px;
+    background: #f6f7f7;
+}
+
+.awcom-empty-state h3 {
+    margin-top: 0;
+}
+
+.awcom-email-template-feedback {
+    margin: 0 0 15px;
+}
+
+.awcom-email-template-feedback[hidden] {
+    display: none;
 }
 
 .save-template.loading {

@@ -76,7 +76,21 @@ trait AdminPagesActionsEditTrait {
 				);
 			}
 
-			if ( empty( $form_data['first_name'] ) || empty( $form_data['last_name'] ) || empty( $form_data['email'] ) ) {
+			$validation_errors = array();
+			if ( empty( $form_data['first_name'] ) ) {
+				$validation_errors['first_name'] = __( 'Enter a first name to continue.', 'alynt-wc-customer-order-manager' );
+			}
+
+			if ( empty( $form_data['last_name'] ) ) {
+				$validation_errors['last_name'] = __( 'Enter a last name to continue.', 'alynt-wc-customer-order-manager' );
+			}
+
+			if ( empty( $form_data['email'] ) ) {
+				$validation_errors['email'] = __( 'Enter an account email address to continue.', 'alynt-wc-customer-order-manager' );
+			}
+
+			if ( ! empty( $validation_errors ) ) {
+				$form_data['validation_errors'] = $validation_errors;
 				$this->redirect_to_edit_customer_with_error(
 					$customer_id,
 					__( 'Please fill in all required fields.', 'alynt-wc-customer-order-manager' ),
@@ -86,6 +100,9 @@ trait AdminPagesActionsEditTrait {
 
 			$existing_user = get_user_by( 'email', $form_data['email'] );
 			if ( $existing_user && (int) $existing_user->ID !== $customer_id ) {
+				$form_data['validation_errors'] = array(
+					'email' => __( 'This email address is already registered to another user. Use a different email address and try again.', 'alynt-wc-customer-order-manager' ),
+				);
 				$this->redirect_to_edit_customer_with_error(
 					$customer_id,
 					__( 'This email address is already registered to another user.', 'alynt-wc-customer-order-manager' ),

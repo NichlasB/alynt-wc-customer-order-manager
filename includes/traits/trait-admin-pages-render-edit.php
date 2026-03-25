@@ -116,6 +116,7 @@ trait AdminPagesRenderEditTrait {
 				'shipping_state'     => get_user_meta( $customer_id, 'shipping_state', true ),
 				'shipping_postcode'  => get_user_meta( $customer_id, 'shipping_postcode', true ),
 				'shipping_country'   => get_user_meta( $customer_id, 'shipping_country', true ),
+				'validation_errors'  => array(),
 			),
 			$this->pull_form_state( 'awcom_edit_customer_form_' . $customer_id )
 		);

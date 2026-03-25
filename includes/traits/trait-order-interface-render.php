@@ -66,6 +66,7 @@ trait OrderInterfaceRenderTrait {
 				esc_html( $error_message ) . '</p></div>';
 			}
 			?>
+			<hr class="wp-header-end">
 
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" id="awcom-create-order-form">
 				<?php wp_nonce_field( 'create_order', 'awcom_order_nonce' ); ?>
@@ -123,8 +124,9 @@ trait OrderInterfaceRenderTrait {
 								<h2 class="hndle"><span><?php esc_html_e( 'Order Notes', 'alynt-wc-customer-order-manager' ); ?></span></h2>
 								<div class="inside">
 									<label for="order_notes" class="screen-reader-text"><?php esc_html_e( 'Order Notes (optional)', 'alynt-wc-customer-order-manager' ); ?></label>
+									<p id="awcom-order-notes-description" class="description"><?php esc_html_e( 'Add internal notes for this order if your team needs extra context.', 'alynt-wc-customer-order-manager' ); ?></p>
 									<textarea name="order_notes" id="order_notes" rows="5" class="awcom-order-notes"
-									placeholder="<?php esc_attr_e( 'Add any notes about this order (optional)', 'alynt-wc-customer-order-manager' ); ?>"></textarea>
+									aria-describedby="awcom-order-notes-description" placeholder="<?php esc_attr_e( 'Add any notes about this order (optional)', 'alynt-wc-customer-order-manager' ); ?>"></textarea>
 								</div>
 							</div>
 						</div>

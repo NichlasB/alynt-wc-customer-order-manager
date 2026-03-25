@@ -53,7 +53,7 @@ jQuery(function($) {
         var $notice = $('#awcom-order-interface-notice');
 
         if ($notice.length === 0) {
-            $notice = $('<div id="awcom-order-interface-notice" class="notice"><p></p></div>');
+            $notice = $('<div id="awcom-order-interface-notice" class="notice" tabindex="-1"><p></p></div>');
             $('#awcom-create-order-form').before($notice);
         }
 
@@ -63,10 +63,40 @@ jQuery(function($) {
             .attr('role', type === 'warning' ? 'status' : 'alert')
             .find('p')
             .text(message);
+
+        $notice.trigger('focus');
     };
 
     api.clearOrderNotice = function() {
         $('#awcom-order-interface-notice').remove();
+    };
+
+    api.clearInlineErrors = function() {
+        $('.awcom-inline-error').remove();
+        $('.awcom-order-items input.quantity').removeAttr('aria-invalid aria-describedby');
+        $('#shipping-methods').removeAttr('aria-describedby');
+    };
+
+    api.showInlineError = function(target, errorId, message) {
+        var $target = $(target);
+        var $error = $('#' + errorId);
+
+        if ($target.length === 0) {
+            return $();
+        }
+
+        if ($error.length === 0) {
+            $error = $('<p></p>', {
+                id: errorId,
+                'class': 'awcom-inline-error awcom-field-error description',
+                role: 'alert'
+            });
+        }
+
+        $error.text(message);
+        $target.after($error);
+
+        return $error;
     };
 
     api.requestShippingMethodsUpdate = function(delay) {
@@ -148,12 +178,13 @@ jQuery(function($) {
         $('.awcom-order-items tbody').append(row);
         api.updateOrderTotals();
         api.clearOrderNotice();
+        api.clearInlineErrors();
         api.requestShippingMethodsUpdate(0);
     };
 
     api.initProductSelect = function() {
         if (typeof $.fn.select2 !== 'function') {
-            $('#awcom-add-product').prop('disabled', true);
+            $('#awcom-add-product').prop('disabled', true).attr('aria-disabled', 'true');
             api.showOrderNotice('error', awcomOrderVars.i18n.product_search_unavailable);
             return;
         }
@@ -253,6 +284,7 @@ jQuery(function($) {
     api.bindEvents = function() {
         $(document).on('change keyup', '.awcom-order-items input.quantity', function() {
             api.clearOrderNotice();
+            api.clearInlineErrors();
             api.updateLineTotal($(this).closest('tr'));
             api.updateOrderTotals();
             api.requestShippingMethodsUpdate(300);
@@ -260,6 +292,7 @@ jQuery(function($) {
 
         $(document).on('click', '.awcom-order-items .remove-item', function(e) {
             e.preventDefault();
+            api.clearInlineErrors();
             $(this).closest('tr').remove();
             api.updateOrderTotals();
             api.requestShippingMethodsUpdate(0);
@@ -267,6 +300,7 @@ jQuery(function($) {
 
         $(document).on('change', 'input[name="shipping_method"]', function() {
             api.clearOrderNotice();
+            api.clearInlineErrors();
             api.updateOrderTotals();
         });
 
@@ -276,16 +310,20 @@ jQuery(function($) {
             var $invalidQuantityField = api.getInvalidQuantityField();
 
             api.clearOrderNotice();
+            api.clearInlineErrors();
 
             if ($('.awcom-order-items tbody tr').length === 0) {
                 e.preventDefault();
                 api.showOrderNotice('error', awcomOrderVars.i18n.no_items);
+                api.showInlineError('.awcom-order-items', 'awcom-order-items-error', awcomOrderVars.i18n.no_items);
                 return false;
             }
 
             if ($invalidQuantityField.length) {
                 e.preventDefault();
                 api.showOrderNotice('error', awcomOrderVars.i18n.invalid_quantity);
+                api.showInlineError($invalidQuantityField, 'awcom-order-quantity-error', awcomOrderVars.i18n.invalid_quantity);
+                $invalidQuantityField.attr('aria-invalid', 'true').attr('aria-describedby', 'awcom-order-quantity-error');
                 $invalidQuantityField.trigger('focus');
                 return false;
             }
@@ -293,6 +331,8 @@ jQuery(function($) {
             if ($('input[name="shipping_method"]:checked').length === 0) {
                 e.preventDefault();
                 api.showOrderNotice('error', awcomOrderVars.i18n.no_shipping_selected);
+                api.showInlineError('#shipping-methods', 'awcom-shipping-method-error', awcomOrderVars.i18n.no_shipping_selected);
+                $('#shipping-methods').attr('aria-describedby', 'awcom-shipping-method-error');
                 return false;
             }
 
@@ -303,7 +343,7 @@ jQuery(function($) {
 
             $submitButton.data('submitting', true);
             $form.attr('aria-busy', 'true');
-            $submitButton.prop('disabled', true).attr('aria-busy', 'true');
+            $submitButton.prop('disabled', true).attr('aria-busy', 'true').attr('aria-disabled', 'true');
 
             if ($submitButton.is('input')) {
                 $submitButton.data('original-text', $submitButton.val());

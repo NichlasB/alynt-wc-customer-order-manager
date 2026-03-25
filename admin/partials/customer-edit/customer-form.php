@@ -10,6 +10,8 @@ defined( 'ABSPATH' ) || exit;
 $groups       = $this->get_customer_groups();
 $countries_obj = new \WC_Countries();
 $countries     = $countries_obj->get_countries();
+$validation_errors = isset( $form_values['validation_errors'] ) && is_array( $form_values['validation_errors'] ) ? $form_values['validation_errors'] : array();
+$first_invalid_field = ! empty( $validation_errors ) ? array_key_first( $validation_errors ) : '';
 ?>
 <div class="postbox">
 	<h2 class="hndle"><span><?php esc_html_e( 'Customer Information', 'alynt-wc-customer-order-manager' ); ?></span></h2>
@@ -19,6 +21,7 @@ $countries     = $countries_obj->get_countries();
 			<input type="hidden" name="action" value="awcom_edit_customer">
 			<input type="hidden" name="customer_id" value="<?php echo esc_attr( $customer_id ); ?>">
 
+			<h3><?php esc_html_e( 'Account Details', 'alynt-wc-customer-order-manager' ); ?></h3>
 			<table class="form-table">
 				<tr>
 					<th scope="row">
@@ -44,16 +47,35 @@ $countries     = $countries_obj->get_countries();
 				</tr>
 				<tr>
 					<th scope="row"><label for="first_name"><?php esc_html_e( 'First Name', 'alynt-wc-customer-order-manager' ); ?> *</label></th>
-					<td><input type="text" name="first_name" id="first_name" class="regular-text" value="<?php echo esc_attr( $form_values['first_name'] ); ?>" required></td>
+					<td>
+						<input type="text" name="first_name" id="first_name" class="regular-text" value="<?php echo esc_attr( $form_values['first_name'] ); ?>" required aria-required="true" <?php echo isset( $validation_errors['first_name'] ) ? 'aria-invalid="true" aria-describedby="awcom-edit-first-name-error"' : ''; ?> <?php echo 'first_name' === $first_invalid_field ? 'autofocus' : ''; ?>>
+						<?php if ( isset( $validation_errors['first_name'] ) ) : ?>
+							<p id="awcom-edit-first-name-error" class="awcom-field-error description" role="alert"><?php echo esc_html( $validation_errors['first_name'] ); ?></p>
+						<?php endif; ?>
+					</td>
 				</tr>
 				<tr>
 					<th scope="row"><label for="last_name"><?php esc_html_e( 'Last Name', 'alynt-wc-customer-order-manager' ); ?> *</label></th>
-					<td><input type="text" name="last_name" id="last_name" class="regular-text" value="<?php echo esc_attr( $form_values['last_name'] ); ?>" required></td>
+					<td>
+						<input type="text" name="last_name" id="last_name" class="regular-text" value="<?php echo esc_attr( $form_values['last_name'] ); ?>" required aria-required="true" <?php echo isset( $validation_errors['last_name'] ) ? 'aria-invalid="true" aria-describedby="awcom-edit-last-name-error"' : ''; ?> <?php echo 'last_name' === $first_invalid_field ? 'autofocus' : ''; ?>>
+						<?php if ( isset( $validation_errors['last_name'] ) ) : ?>
+							<p id="awcom-edit-last-name-error" class="awcom-field-error description" role="alert"><?php echo esc_html( $validation_errors['last_name'] ); ?></p>
+						<?php endif; ?>
+					</td>
 				</tr>
 				<tr>
 					<th scope="row"><label for="email"><?php esc_html_e( 'Account Email', 'alynt-wc-customer-order-manager' ); ?> *</label></th>
-					<td><input type="email" name="email" id="email" class="regular-text" value="<?php echo esc_attr( $form_values['email'] ); ?>" required></td>
+					<td>
+						<input type="email" name="email" id="email" class="regular-text" value="<?php echo esc_attr( $form_values['email'] ); ?>" required aria-required="true" <?php echo isset( $validation_errors['email'] ) ? 'aria-invalid="true" aria-describedby="awcom-edit-email-error"' : ''; ?> <?php echo 'email' === $first_invalid_field ? 'autofocus' : ''; ?>>
+						<?php if ( isset( $validation_errors['email'] ) ) : ?>
+							<p id="awcom-edit-email-error" class="awcom-field-error description" role="alert"><?php echo esc_html( $validation_errors['email'] ); ?></p>
+						<?php endif; ?>
+					</td>
 				</tr>
+			</table>
+
+			<h3><?php esc_html_e( 'Billing Address', 'alynt-wc-customer-order-manager' ); ?></h3>
+			<table class="form-table">
 				<tr>
 					<th scope="row"><label for="billing_email"><?php esc_html_e( 'Billing Email', 'alynt-wc-customer-order-manager' ); ?></label></th>
 					<td><input type="email" name="billing_email" id="billing_email" class="regular-text" value="<?php echo esc_attr( $form_values['billing_email'] ); ?>"></td>

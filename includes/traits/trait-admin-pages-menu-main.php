@@ -31,10 +31,14 @@ trait AdminPagesMenuMainTrait {
 			return;
 		}
 
+		wp_enqueue_style( 'wp-jquery-ui-dialog' );
+		wp_enqueue_script( 'jquery-ui-dialog' );
+		wp_add_inline_style( 'wp-jquery-ui-dialog', '.awcom-list-actions-feedback{margin:8px 0;min-height:20px}.awcom-list-actions-feedback .spinner{float:none;margin:0}' );
+
 		wp_enqueue_script(
 			'awcom-customer-list',
 			AWCOM_PLUGIN_URL . 'assets/js/customer-list.js',
-			array( 'jquery' ),
+			array( 'jquery', 'jquery-ui-dialog' ),
 			AWCOM_VERSION,
 			true
 		);
@@ -44,9 +48,15 @@ trait AdminPagesMenuMainTrait {
 			'awcomCustomerListVars',
 			array(
 				'i18n' => array(
-					'confirm_delete_single' => __( 'Delete this customer permanently? This cannot be undone.', 'alynt-wc-customer-order-manager' ),
+					'cancel_label'          => __( 'Cancel', 'alynt-wc-customer-order-manager' ),
+					'delete_single_title'   => __( 'Delete Customer?', 'alynt-wc-customer-order-manager' ),
+					'delete_single_action'  => __( 'Delete Customer', 'alynt-wc-customer-order-manager' ),
+					/* translators: %s: customer full name. */
+					'delete_single_message' => __( 'This will permanently delete "%s". This cannot be undone.', 'alynt-wc-customer-order-manager' ),
+					'delete_bulk_title'     => __( 'Delete Customers?', 'alynt-wc-customer-order-manager' ),
+					'delete_bulk_action'    => __( 'Delete Customers', 'alynt-wc-customer-order-manager' ),
 					/* translators: %d: number of selected customers. */
-					'confirm_delete_bulk'   => __( 'Delete %d customers permanently? This cannot be undone.', 'alynt-wc-customer-order-manager' ),
+					'delete_bulk_message'   => __( 'This will permanently delete %d customers. This cannot be undone.', 'alynt-wc-customer-order-manager' ),
 				),
 			)
 		);
@@ -166,11 +176,13 @@ trait AdminPagesMenuMainTrait {
 					esc_html( $error_message ) . '</p></div>';
 			}
 			?>
+			<hr class="wp-header-end">
 
-			<form method="post">
+			<form method="post" class="awcom-customer-list-form">
 				<?php
 				$customer_table->search_box( esc_html__( 'Search Customers', 'alynt-wc-customer-order-manager' ), 'customer-search' );
 				wp_nonce_field( 'bulk-customers', 'alynt-wc-customer-order-manager-nonce' );
+				echo '<div class="awcom-list-actions-feedback"><span class="spinner awcom-customer-list-spinner" aria-hidden="true"></span></div>';
 				$customer_table->display();
 				?>
 			</form>

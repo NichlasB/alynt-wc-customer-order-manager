@@ -84,6 +84,8 @@ $partial_base = AWCOM_PLUGIN_PATH . 'admin/partials/customer-edit/';
 		</div>
 	<?php endif; ?>
 
+	<hr class="wp-header-end">
+
 	<div id="poststuff">
 		<div id="post-body" class="metabox-holder columns-2">
 			<div id="post-body-content">
