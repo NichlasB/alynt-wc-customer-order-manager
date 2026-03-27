@@ -115,80 +115,123 @@ trait OrderHandlerCheckoutTrait {
 
 		$customer_id = get_current_user_id();
 
-		$group_id = PricingRuleLookup::get_customer_group_id( $customer_id );
-
-		if ( ! $group_id ) {
-			$this->log( 'Order Creation: No customer group found' );
-			return;
+		$group_id = PricingRuleLookup::get_customer_group_id( $customer_id, true );
+		if ( $group_id ) {
+			$this->log( 'Order Creation: Customer is in group #' . $group_id );
+		} else {
+			$this->log( 'Order Creation: No customer group found, attempting to restore stored custom pricing only' );
 		}
-
-		$this->log( 'Order Creation: Customer is in group #' . $group_id );
 
 		$product_ids = array();
 		foreach ( $order->get_items() as $order_item ) {
-			$order_item_product_id = $order_item->get_product_id();
+			$order_item_product_id = $order_item->get_variation_id() ? $order_item->get_variation_id() : $order_item->get_product_id();
 			if ( $order_item_product_id > 0 ) {
 				$product_ids[] = $order_item_product_id;
 			}
 		}
-		$product_category_map = PricingRuleLookup::get_product_category_map( $product_ids );
-		$rule_lookup          = PricingRuleLookup::get_rule_lookup( $group_id, $product_ids, $product_category_map, false, true );
+		$product_category_map = array();
+		$rule_lookup          = array(
+			'product_rules'        => array(),
+			'category_rules'       => array(),
+			'product_category_map' => array(),
+			'resolved_rules'       => array(),
+		);
+
+		if ( $group_id && ! empty( $product_ids ) ) {
+			$product_category_map = PricingRuleLookup::get_product_category_map( $product_ids );
+			$rule_lookup          = PricingRuleLookup::get_rule_lookup( $group_id, $product_ids, $product_category_map, true, true );
+		}
 
 		$modified = false;
 
 		foreach ( $order->get_items() as $item_id => $item ) {
-			$product_id = $item->get_product_id();
-			$quantity   = $item->get_quantity();
+			$product_id = $item->get_variation_id() ? $item->get_variation_id() : $item->get_product_id();
+			$quantity   = max( 1, (int) $item->get_quantity() );
 			$product    = $item->get_product();
 
-			if ( ! $product ) {
+			if ( ! $product || $product_id <= 0 ) {
 				continue;
 			}
 
-			$original_price = $product->get_regular_price();
-			$adjusted_price = $original_price;
-			$group_name     = '';
+			$stored_custom_price          = $item->get_meta( self::ITEM_META_CUSTOM_PRICE, true );
+			$stored_custom_subtotal_price = $item->get_meta( self::ITEM_META_CUSTOM_SUBTOTAL_PRICE, true );
+
+			if ( '' !== $stored_custom_price && '' !== $stored_custom_subtotal_price && is_numeric( $stored_custom_price ) && is_numeric( $stored_custom_subtotal_price ) ) {
+				$stored_custom_price          = max( 0, (float) $stored_custom_price );
+				$stored_custom_subtotal_price = max( 0, (float) $stored_custom_subtotal_price );
+				$expected_subtotal            = $stored_custom_subtotal_price * $quantity;
+				$expected_total               = $stored_custom_price * $quantity;
+				$current_subtotal             = (float) $item->get_subtotal();
+				$current_total                = (float) $item->get_total();
+
+				if ( abs( $current_subtotal - $expected_subtotal ) > 0.0001 || abs( $current_total - $expected_total ) > 0.0001 ) {
+					$item->set_subtotal( $expected_subtotal );
+					$item->set_total( $expected_total );
+					$item->save();
+					$modified = true;
+
+					$this->log(
+						sprintf(
+							'Order Creation: Restored stored custom pricing for item #%d - Product #%d subtotal=%s total=%s',
+							$item_id,
+							$product_id,
+							wc_price( $expected_subtotal ),
+							wc_price( $expected_total )
+						)
+					);
+				}
+
+				continue;
+			}
+
+			if ( ! $group_id ) {
+				continue;
+			}
+
+			$original_price = PricingRuleLookup::get_product_base_price( $product );
+			if ( $original_price <= 0 ) {
+				continue;
+			}
 
 			$matching_rule = PricingRuleLookup::get_matching_rule( $product_id, $rule_lookup );
-
-			if ( $matching_rule ) {
-				if ( 'percentage' === $matching_rule->discount_type ) {
-					$adjusted_price = $original_price - ( ( $matching_rule->discount_value / 100 ) * $original_price );
-				} else {
-					$adjusted_price = $original_price - $matching_rule->discount_value;
-				}
-				$group_name = $matching_rule->group_name;
+			if ( ! $matching_rule ) {
+				continue;
 			}
 
-			if ( $adjusted_price < $original_price ) {
-				$adjusted_price = max( 0, $adjusted_price );
-
-				$item->set_subtotal( $adjusted_price * $quantity );
-				$item->set_total( $adjusted_price * $quantity );
-
-				if ( $group_name ) {
-					$item->add_meta_data( '_awcom_customer_group', $group_name, true );
-				}
-
-				$item->save();
-
-				$modified = true;
-
-				$this->log(
-					sprintf(
-						'Order Creation: Updated item #%d - Product #%d from %s to %s (total: %s)',
-						$item_id,
-						$product_id,
-						wc_price( $original_price ),
-						wc_price( $adjusted_price ),
-						wc_price( $adjusted_price * $quantity )
-					)
-				);
+			$adjusted_price = PricingRuleLookup::get_adjusted_price( $original_price, $matching_rule );
+			if ( $adjusted_price >= $original_price ) {
+				continue;
 			}
+
+			$group_name = isset( $matching_rule->group_name ) ? (string) $matching_rule->group_name : '';
+
+			$item->set_subtotal( $original_price * $quantity );
+			$item->set_total( $adjusted_price * $quantity );
+			$item->update_meta_data( self::ITEM_META_CUSTOM_PRICE, $adjusted_price );
+			$item->update_meta_data( self::ITEM_META_CUSTOM_SUBTOTAL_PRICE, $original_price );
+
+			if ( $group_name ) {
+				$item->update_meta_data( '_awcom_customer_group', $group_name );
+			}
+
+			$item->save();
+			$modified = true;
+
+			$this->log(
+				sprintf(
+					'Order Creation: Updated item #%d - Product #%d from %s to %s (total: %s)',
+					$item_id,
+					$product_id,
+					wc_price( $original_price ),
+					wc_price( $adjusted_price ),
+					wc_price( $adjusted_price * $quantity )
+				)
+			);
 		}
 
 		if ( $modified ) {
-			$order->calculate_totals();
+			$order->calculate_totals( false );
+			$order->update_meta_data( self::ORDER_META_LOCKED_TOTAL, $order->get_total() );
 			$order->save();
 			$this->log( 'Order Creation: Order totals recalculated. New total: ' . $order->get_total() );
 		} else {
