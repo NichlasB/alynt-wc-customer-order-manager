@@ -8,6 +8,7 @@ class PricingRuleLookup {
 	private static $table_exists = array();
 	private static $customer_group_ids = array();
 	private static $product_category_maps = array();
+	private static $product_contexts = array();
 	private static $rule_lookups = array();
 	private static $group_display_titles = array();
 
@@ -119,26 +120,11 @@ class PricingRuleLookup {
 			return self::$product_category_maps[ $cache_key ];
 		}
 
-		$product_category_map = array_fill_keys( $product_ids, array() );
-		$terms                = wp_get_object_terms( $product_ids, 'product_cat', array( 'fields' => 'all_with_object_id' ) );
+		$product_contexts    = self::get_product_contexts( $product_ids );
+		$product_category_map = array();
 
-		if ( ! is_wp_error( $terms ) && is_array( $terms ) ) {
-			foreach ( $terms as $term ) {
-				$product_id = isset( $term->object_id ) ? absint( $term->object_id ) : 0;
-				$term_id    = isset( $term->term_id ) ? absint( $term->term_id ) : 0;
-
-				if ( $product_id > 0 && $term_id > 0 ) {
-					if ( ! isset( $product_category_map[ $product_id ] ) ) {
-						$product_category_map[ $product_id ] = array();
-					}
-
-					$product_category_map[ $product_id ][] = $term_id;
-				}
-			}
-		}
-
-		foreach ( $product_category_map as $product_id => $category_ids ) {
-			$product_category_map[ $product_id ] = array_values( array_unique( array_map( 'absint', $category_ids ) ) );
+		foreach ( $product_contexts as $product_id => $context ) {
+			$product_category_map[ $product_id ] = self::get_cached_product_categories( $context['category_source_id'] );
 		}
 
 		self::$product_category_maps[ $cache_key ] = $product_category_map;
@@ -156,24 +142,16 @@ class PricingRuleLookup {
 				'product_rules'         => array(),
 				'category_rules'        => array(),
 				'product_category_map'  => $product_category_map,
+				'resolved_rules'        => array(),
 			);
 		}
-
-		$category_ids = array();
-		foreach ( $product_category_map as $mapped_category_ids ) {
-			foreach ( (array) $mapped_category_ids as $category_id ) {
-				$category_ids[] = absint( $category_id );
-			}
-		}
-		$category_ids = array_values( array_unique( array_filter( $category_ids ) ) );
-		sort( $category_ids );
 
 		$cache_key = md5(
 			wp_json_encode(
 				array(
 					$group_id,
 					$product_ids,
-					$category_ids,
+					$product_category_map,
 					(bool) $active_only,
 					(bool) $include_group_name,
 				)
@@ -184,78 +162,39 @@ class PricingRuleLookup {
 			return self::$rule_lookups[ $cache_key ];
 		}
 
-		global $wpdb;
-		$pricing_rules_table  = $wpdb->prefix . 'pricing_rules';
-		$rule_products_table  = $wpdb->prefix . 'rule_products';
-		$rule_categories_table = $wpdb->prefix . 'rule_categories';
-		$customer_groups_table = $wpdb->prefix . 'customer_groups';
-
 		$lookup = array(
 			'product_rules'        => array(),
 			'category_rules'       => array(),
 			'product_category_map' => $product_category_map,
+			'resolved_rules'       => array(),
 		);
 
-		if ( ! self::table_exists( $pricing_rules_table ) || ! self::table_exists( $rule_products_table ) || ! self::table_exists( $rule_categories_table ) ) {
-			self::$rule_lookups[ $cache_key ] = $lookup;
-			return $lookup;
+		if ( empty( $product_category_map ) ) {
+			$product_category_map = self::get_product_category_map( $product_ids );
+			$lookup['product_category_map'] = $product_category_map;
 		}
 
-		$group_name_select = '';
-		$group_name_join   = '';
-		if ( $include_group_name ) {
-			if ( self::table_exists( $customer_groups_table ) ) {
-				$group_name_select = ', g.group_name';
-				$group_name_join   = " JOIN {$customer_groups_table} g ON pr.group_id = g.group_id";
-			} else {
-				$group_name_select = ", '' AS group_name";
+		$product_contexts = self::get_product_contexts( $product_ids );
+		$product_rules    = self::get_product_specific_rules_by_match_id( $product_contexts, $group_id, $active_only, $include_group_name );
+		$unresolved_ids   = array();
+
+		foreach ( $product_contexts as $product_id => $context ) {
+			$product_rule = self::select_product_specific_rule( $context, $product_rules );
+			if ( $product_rule ) {
+				$lookup['resolved_rules'][ $product_id ] = $product_rule;
+				continue;
 			}
+
+			$unresolved_ids[] = $product_id;
 		}
 
-		$where_sql = 'pr.group_id = %d';
-		if ( $active_only ) {
-			$where_sql .= ' AND pr.is_active = 1 AND (pr.start_date IS NULL OR pr.start_date <= UTC_TIMESTAMP()) AND (pr.end_date IS NULL OR pr.end_date >= UTC_TIMESTAMP())';
-		}
+		if ( ! empty( $unresolved_ids ) ) {
+			$category_rules = self::get_category_rules_by_product_id( $unresolved_ids, $product_category_map, $group_id, $active_only, $include_group_name );
 
-		$product_placeholders = implode( ',', array_fill( 0, count( $product_ids ), '%d' ) );
-		$product_query        = $wpdb->prepare(
-			"SELECT pr.*, rp.product_id{$group_name_select}
-			FROM {$pricing_rules_table} pr
-			JOIN {$rule_products_table} rp ON pr.rule_id = rp.rule_id{$group_name_join}
-			WHERE {$where_sql} AND rp.product_id IN ({$product_placeholders})
-			ORDER BY rp.product_id ASC, pr.created_at DESC, pr.rule_id DESC",
-			array_merge( array( $group_id ), $product_ids )
-		);
-		$product_rows         = $wpdb->get_results( $product_query );
-
-		if ( is_array( $product_rows ) ) {
-			foreach ( $product_rows as $product_row ) {
-				$product_id = isset( $product_row->product_id ) ? absint( $product_row->product_id ) : 0;
-				if ( $product_id > 0 && ! isset( $lookup['product_rules'][ $product_id ] ) ) {
-					$lookup['product_rules'][ $product_id ] = $product_row;
-				}
-			}
-		}
-
-		if ( ! empty( $category_ids ) ) {
-			$category_placeholders = implode( ',', array_fill( 0, count( $category_ids ), '%d' ) );
-			$category_query        = $wpdb->prepare(
-				"SELECT pr.*, rc.category_id{$group_name_select}
-				FROM {$pricing_rules_table} pr
-				JOIN {$rule_categories_table} rc ON pr.rule_id = rc.rule_id{$group_name_join}
-				WHERE {$where_sql} AND rc.category_id IN ({$category_placeholders})
-				ORDER BY rc.category_id ASC, pr.created_at DESC, pr.rule_id DESC",
-				array_merge( array( $group_id ), $category_ids )
-			);
-			$category_rows         = $wpdb->get_results( $category_query );
-
-			if ( is_array( $category_rows ) ) {
-				foreach ( $category_rows as $category_row ) {
-					$category_id = isset( $category_row->category_id ) ? absint( $category_row->category_id ) : 0;
-					if ( $category_id > 0 && ! isset( $lookup['category_rules'][ $category_id ] ) ) {
-						$lookup['category_rules'][ $category_id ] = $category_row;
-					}
-				}
+			foreach ( $unresolved_ids as $product_id ) {
+				$lookup['resolved_rules'][ $product_id ] = ! empty( $category_rules[ $product_id ] )
+					? self::determine_best_rule( $category_rules[ $product_id ] )
+					: null;
 			}
 		}
 
@@ -267,39 +206,11 @@ class PricingRuleLookup {
 	public static function get_matching_rule( $product_id, array $rule_lookup ) {
 		$product_id = absint( $product_id );
 
-		if ( isset( $rule_lookup['product_rules'][ $product_id ] ) ) {
-			return $rule_lookup['product_rules'][ $product_id ];
+		if ( isset( $rule_lookup['resolved_rules'] ) && array_key_exists( $product_id, $rule_lookup['resolved_rules'] ) ) {
+			return $rule_lookup['resolved_rules'][ $product_id ];
 		}
 
-		$matching_rule = null;
-		$category_ids  = isset( $rule_lookup['product_category_map'][ $product_id ] ) ? (array) $rule_lookup['product_category_map'][ $product_id ] : array();
-
-		foreach ( $category_ids as $category_id ) {
-			$category_id = absint( $category_id );
-			if ( $category_id <= 0 || ! isset( $rule_lookup['category_rules'][ $category_id ] ) ) {
-				continue;
-			}
-
-			$category_rule = $rule_lookup['category_rules'][ $category_id ];
-			if ( null === $matching_rule ) {
-				$matching_rule = $category_rule;
-				continue;
-			}
-
-			$current_created_at = isset( $category_rule->created_at ) ? (string) $category_rule->created_at : '';
-			$best_created_at    = isset( $matching_rule->created_at ) ? (string) $matching_rule->created_at : '';
-
-			if ( $current_created_at > $best_created_at ) {
-				$matching_rule = $category_rule;
-				continue;
-			}
-
-			if ( $current_created_at === $best_created_at && isset( $category_rule->rule_id, $matching_rule->rule_id ) && (int) $category_rule->rule_id > (int) $matching_rule->rule_id ) {
-				$matching_rule = $category_rule;
-			}
-		}
-
-		return $matching_rule;
+		return null;
 	}
 
 	public static function get_customer_group_display_title( $customer_id ) {
@@ -330,26 +241,17 @@ class PricingRuleLookup {
 		if ( '' === $display_title ) {
 			$default_group_id = (int) get_option( 'wccg_default_group_id', 0 );
 
-			if ( $default_group_id > 0 && self::table_exists( $pricing_rules_table ) ) {
-				$has_active_rule = $wpdb->get_var(
-					$wpdb->prepare(
-						"SELECT 1 FROM {$pricing_rules_table} WHERE group_id = %d AND is_active = 1 LIMIT 1",
-						$default_group_id
-					)
-				);
-
-				if ( $has_active_rule ) {
-					$custom_title = (string) get_option( 'wccg_default_group_custom_title', '' );
-					if ( '' !== $custom_title ) {
-						$display_title = $custom_title;
-					} elseif ( self::table_exists( $customer_groups_table ) ) {
-						$display_title = (string) $wpdb->get_var(
-							$wpdb->prepare(
-								"SELECT group_name FROM {$customer_groups_table} WHERE group_id = %d",
-								$default_group_id
-							)
-						);
-					}
+			if ( $default_group_id > 0 && self::table_exists( $pricing_rules_table ) && self::group_has_active_pricing_rule( $default_group_id ) ) {
+				$custom_title = (string) get_option( 'wccg_default_group_custom_title', '' );
+				if ( '' !== $custom_title ) {
+					$display_title = $custom_title;
+				} elseif ( self::table_exists( $customer_groups_table ) ) {
+					$display_title = (string) $wpdb->get_var(
+						$wpdb->prepare(
+							"SELECT group_name FROM {$customer_groups_table} WHERE group_id = %d",
+							$default_group_id
+						)
+					);
 				}
 			}
 		}
@@ -375,5 +277,312 @@ class PricingRuleLookup {
 		self::$table_exists[ $table_name ] = ( $exists === $table_name );
 
 		return self::$table_exists[ $table_name ];
+	}
+
+	private static function group_has_active_pricing_rule( $group_id ) {
+		$group_id = absint( $group_id );
+		if ( $group_id <= 0 ) {
+			return false;
+		}
+
+		global $wpdb;
+		$pricing_rules_table = $wpdb->prefix . 'pricing_rules';
+
+		if ( ! self::table_exists( $pricing_rules_table ) ) {
+			return false;
+		}
+
+		$has_active_rule = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT 1 FROM {$pricing_rules_table} WHERE group_id = %d AND is_active = 1 AND (start_date IS NULL OR start_date <= UTC_TIMESTAMP()) AND (end_date IS NULL OR end_date >= UTC_TIMESTAMP()) LIMIT 1",
+				$group_id
+			)
+		);
+
+		return (bool) $has_active_rule;
+	}
+
+	private static function get_product_contexts( array $product_ids ) {
+		$product_ids = array_values( array_unique( array_filter( array_map( 'absint', $product_ids ) ) ) );
+		sort( $product_ids );
+
+		if ( empty( $product_ids ) ) {
+			return array();
+		}
+
+		$cache_key = md5( wp_json_encode( $product_ids ) );
+		if ( isset( self::$product_contexts[ $cache_key ] ) ) {
+			return self::$product_contexts[ $cache_key ];
+		}
+
+		$contexts = array();
+
+		foreach ( $product_ids as $product_id ) {
+			$product            = function_exists( 'wc_get_product' ) ? wc_get_product( $product_id ) : null;
+			$category_source_id = $product_id;
+			$match_ids          = array( $product_id );
+
+			if ( $product && method_exists( $product, 'is_type' ) && $product->is_type( 'variation' ) && method_exists( $product, 'get_parent_id' ) ) {
+				$parent_id = absint( $product->get_parent_id() );
+				if ( $parent_id > 0 ) {
+					$match_ids[]        = $parent_id;
+					$category_source_id = $parent_id;
+				}
+			}
+
+			$contexts[ $product_id ] = array(
+				'product_id'         => $product_id,
+				'match_ids'          => array_values( array_unique( array_filter( array_map( 'absint', $match_ids ) ) ) ),
+				'category_source_id' => absint( $category_source_id ),
+			);
+		}
+
+		self::$product_contexts[ $cache_key ] = $contexts;
+
+		return $contexts;
+	}
+
+	private static function get_cached_product_categories( $product_id ) {
+		$product_id = absint( $product_id );
+		if ( $product_id <= 0 ) {
+			return array();
+		}
+
+		$cache_key = 'product:' . $product_id;
+		if ( isset( self::$product_category_maps[ $cache_key ] ) ) {
+			return self::$product_category_maps[ $cache_key ];
+		}
+
+		$category_ids = array();
+		$terms        = wp_get_object_terms( array( $product_id ), 'product_cat', array( 'fields' => 'all_with_object_id' ) );
+
+		if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
+			foreach ( $terms as $term ) {
+				$term_id = isset( $term->term_id ) ? absint( $term->term_id ) : 0;
+				if ( $term_id <= 0 ) {
+					continue;
+				}
+
+				$category_ids[] = $term_id;
+
+				if ( function_exists( 'get_ancestors' ) ) {
+					$ancestors = get_ancestors( $term_id, 'product_cat', 'taxonomy' );
+					if ( ! empty( $ancestors ) ) {
+						$category_ids = array_merge( $category_ids, array_map( 'absint', $ancestors ) );
+					}
+				}
+			}
+		}
+
+		self::$product_category_maps[ $cache_key ] = array_values( array_unique( array_filter( $category_ids ) ) );
+
+		return self::$product_category_maps[ $cache_key ];
+	}
+
+	private static function get_product_specific_rules_by_match_id( array $product_contexts, $group_id, $active_only, $include_group_name ) {
+		$match_ids = array();
+		foreach ( $product_contexts as $context ) {
+			$match_ids = array_merge( $match_ids, $context['match_ids'] );
+		}
+
+		$match_ids = array_values( array_unique( array_filter( array_map( 'absint', $match_ids ) ) ) );
+		if ( empty( $match_ids ) ) {
+			return array();
+		}
+
+		global $wpdb;
+		$pricing_rules_table   = $wpdb->prefix . 'pricing_rules';
+		$rule_products_table   = $wpdb->prefix . 'rule_products';
+		$customer_groups_table = $wpdb->prefix . 'customer_groups';
+
+		if ( ! self::table_exists( $pricing_rules_table ) || ! self::table_exists( $rule_products_table ) ) {
+			return array();
+		}
+
+		$group_name_select = '';
+		$group_name_join   = '';
+		if ( $include_group_name ) {
+			if ( self::table_exists( $customer_groups_table ) ) {
+				$group_name_select = ', g.group_name';
+				$group_name_join   = " JOIN {$customer_groups_table} g ON pr.group_id = g.group_id";
+			} else {
+				$group_name_select = ", '' AS group_name";
+			}
+		}
+
+		$where_sql = 'pr.group_id = %d';
+		if ( $active_only ) {
+			$where_sql .= ' AND pr.is_active = 1 AND (pr.start_date IS NULL OR pr.start_date <= UTC_TIMESTAMP()) AND (pr.end_date IS NULL OR pr.end_date >= UTC_TIMESTAMP())';
+		}
+
+		$placeholders = implode( ',', array_fill( 0, count( $match_ids ), '%d' ) );
+		$query        = $wpdb->prepare(
+			"SELECT pr.*, rp.product_id AS matched_product_id{$group_name_select}
+			FROM {$pricing_rules_table} pr
+			JOIN {$rule_products_table} rp ON pr.rule_id = rp.rule_id{$group_name_join}
+			WHERE {$where_sql} AND rp.product_id IN ({$placeholders})
+			ORDER BY pr.sort_order ASC, pr.rule_id ASC",
+			array_merge( array( absint( $group_id ) ), $match_ids )
+		);
+		$rules        = $wpdb->get_results( $query );
+
+		$rules_by_match_id = array();
+		if ( is_array( $rules ) ) {
+			foreach ( $rules as $rule ) {
+				$matched_product_id = isset( $rule->matched_product_id ) ? absint( $rule->matched_product_id ) : 0;
+				if ( $matched_product_id <= 0 ) {
+					continue;
+				}
+
+				if ( ! isset( $rules_by_match_id[ $matched_product_id ] ) ) {
+					$rules_by_match_id[ $matched_product_id ] = array();
+				}
+
+				$rules_by_match_id[ $matched_product_id ][] = $rule;
+			}
+		}
+
+		return $rules_by_match_id;
+	}
+
+	private static function select_product_specific_rule( array $product_context, array $rules_by_match_id ) {
+		foreach ( $product_context['match_ids'] as $match_id ) {
+			if ( ! empty( $rules_by_match_id[ $match_id ] ) ) {
+				return $rules_by_match_id[ $match_id ][0];
+			}
+		}
+
+		return null;
+	}
+
+	private static function get_category_rules_by_product_id( array $product_ids, array $product_category_map, $group_id, $active_only, $include_group_name ) {
+		$product_ids = array_values( array_unique( array_filter( array_map( 'absint', $product_ids ) ) ) );
+		if ( empty( $product_ids ) ) {
+			return array();
+		}
+
+		$all_category_ids = array();
+		foreach ( $product_ids as $product_id ) {
+			$all_category_ids = array_merge(
+				$all_category_ids,
+				isset( $product_category_map[ $product_id ] ) ? (array) $product_category_map[ $product_id ] : array()
+			);
+		}
+
+		$all_category_ids = array_values( array_unique( array_filter( array_map( 'absint', $all_category_ids ) ) ) );
+		if ( empty( $all_category_ids ) ) {
+			return array();
+		}
+
+		global $wpdb;
+		$pricing_rules_table   = $wpdb->prefix . 'pricing_rules';
+		$rule_categories_table = $wpdb->prefix . 'rule_categories';
+		$customer_groups_table = $wpdb->prefix . 'customer_groups';
+
+		if ( ! self::table_exists( $pricing_rules_table ) || ! self::table_exists( $rule_categories_table ) ) {
+			return array();
+		}
+
+		$group_name_select = '';
+		$group_name_join   = '';
+		if ( $include_group_name ) {
+			if ( self::table_exists( $customer_groups_table ) ) {
+				$group_name_select = ', g.group_name';
+				$group_name_join   = " JOIN {$customer_groups_table} g ON pr.group_id = g.group_id";
+			} else {
+				$group_name_select = ", '' AS group_name";
+			}
+		}
+
+		$where_sql = 'pr.group_id = %d';
+		if ( $active_only ) {
+			$where_sql .= ' AND pr.is_active = 1 AND (pr.start_date IS NULL OR pr.start_date <= UTC_TIMESTAMP()) AND (pr.end_date IS NULL OR pr.end_date >= UTC_TIMESTAMP())';
+		}
+
+		$placeholders = implode( ',', array_fill( 0, count( $all_category_ids ), '%d' ) );
+		$query        = $wpdb->prepare(
+			"SELECT pr.*, rc.category_id{$group_name_select}
+			FROM {$pricing_rules_table} pr
+			JOIN {$rule_categories_table} rc ON pr.rule_id = rc.rule_id{$group_name_join}
+			WHERE {$where_sql} AND rc.category_id IN ({$placeholders})
+			ORDER BY pr.created_at DESC, pr.rule_id DESC",
+			array_merge( array( absint( $group_id ) ), $all_category_ids )
+		);
+		$rules        = $wpdb->get_results( $query );
+
+		$rules_by_category_id = array();
+		if ( is_array( $rules ) ) {
+			foreach ( $rules as $rule ) {
+				$category_id = isset( $rule->category_id ) ? absint( $rule->category_id ) : 0;
+				if ( $category_id <= 0 ) {
+					continue;
+				}
+
+				if ( ! isset( $rules_by_category_id[ $category_id ] ) ) {
+					$rules_by_category_id[ $category_id ] = array();
+				}
+
+				$rules_by_category_id[ $category_id ][] = $rule;
+			}
+		}
+
+		$rules_by_product_id = array();
+		foreach ( $product_ids as $product_id ) {
+			$product_rules = array();
+			$category_ids  = isset( $product_category_map[ $product_id ] ) ? (array) $product_category_map[ $product_id ] : array();
+
+			foreach ( $category_ids as $category_id ) {
+				$category_id = absint( $category_id );
+				if ( ! empty( $rules_by_category_id[ $category_id ] ) ) {
+					$product_rules = array_merge( $product_rules, $rules_by_category_id[ $category_id ] );
+				}
+			}
+
+			$rules_by_product_id[ $product_id ] = $product_rules;
+		}
+
+		return $rules_by_product_id;
+	}
+
+	private static function determine_best_rule( array $rules ) {
+		$best_rule = null;
+
+		foreach ( $rules as $rule ) {
+			if ( ! is_object( $rule ) ) {
+				continue;
+			}
+
+			if ( null === $best_rule ) {
+				$best_rule = $rule;
+				continue;
+			}
+
+			if ( self::compare_discount_rules( $rule, $best_rule ) > 0 ) {
+				$best_rule = $rule;
+			}
+		}
+
+		return $best_rule;
+	}
+
+	private static function compare_discount_rules( $rule1, $rule2 ) {
+		if ( $rule1->discount_type !== $rule2->discount_type ) {
+			return 'fixed' === $rule1->discount_type ? 1 : -1;
+		}
+
+		if ( (float) $rule1->discount_value === (float) $rule2->discount_value ) {
+			$rule1_created_at = isset( $rule1->created_at ) ? strtotime( (string) $rule1->created_at ) : 0;
+			$rule2_created_at = isset( $rule2->created_at ) ? strtotime( (string) $rule2->created_at ) : 0;
+
+			if ( $rule1_created_at === $rule2_created_at ) {
+				$rule1_id = isset( $rule1->rule_id ) ? absint( $rule1->rule_id ) : 0;
+				$rule2_id = isset( $rule2->rule_id ) ? absint( $rule2->rule_id ) : 0;
+				return $rule1_id > $rule2_id ? 1 : -1;
+			}
+
+			return $rule1_created_at > $rule2_created_at ? 1 : -1;
+		}
+
+		return (float) $rule1->discount_value > (float) $rule2->discount_value ? 1 : -1;
 	}
 }
