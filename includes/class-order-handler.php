@@ -219,6 +219,7 @@ class OrderHandler {
 		$item_total = 0.0;
 		$fee_total  = 0.0;
 		$items      = array();
+		$shipping_items = array();
 
 		foreach ( $order->get_items() as $item_id => $item ) {
 			$item_total += (float) $item->get_total();
@@ -239,6 +240,28 @@ class OrderHandler {
 			$fee_total += (float) $fee->get_total();
 		}
 
+		foreach ( $order->get_items( 'shipping' ) as $shipping_item_id => $shipping_item ) {
+			$shipping_meta = array();
+
+			foreach ( $shipping_item->get_meta_data() as $meta ) {
+				$shipping_meta[] = array(
+					'id'    => isset( $meta->id ) ? (int) $meta->id : 0,
+					'key'   => isset( $meta->key ) ? (string) $meta->key : '',
+					'value' => isset( $meta->value ) ? $meta->value : '',
+				);
+			}
+
+			$shipping_items[] = array(
+				'item_id'      => $shipping_item_id,
+				'method_title' => $shipping_item->get_method_title(),
+				'method_id'    => $shipping_item->get_method_id(),
+				'instance_id'  => $shipping_item->get_instance_id(),
+				'total'        => (float) $shipping_item->get_total(),
+				'taxes'        => $shipping_item->get_taxes(),
+				'meta_data'    => $shipping_meta,
+			);
+		}
+
 		$this->write_log(
 			'debug',
 			'Payment order snapshot',
@@ -250,7 +273,15 @@ class OrderHandler {
 					'status'                 => $order->get_status(),
 					'created_via'            => $order->get_created_via(),
 					'plugin_created_meta'    => $order->get_meta( self::ORDER_META_PLUGIN_CREATED, true ),
+					'customer_id'            => (int) $order->get_customer_id(),
 					'is_paid'                => $order->is_paid(),
+					'billing_email'          => $order->get_billing_email(),
+					'billing_country'        => $order->get_billing_country(),
+					'billing_state'          => $order->get_billing_state(),
+					'billing_postcode'       => $order->get_billing_postcode(),
+					'shipping_country'       => $order->get_shipping_country(),
+					'shipping_state'         => $order->get_shipping_state(),
+					'shipping_postcode'      => $order->get_shipping_postcode(),
 					'item_total'             => $item_total,
 					'shipping_total'         => (float) $order->get_shipping_total(),
 					'fee_total'              => $fee_total,
@@ -261,6 +292,7 @@ class OrderHandler {
 					'pricing_locked'         => $order->get_meta( self::ORDER_META_PRICING_LOCKED, true ),
 					'item_count'             => count( $items ),
 					'items'                  => $items,
+					'shipping_items'         => $shipping_items,
 				),
 				$extra
 			)
