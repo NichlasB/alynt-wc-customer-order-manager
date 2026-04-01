@@ -56,6 +56,24 @@ class OrderHandler {
 	public const ORDER_CREATED_VIA = 'alynt_wc_customer_order_manager';
 
 	/**
+	 * Standard WooCommerce origin used for admin-created orders.
+	 *
+	 * @since 1.0.6
+	 *
+	 * @var string
+	 */
+	public const ORDER_CREATED_VIA_ADMIN = 'admin';
+
+	/**
+	 * Order meta key storing whether the plugin created the order.
+	 *
+	 * @since 1.0.6
+	 *
+	 * @var string
+	 */
+	public const ORDER_META_PLUGIN_CREATED = '_awcom_plugin_created';
+
+	/**
 	 * Order meta key indicating custom pricing was applied.
 	 *
 	 * @since 1.0.6
@@ -231,6 +249,7 @@ class OrderHandler {
 					'order_key'              => $order->get_order_key(),
 					'status'                 => $order->get_status(),
 					'created_via'            => $order->get_created_via(),
+					'plugin_created_meta'    => $order->get_meta( self::ORDER_META_PLUGIN_CREATED, true ),
 					'is_paid'                => $order->is_paid(),
 					'item_total'             => $item_total,
 					'shipping_total'         => (float) $order->get_shipping_total(),
@@ -314,7 +333,7 @@ class OrderHandler {
 			return;
 		}
 
-		if ( self::ORDER_CREATED_VIA !== $order->get_created_via() ) {
+		if ( self::ORDER_CREATED_VIA !== $order->get_created_via() && 'yes' !== $order->get_meta( self::ORDER_META_PLUGIN_CREATED, true ) ) {
 			return;
 		}
 

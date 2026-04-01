@@ -125,7 +125,7 @@ trait OrderHandlerAdminCreateTrait {
 			$order = wc_create_order(
 				array(
 					'customer_id' => $customer_id,
-					'created_via' => self::ORDER_CREATED_VIA,
+					'created_via' => self::ORDER_CREATED_VIA_ADMIN,
 				)
 			);
 
@@ -136,6 +136,8 @@ trait OrderHandlerAdminCreateTrait {
 					__( 'Could not create the order. Please try again.', 'alynt-wc-customer-order-manager' )
 				);
 			}
+
+			$order->update_meta_data( self::ORDER_META_PLUGIN_CREATED, 'yes' );
 
 			$product_ids          = array_map(
 				static function ( $validated_item ) {
