@@ -117,6 +117,8 @@ class OrderHandler {
 	public function __construct() {
 		add_action( 'admin_post_awcom_create_order', array( $this, 'handle_order_creation' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_cart_display_styles' ) );
+		add_action( 'wp_ajax_wc_square_credit_card_get_order_amount', array( $this, 'log_square_order_amount_request' ), 1 );
+		add_action( 'wp_ajax_nopriv_wc_square_credit_card_get_order_amount', array( $this, 'log_square_order_amount_request' ), 1 );
 
 		// Preserve custom totals for orders created by this plugin.
 		add_action( 'woocommerce_order_before_calculate_totals', array( $this, 'prevent_total_recalculation' ), 10, 2 );
@@ -134,7 +136,153 @@ class OrderHandler {
 	}
 
 	/**
-	 * No-op logger retained for backwards compatibility with existing calls.
+	 * Determine whether the current request is the Square order-amount lookup.
+	 *
+	 * @since 1.0.6
+	 *
+	 * @return bool True when handling Square's order amount AJAX action.
+	 */
+	private function is_square_order_amount_request() {
+		if ( ! wp_doing_ajax() ) {
+			return false;
+		}
+
+		$action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
+
+		return 'wc_square_credit_card_get_order_amount' === $action;
+	}
+
+	/**
+	 * Write a message to WooCommerce logs.
+	 *
+	 * @since 1.0.6
+	 *
+	 * @param string $level   Log level.
+	 * @param string $message Log message.
+	 * @param array  $context Optional structured context.
+	 * @return void
+	 */
+	private function write_log( $level, $message, array $context = array() ) {
+		if ( ! function_exists( 'wc_get_logger' ) ) {
+			return;
+		}
+
+		$logger_context           = $context;
+		$logger_context['source'] = 'awcom-payment-debug';
+
+		wc_get_logger()->log( $level, $message, $logger_context );
+	}
+
+	/**
+	 * Log a summarized snapshot of an order for payment debugging.
+	 *
+	 * @since 1.0.6
+	 *
+	 * @param string    $stage  Short label describing when the snapshot was taken.
+	 * @param \WC_Order $order  The order being logged.
+	 * @param array     $extra  Optional extra context values.
+	 * @return void
+	 */
+	protected function log_payment_order_snapshot( $stage, $order, array $extra = array() ) {
+		if ( ! $order instanceof \WC_Order ) {
+			$this->write_log(
+				'warning',
+				'Payment debug snapshot requested without a valid order.',
+				array_merge(
+					array(
+						'stage' => $stage,
+					),
+					$extra
+				)
+			);
+			return;
+		}
+
+		$item_total = 0.0;
+		$fee_total  = 0.0;
+		$items      = array();
+
+		foreach ( $order->get_items() as $item_id => $item ) {
+			$item_total += (float) $item->get_total();
+			$items[] = array(
+				'item_id'            => $item_id,
+				'product_id'         => $item->get_product_id(),
+				'variation_id'       => $item->get_variation_id(),
+				'quantity'           => (int) $item->get_quantity(),
+				'subtotal'           => (float) $item->get_subtotal(),
+				'total'              => (float) $item->get_total(),
+				'custom_price_meta'  => $item->get_meta( self::ITEM_META_CUSTOM_PRICE, true ),
+				'custom_base_meta'   => $item->get_meta( self::ITEM_META_CUSTOM_SUBTOTAL_PRICE, true ),
+				'discount_meta'      => $item->get_meta( self::ITEM_META_DISCOUNT_DESCRIPTION, true ),
+			);
+		}
+
+		foreach ( $order->get_fees() as $fee ) {
+			$fee_total += (float) $fee->get_total();
+		}
+
+		$this->write_log(
+			'debug',
+			'Payment order snapshot',
+			array_merge(
+				array(
+					'stage'                  => $stage,
+					'order_id'               => $order->get_id(),
+					'order_key'              => $order->get_order_key(),
+					'status'                 => $order->get_status(),
+					'created_via'            => $order->get_created_via(),
+					'is_paid'                => $order->is_paid(),
+					'item_total'             => $item_total,
+					'shipping_total'         => (float) $order->get_shipping_total(),
+					'fee_total'              => $fee_total,
+					'tax_total'              => (float) $order->get_total_tax(),
+					'order_total'            => (float) $order->get_total(),
+					'locked_total_meta'      => $order->get_meta( self::ORDER_META_LOCKED_TOTAL, true ),
+					'has_custom_pricing'     => $order->get_meta( self::ORDER_META_HAS_CUSTOM_PRICING, true ),
+					'pricing_locked'         => $order->get_meta( self::ORDER_META_PRICING_LOCKED, true ),
+					'item_count'             => count( $items ),
+					'items'                  => $items,
+				),
+				$extra
+			)
+		);
+	}
+
+	/**
+	 * Log the inbound Square order-amount lookup request before Square handles it.
+	 *
+	 * @since 1.0.6
+	 *
+	 * @return void
+	 */
+	public function log_square_order_amount_request() {
+		$order_id  = isset( $_POST['order_id'] ) ? absint( wp_unslash( $_POST['order_id'] ) ) : 0;
+		$order_key = isset( $_POST['order_key'] ) ? sanitize_text_field( wp_unslash( $_POST['order_key'] ) ) : '';
+		$order     = $order_id > 0 ? wc_get_order( $order_id ) : false;
+
+		$this->write_log(
+			'debug',
+			'Square order amount request received.',
+			array(
+				'order_id'        => $order_id,
+				'posted_order_key'=> $order_key,
+				'is_pay_order'    => isset( $_POST['is_pay_order'] ) ? wc_string_to_bool( wp_unslash( $_POST['is_pay_order'] ) ) : null,
+				'order_found'     => (bool) $order,
+				'order_key_match' => $order instanceof \WC_Order ? hash_equals( $order->get_order_key(), $order_key ) : false,
+			)
+		);
+
+		$this->log_payment_order_snapshot(
+			'square_get_order_amount_request',
+			$order,
+			array(
+				'posted_order_key' => $order_key,
+			)
+		);
+	}
+
+	/**
+	 * Write low-noise debug logs for payment troubleshooting.
 	 *
 	 * @since 1.0.6
 	 *
@@ -142,7 +290,11 @@ class OrderHandler {
 	 * @return void
 	 */
 	private function log( $message ) {
-		// Logging removed in pre-release cleanup.
+		if ( ! $this->is_square_order_amount_request() ) {
+			return;
+		}
+
+		$this->write_log( 'debug', $message );
 	}
 
 	/**
@@ -154,7 +306,7 @@ class OrderHandler {
 	 * @return void
 	 */
 	protected function log_order_handler_error( $message ) {
-		// Logging removed in pre-release cleanup.
+		$this->write_log( 'error', $message );
 	}
 
 	protected function cleanup_failed_order_creation( $order ) {

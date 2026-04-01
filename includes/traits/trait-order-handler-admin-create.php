@@ -118,7 +118,8 @@ trait OrderHandlerAdminCreateTrait {
 			);
 		}
 
-		$order = null;
+		$order              = null;
+		$has_custom_pricing = false;
 
 		try {
 			$order = wc_create_order(
@@ -201,10 +202,10 @@ trait OrderHandlerAdminCreateTrait {
 						)
 					);
 
-					$item->add_meta_data( self::ITEM_META_CUSTOM_PRICE, $adjusted_price, true );
-					$item->add_meta_data( self::ITEM_META_CUSTOM_SUBTOTAL_PRICE, $original_price, true );
-
 					if ( $adjusted_price < $original_price ) {
+						$has_custom_pricing = true;
+						$item->add_meta_data( self::ITEM_META_CUSTOM_PRICE, $adjusted_price, true );
+						$item->add_meta_data( self::ITEM_META_CUSTOM_SUBTOTAL_PRICE, $original_price, true );
 						$item->add_meta_data( self::ITEM_META_DISCOUNT_DESCRIPTION, $discount_description );
 
 						$discount_amount = ( $original_price - $adjusted_price ) * $quantity;
@@ -287,9 +288,11 @@ trait OrderHandlerAdminCreateTrait {
 				$this->log( 'Warning: No shipping items found in order' );
 			}
 
-			$order->update_meta_data( self::ORDER_META_HAS_CUSTOM_PRICING, 'yes' );
-			$order->update_meta_data( self::ORDER_META_PRICING_LOCKED, 'yes' );
-			$order->update_meta_data( self::ORDER_META_LOCKED_TOTAL, $order->get_total() );
+			if ( $has_custom_pricing ) {
+				$this->set_order_pricing_protection( $order );
+			} else {
+				$this->clear_order_pricing_protection( $order );
+			}
 
 			$this->log( 'Order Creation: Locked total for order #' . $order->get_id() . ' at ' . $order->get_total() );
 

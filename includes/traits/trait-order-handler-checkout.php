@@ -142,7 +142,8 @@ trait OrderHandlerCheckoutTrait {
 			$rule_lookup          = PricingRuleLookup::get_rule_lookup( $group_id, $product_ids, $product_category_map, true, true );
 		}
 
-		$modified = false;
+		$modified           = false;
+		$has_custom_pricing = false;
 
 		foreach ( $order->get_items() as $item_id => $item ) {
 			$product_id = $item->get_variation_id() ? $item->get_variation_id() : $item->get_product_id();
@@ -157,6 +158,7 @@ trait OrderHandlerCheckoutTrait {
 			$stored_custom_subtotal_price = $item->get_meta( self::ITEM_META_CUSTOM_SUBTOTAL_PRICE, true );
 
 			if ( '' !== $stored_custom_price && '' !== $stored_custom_subtotal_price && is_numeric( $stored_custom_price ) && is_numeric( $stored_custom_subtotal_price ) ) {
+				$has_custom_pricing          = true;
 				$stored_custom_price          = max( 0, (float) $stored_custom_price );
 				$stored_custom_subtotal_price = max( 0, (float) $stored_custom_subtotal_price );
 				$expected_subtotal            = $stored_custom_subtotal_price * $quantity;
@@ -209,6 +211,7 @@ trait OrderHandlerCheckoutTrait {
 			$item->set_total( $adjusted_price * $quantity );
 			$item->update_meta_data( self::ITEM_META_CUSTOM_PRICE, $adjusted_price );
 			$item->update_meta_data( self::ITEM_META_CUSTOM_SUBTOTAL_PRICE, $original_price );
+			$has_custom_pricing = true;
 
 			if ( $group_name ) {
 				$item->update_meta_data( '_awcom_customer_group', $group_name );
@@ -231,9 +234,16 @@ trait OrderHandlerCheckoutTrait {
 
 		if ( $modified ) {
 			$order->calculate_totals( false );
-			$order->update_meta_data( self::ORDER_META_LOCKED_TOTAL, $order->get_total() );
+		}
+
+		if ( $has_custom_pricing ) {
+			$this->set_order_pricing_protection( $order );
 			$order->save();
 			$this->log( 'Order Creation: Order totals recalculated. New total: ' . $order->get_total() );
+		} elseif ( $this->order_has_pricing_protection( $order ) ) {
+			$this->clear_order_pricing_protection( $order );
+			$order->save();
+			$this->log( 'Order Creation: Cleared custom-pricing protection for order #' . $order->get_id() );
 		} else {
 			$this->log( 'Order Creation: No pricing changes needed' );
 		}
@@ -267,6 +277,8 @@ trait OrderHandlerCheckoutTrait {
 	 */
 	public function fix_order_before_payment( $order_id ) {
 		$this->log( 'Before Payment: Fixing order #' . $order_id );
+		$this->log_payment_order_snapshot( 'before_fix_order_before_payment', wc_get_order( $order_id ) );
 		$this->fix_order_pricing_on_creation( $order_id );
+		$this->log_payment_order_snapshot( 'after_fix_order_before_payment', wc_get_order( $order_id ) );
 	}
 }

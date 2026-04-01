@@ -19,6 +19,91 @@ defined( 'ABSPATH' ) || exit;
 trait OrderHandlerTotalProtectionTrait {
 
 	/**
+	 * Determine whether an order should use custom-pricing protection.
+	 *
+	 * Only orders explicitly flagged for custom pricing should have their
+	 * totals locked or their item prices restored on the frontend.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param \WC_Order $order The order being evaluated.
+	 * @return bool True when custom-pricing protection is enabled.
+	 */
+	protected function order_has_pricing_protection( $order ) {
+		if ( ! $order instanceof \WC_Order || is_a( $order, 'WC_Order_Refund' ) ) {
+			return false;
+		}
+
+		return 'yes' === $order->get_meta( self::ORDER_META_HAS_CUSTOM_PRICING )
+			|| 'yes' === $order->get_meta( self::ORDER_META_PRICING_LOCKED );
+	}
+
+	/**
+	 * Calculate the current order total from persisted order data.
+	 *
+	 * Uses the stored line-item, shipping, fee, and tax values so locked totals
+	 * stay in sync with legitimate admin edits to payable orders.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param \WC_Order $order The order being evaluated.
+	 * @return float Calculated order total.
+	 */
+	protected function calculate_protected_order_total( $order ) {
+		$calculated_total = 0.0;
+
+		foreach ( $order->get_items() as $item ) {
+			$calculated_total += (float) $item->get_total();
+		}
+
+		$calculated_total += (float) $order->get_shipping_total();
+
+		foreach ( $order->get_fees() as $fee ) {
+			$calculated_total += (float) $fee->get_total();
+		}
+
+		$calculated_total += (float) $order->get_total_tax();
+
+		return max( 0, $calculated_total );
+	}
+
+	/**
+	 * Mark an order as requiring custom-pricing protection.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param \WC_Order $order The order being updated.
+	 * @return void
+	 */
+	protected function set_order_pricing_protection( $order ) {
+		if ( ! $order instanceof \WC_Order || is_a( $order, 'WC_Order_Refund' ) ) {
+			return;
+		}
+
+		$order->update_meta_data( self::ORDER_META_HAS_CUSTOM_PRICING, 'yes' );
+		$order->update_meta_data( self::ORDER_META_PRICING_LOCKED, 'yes' );
+		$order->update_meta_data( self::ORDER_META_LOCKED_TOTAL, $this->calculate_protected_order_total( $order ) );
+	}
+
+	/**
+	 * Remove custom-pricing protection metadata from an order.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param \WC_Order $order The order being updated.
+	 * @return void
+	 */
+	protected function clear_order_pricing_protection( $order ) {
+		if ( ! $order instanceof \WC_Order || is_a( $order, 'WC_Order_Refund' ) ) {
+			return;
+		}
+
+		$order->delete_meta_data( self::ORDER_META_HAS_CUSTOM_PRICING );
+		$order->delete_meta_data( self::ORDER_META_PRICING_LOCKED );
+		$order->delete_meta_data( self::ORDER_META_LOCKED_TOTAL );
+	}
+
+	/**
 	 * Cancel total recalculation for orders with custom pricing.
 	 *
 	 * Hooked to woocommerce_order_before_calculate_totals. Returns false
@@ -40,13 +125,7 @@ trait OrderHandlerTotalProtectionTrait {
 			return;
 		}
 
-		if ( $order->get_created_via() === self::ORDER_CREATED_VIA ) {
-			$this->log( 'Preventing total recalculation for order #' . $order->get_id() . ' to preserve customer group pricing' );
-			remove_action( 'woocommerce_order_before_calculate_totals', array( $this, 'prevent_total_recalculation' ), 10 );
-			return false;
-		}
-
-		if ( $order->get_meta( self::ORDER_META_HAS_CUSTOM_PRICING ) === 'yes' ) {
+		if ( $this->order_has_pricing_protection( $order ) ) {
 			$this->log( 'Preventing total recalculation for order #' . $order->get_id() . ' - has custom pricing flag' );
 			remove_action( 'woocommerce_order_before_calculate_totals', array( $this, 'prevent_total_recalculation' ), 10 );
 			return false;
@@ -70,7 +149,7 @@ trait OrderHandlerTotalProtectionTrait {
 			return;
 		}
 
-		if ( $order->get_created_via() !== self::ORDER_CREATED_VIA && $order->get_meta( self::ORDER_META_HAS_CUSTOM_PRICING ) !== 'yes' ) {
+		if ( ! $this->order_has_pricing_protection( $order ) ) {
 			return;
 		}
 
@@ -122,7 +201,7 @@ trait OrderHandlerTotalProtectionTrait {
 			return $subtotal;
 		}
 
-		if ( $order->get_created_via() === self::ORDER_CREATED_VIA || $order->get_meta( self::ORDER_META_HAS_CUSTOM_PRICING ) === 'yes' ) {
+		if ( $this->order_has_pricing_protection( $order ) ) {
 			return $subtotal;
 		}
 
@@ -144,7 +223,7 @@ trait OrderHandlerTotalProtectionTrait {
 			return $total;
 		}
 
-		if ( $order->get_created_via() === self::ORDER_CREATED_VIA || $order->get_meta( self::ORDER_META_HAS_CUSTOM_PRICING ) === 'yes' ) {
+		if ( $this->order_has_pricing_protection( $order ) ) {
 			return $total;
 		}
 
@@ -173,33 +252,16 @@ trait OrderHandlerTotalProtectionTrait {
 			return $total;
 		}
 
-		if ( $order->get_created_via() === self::ORDER_CREATED_VIA || $order->get_meta( self::ORDER_META_HAS_CUSTOM_PRICING ) === 'yes' ) {
-			$locked_total = $order->get_meta( self::ORDER_META_LOCKED_TOTAL );
-
-			if ( $locked_total ) {
-				$this->log( 'Order Total Lock: Returning locked total ' . $locked_total . ' for order #' . $order->get_id() . ' (passed in: ' . $total . ')' );
-				return $locked_total;
-			}
-
-			$this->log( 'Order Total Lock: No locked total metadata, calculating from order items for #' . $order->get_id() );
-
-			$calculated_total = 0;
-			foreach ( $order->get_items() as $item ) {
-				$calculated_total += $item->get_total();
-			}
-
-			$calculated_total += $order->get_shipping_total();
-
-			foreach ( $order->get_fees() as $fee ) {
-				$calculated_total += $fee->get_total();
-			}
-
-			$calculated_total += $order->get_total_tax();
+		if ( $this->order_has_pricing_protection( $order ) ) {
+			$locked_total     = $order->get_meta( self::ORDER_META_LOCKED_TOTAL );
+			$calculated_total = $this->calculate_protected_order_total( $order );
 
 			$this->log( 'Order Total Lock: Calculated total from items: ' . $calculated_total . ' (passed in total was: ' . $total . ')' );
 
-			$order->update_meta_data( self::ORDER_META_LOCKED_TOTAL, $calculated_total );
-			$order->save_meta_data();
+			if ( '' === $locked_total || abs( (float) $locked_total - $calculated_total ) > 0.0001 ) {
+				$order->update_meta_data( self::ORDER_META_LOCKED_TOTAL, $calculated_total );
+				$order->save_meta_data();
+			}
 
 			return $calculated_total;
 		}
