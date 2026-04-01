@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Plugin header now includes `License`, `License URI`, `Text Domain`, and `Domain Path` fields
 - Documentation link in plugin row meta now points to the GitHub repository instead of `#`
+- Documentation now clarifies that some gateways, such as Square, may require order payment links to be completed in the customer or logged-out context instead of an active admin session
 
 ## [1.0.5] - 2025-02-10
 
@@ -29,9 +30,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [1.0.4] - 2025-01-30
 
 ### Added
-- Ability for administrators and shop managers to process payments on behalf of customers
-- Secure access to order payment forms for authorized roles
-- Streamlined payment processing workflow for customer service
+- Secure access to WooCommerce order payment links for authorized roles
+- Streamlined payment-link sharing workflow for customer service
 
 ## [1.0.3] - 2025-01-27
 

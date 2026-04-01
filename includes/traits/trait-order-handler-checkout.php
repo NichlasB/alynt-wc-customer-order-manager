@@ -277,8 +277,6 @@ trait OrderHandlerCheckoutTrait {
 	 */
 	public function fix_order_before_payment( $order_id ) {
 		$this->log( 'Before Payment: Fixing order #' . $order_id );
-		$this->log_payment_order_snapshot( 'before_fix_order_before_payment', wc_get_order( $order_id ) );
 		$this->fix_order_pricing_on_creation( $order_id );
-		$this->log_payment_order_snapshot( 'after_fix_order_before_payment', wc_get_order( $order_id ) );
 	}
 }

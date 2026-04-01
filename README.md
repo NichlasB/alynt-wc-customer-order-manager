@@ -55,6 +55,7 @@ After installation and activation:
 - Look for the "Copy Payment Link" button in the order actions sidebar
 - Click the button to copy the payment URL to your clipboard
 - Share the link with your customer via email, message, or any preferred method
+- For Square-powered stores, complete the payment link in a logged-out window or while switched into the customer account. Admin wp-admin sessions can fail before payment.
 
 ### Customer Order Editing
 When customers receive payment links for pending orders, they can:
@@ -118,9 +119,9 @@ See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 - Customer-specific pricing maintained during order modifications
 
 ### 1.0.4 (2025-01-30)
-- Added ability for administrators and shop managers to process payments on behalf of customers
-- Added secure access to order payment forms for authorized roles
-- Added streamlined payment processing workflow for customer service
+- Added secure access to WooCommerce order payment links for authorized roles
+- Added streamlined payment-link sharing workflow for customer service
+- Note: Some gateways, such as Square, may require the payment link to be completed in the customer or logged-out context rather than an active admin session
 
 ### 1.0.3 (2025-01-27)
 - Fixed potential Composer autoloader conflicts with other plugins

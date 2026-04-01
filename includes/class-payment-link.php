@@ -121,9 +121,10 @@ class PaymentLink {
 		}
 
 		// Always use the standard WooCommerce payment link.
-		$link          = $order->get_checkout_payment_url();
-		$button_text   = __( 'Copy Payment Link', 'alynt-wc-customer-order-manager' );
-		$section_title = __( 'Payment Link', 'alynt-wc-customer-order-manager' );
+		$link              = $order->get_checkout_payment_url();
+		$button_text       = __( 'Copy Payment Link', 'alynt-wc-customer-order-manager' );
+		$section_title     = __( 'Payment Link', 'alynt-wc-customer-order-manager' );
+		$workflow_guidance = __( 'If this site uses Square, complete the payment link in a logged-out window or while switched into the customer account. Admin wp-admin sessions can fail before payment.', 'alynt-wc-customer-order-manager' );
 		?>
 		<div class="payment-link-actions">
 			<h3 class="wc-order-data-row-toggle">
@@ -135,6 +136,7 @@ class PaymentLink {
 					<?php echo esc_html( $button_text ); ?>
 				</button>
 				<div class="awcom-payment-link-feedback" hidden></div>
+				<p class="description"><?php echo esc_html( $workflow_guidance ); ?></p>
 			</div>
 		</div>
 		<?php

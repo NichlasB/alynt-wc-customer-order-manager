@@ -51,7 +51,7 @@ The plugin works with any WordPress theme as it operates primarily in the admin 
 
 = How do I use the payment link copy feature? =
 
-When viewing an order in the admin area, you'll find a "Copy Payment Link" button in the order actions sidebar. Click this button to copy the payment URL to your clipboard, which you can then share with your customer.
+When viewing an order in the admin area, you'll find a "Copy Payment Link" button in the order actions sidebar. Click this button to copy the payment URL to your clipboard, which you can then share with your customer. For Square-powered stores, complete the payment link in a logged-out/private window or while switched into the customer account, because active wp-admin sessions can fail before payment.
 
 = Can customers edit their orders? =
 
@@ -91,9 +91,9 @@ Customers can modify pending orders by adding or removing products, changing ite
 * Security: Only pending orders can be edited to prevent payment conflicts
 
 = 1.0.4 =
-* Added: Ability for administrators and shop managers to process payments on behalf of customers
-* Added: Secure access to order payment forms for authorized roles
-* Added: Streamlined payment processing workflow for customer service
+* Added: Secure access to WooCommerce order payment links for authorized roles
+* Added: Streamlined payment-link sharing workflow for customer service
+* Note: Some gateways, such as Square, may require the payment link to be completed in the customer or logged-out context rather than an active admin session
 
 = 1.0.3 - 2025-01-27 =
 * Fix: Resolved potential Composer autoloader conflicts with other plugins
@@ -121,7 +121,7 @@ Customers can modify pending orders by adding or removing products, changing ite
 Major new feature: Customers can now edit their pending orders before payment! This includes adding/removing products, changing quantities, and updating shipping methods with real-time calculations. Highly recommended for all users to improve customer experience.
 
 = 1.0.4 =
-Important update for stores that process customer payments manually. Administrators and shop managers can now access payment forms to process payments on behalf of customers.
+Important update for stores that share customer payment links manually. Authorized staff can access and share order payment links, but some gateways such as Square may require the link to be completed in the customer or logged-out context.
 
 = 1.0.3 =
 Important stability update: Fixes potential conflicts with other plugins using Composer. Recommended for all users, especially those running multiple plugins.
