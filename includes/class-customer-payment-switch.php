@@ -48,28 +48,102 @@ class CustomerPaymentSwitch {
 	 * Register hooks.
 	 */
 	public function __construct() {
-		self::grant_switching_capabilities();
-
 		add_action( 'admin_post_' . self::REQUEST_ACTION, array( $this, 'handle_switch_to_customer_payment' ) );
 		add_action( 'admin_post_' . self::COMPLETE_REQUEST_ACTION, array( $this, 'handle_complete_customer_payment_switch' ) );
 		add_filter( 'user_switching_redirect_to', array( $this, 'filter_user_switching_redirect_to' ), 10, 4 );
+		add_filter( 'user_has_cap', array( $this, 'filter_user_has_cap' ), 9, 4 );
 		add_action( 'wp_head', array( $this, 'render_switch_back_button_styles' ) );
 		add_action( 'woocommerce_pay_order_before_payment', array( $this, 'render_switched_payment_notice' ) );
 	}
 
 	/**
-	 * Grant native User Switching support to trusted staff roles.
+	 * Scope User Switching capability checks to this feature's signed order flow.
 	 *
-	 * @return void
+	 * User Switching treats the primitive `switch_users` capability as blanket
+	 * permission to switch into any user account. This filter grants the
+	 * narrower `switch_to_user` capability only when the current request is the
+	 * plugin's own signed switch flow for the order's linked customer account.
+	 *
+	 * @param array    $allcaps Array of the user's primitive capabilities.
+	 * @param string[] $caps    Required primitive capabilities for the request.
+	 * @param mixed[]  $args    Capability check arguments.
+	 * @param \WP_User $user    Current user object.
+	 * @return array
 	 */
-	public static function grant_switching_capabilities() {
-		foreach ( array( 'administrator', 'shop_manager' ) as $role_name ) {
-			$role = get_role( $role_name );
+	public function filter_user_has_cap( array $allcaps, array $caps, array $args, \WP_User $user ) {
+		unset( $caps );
 
-			if ( $role && ! $role->has_cap( 'switch_users' ) ) {
-				$role->add_cap( 'switch_users' );
-			}
+		if ( empty( $args[0] ) || 'switch_to_user' !== $args[0] ) {
+			return $allcaps;
 		}
+
+		$target_user_id = isset( $args[2] ) ? absint( $args[2] ) : 0;
+
+		if ( $target_user_id <= 0 || $target_user_id === (int) $user->ID ) {
+			return $allcaps;
+		}
+
+		$order = $this->get_authorized_switch_order( $target_user_id );
+
+		if ( ! $order ) {
+			return $allcaps;
+		}
+
+		$allcaps['switch_to_user'] = true;
+
+		return $allcaps;
+	}
+
+	/**
+	 * Check whether the current request is authorized to switch to the order's customer.
+	 *
+	 * @param int $target_user_id Expected target user ID.
+	 * @return \WC_Order|false
+	 */
+	protected function get_authorized_switch_order( $target_user_id = 0 ) {
+		if ( ! Security::user_can_access() ) {
+			return false;
+		}
+
+		$order_id = $this->get_requested_order_id();
+
+		if ( $order_id <= 0 ) {
+			return false;
+		}
+
+		$nonce = $this->get_request_value( self::REQUEST_NONCE );
+
+		if ( '' === $nonce || ! wp_verify_nonce( $nonce, self::get_nonce_action( $order_id ) ) ) {
+			return false;
+		}
+
+		$order = $this->get_requested_order();
+
+		if ( ! $this->is_switchable_order( $order ) ) {
+			return false;
+		}
+
+		$customer = $this->get_order_customer_user( $order );
+
+		if ( ! $customer instanceof \WP_User || $this->is_staff_user( $customer ) ) {
+			return false;
+		}
+
+		if ( $target_user_id > 0 && (int) $customer->ID !== (int) $target_user_id ) {
+			return false;
+		}
+
+		return $order;
+	}
+
+	/**
+	 * Determine whether a user account should be treated as a staff account.
+	 *
+	 * @param \WP_User $user User object.
+	 * @return bool
+	 */
+	protected function is_staff_user( \WP_User $user ) {
+		return user_can( $user, 'manage_woocommerce' ) || user_can( $user, 'manage_options' );
 	}
 
 	/**
@@ -124,11 +198,11 @@ class CustomerPaymentSwitch {
 			);
 		}
 
-		$order = $this->get_requested_order();
-		if ( ! $this->is_switchable_order( $order ) ) {
+		$order = $this->get_authorized_switch_order();
+		if ( ! $order ) {
 			$this->redirect_to_order_with_error(
 				$order_id,
-				__( 'This order is no longer available for payment.', 'alynt-wc-customer-order-manager' )
+				__( 'This order is no longer available for payment. Refresh the order screen and confirm the order is still pending and unpaid.', 'alynt-wc-customer-order-manager' )
 			);
 		}
 
@@ -136,22 +210,29 @@ class CustomerPaymentSwitch {
 		if ( ! $customer instanceof \WP_User ) {
 			$this->redirect_to_order_with_error(
 				$order_id,
-				__( 'This order is not attached to a valid WordPress customer account.', 'alynt-wc-customer-order-manager' )
+				__( 'This order is not attached to a valid WordPress customer account. Assign the order to a customer account or send the payment link directly.', 'alynt-wc-customer-order-manager' )
+			);
+		}
+
+		if ( $this->is_staff_user( $customer ) ) {
+			$this->redirect_to_order_with_error(
+				$order_id,
+				__( 'This order is assigned to a staff account, so customer switching is unavailable. Use the payment link directly instead.', 'alynt-wc-customer-order-manager' )
 			);
 		}
 
 		if ( (int) $customer->ID === (int) get_current_user_id() ) {
 			$this->redirect_to_order_with_error(
 				$order_id,
-				__( 'This order is already assigned to your current WordPress account, so User Switching cannot switch into it.', 'alynt-wc-customer-order-manager' )
+				__( 'This order is already assigned to your current WordPress account, so User Switching cannot switch into it. Use the payment link directly instead.', 'alynt-wc-customer-order-manager' )
 			);
 		}
 
-		$switch_url = $this->get_native_switch_url( $customer );
+		$switch_url = $this->get_native_switch_url( $customer, $order );
 		if ( '' === $switch_url ) {
 			$this->redirect_to_order_with_error(
 				$order_id,
-				__( 'Could not start the customer switch flow for this order.', 'alynt-wc-customer-order-manager' )
+				__( 'Could not start the customer switch flow for this order. Try again, or send the payment link directly if the problem continues.', 'alynt-wc-customer-order-manager' )
 			);
 		}
 
@@ -171,15 +252,21 @@ class CustomerPaymentSwitch {
 	 * @return void
 	 */
 	public function handle_complete_customer_payment_switch() {
+		$switch_token     = $this->get_request_value( self::REQUEST_SWITCH_TOKEN );
+		$originating_user = $this->get_originating_user();
 		$order = $this->get_requested_order();
 
+		if ( '' === $switch_token || ! $originating_user instanceof \WP_User || ! $this->is_staff_user( $originating_user ) ) {
+			wp_die( esc_html__( 'This payment handoff is no longer valid. Switch back to staff, then restart the payment flow from the order screen.', 'alynt-wc-customer-order-manager' ), 403 );
+		}
+
 		if ( ! $this->is_switchable_order( $order ) ) {
-			wp_die( esc_html__( 'This order is no longer available for payment.', 'alynt-wc-customer-order-manager' ) );
+			wp_die( esc_html__( 'This order is no longer available for payment. Return to the order screen and confirm the order is still pending and unpaid.', 'alynt-wc-customer-order-manager' ) );
 		}
 
 		$customer = $this->get_order_customer_user( $order );
 		if ( ! $customer instanceof \WP_User || (int) $customer->ID !== (int) get_current_user_id() ) {
-			wp_die( esc_html__( 'This switched session does not match the customer assigned to the order.', 'alynt-wc-customer-order-manager' ), 403 );
+			wp_die( esc_html__( 'This switched session does not match the customer assigned to the order. Switch back to staff, then restart the payment flow from the order screen.', 'alynt-wc-customer-order-manager' ), 403 );
 		}
 
 		$this->prime_switch_back_redirect( $order );
@@ -187,7 +274,7 @@ class CustomerPaymentSwitch {
 		$redirect_to = add_query_arg(
 			array(
 				self::REQUEST_ORDER_ID     => $order->get_id(),
-				self::REQUEST_SWITCH_TOKEN => $this->get_request_value( self::REQUEST_SWITCH_TOKEN ),
+				self::REQUEST_SWITCH_TOKEN => $switch_token,
 			),
 			$order->get_checkout_payment_url()
 		);
@@ -313,6 +400,13 @@ class CustomerPaymentSwitch {
 					width: 100% !important;
 					padding: 12px 16px !important;
 					text-align: center !important;
+				}
+			}
+
+			@media (prefers-reduced-motion: reduce) {
+				p[style*="position: fixed"][style*="z-index:99999"] > a[href*="action=switch_to_olduser"] {
+					transition: none !important;
+					transform: none !important;
 				}
 			}
 		</style>
@@ -462,14 +556,22 @@ class CustomerPaymentSwitch {
 	 * @param \WP_User $customer Target customer account.
 	 * @return string
 	 */
-	protected function get_native_switch_url( \WP_User $customer ) {
+	protected function get_native_switch_url( \WP_User $customer, \WC_Order $order ) {
 		$switch_url = \user_switching::maybe_switch_url( $customer );
 
 		if ( ! is_string( $switch_url ) || '' === $switch_url ) {
 			return '';
 		}
 
-		return esc_url_raw( html_entity_decode( $switch_url, ENT_QUOTES, 'UTF-8' ) );
+		return esc_url_raw(
+			add_query_arg(
+				array(
+					self::REQUEST_ORDER_ID => $order->get_id(),
+					self::REQUEST_NONCE    => wp_create_nonce( self::get_nonce_action( $order->get_id() ) ),
+				),
+				html_entity_decode( $switch_url, ENT_QUOTES, 'UTF-8' )
+			)
+		);
 	}
 
 	/**

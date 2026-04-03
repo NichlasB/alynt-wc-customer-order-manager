@@ -44,6 +44,15 @@
     flex: 0 0 16px;
 }
 
+.awcom-payment-action-spinner {
+    float: none;
+    margin: 0 0 0 4px;
+}
+
+.awcom-payment-action-spinner:not(.is-active) {
+    display: none;
+}
+
 .awcom-payment-link-inline-notice {
     margin: 0 0 12px 0;
 }

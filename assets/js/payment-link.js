@@ -13,6 +13,18 @@
         return actions ? actions.querySelector('.awcom-payment-link-feedback') : null;
     }
 
+    function getActionRegion(button) {
+        return button.closest('.payment-link-actions');
+    }
+
+    function getButtonLabel(button) {
+        return button.querySelector('.awcom-payment-action-label');
+    }
+
+    function getButtonSpinner(button) {
+        return button.querySelector('.awcom-payment-action-spinner');
+    }
+
     function clearFeedback(button) {
         var feedback = getFeedbackElement(button);
 
@@ -44,22 +56,54 @@
         paragraph = document.createElement('p');
         paragraph.textContent = message;
         feedback.appendChild(paragraph);
-        feedback.focus();
+
+        if (type === 'error') {
+            feedback.focus();
+        }
     }
 
     function setBusyState(button, isBusy) {
+        var region = getActionRegion(button);
+        var label = getButtonLabel(button);
+        var spinner = getButtonSpinner(button);
+
         button.disabled = Boolean(isBusy);
 
         if (isBusy) {
             button.classList.add('is-busy');
             button.setAttribute('aria-disabled', 'true');
             button.setAttribute('aria-busy', 'true');
+
+            if (region) {
+                region.setAttribute('aria-busy', 'true');
+            }
+
+            if (label && i18n.copying) {
+                label.textContent = i18n.copying;
+            }
+
+            if (spinner) {
+                spinner.classList.add('is-active');
+            }
+
             return;
         }
 
         button.classList.remove('is-busy');
         button.removeAttribute('aria-disabled');
         button.removeAttribute('aria-busy');
+
+        if (region) {
+            region.removeAttribute('aria-busy');
+        }
+
+        if (label && i18n.copy_label) {
+            label.textContent = i18n.copy_label;
+        }
+
+        if (spinner) {
+            spinner.classList.remove('is-active');
+        }
     }
 
     function fallbackCopy(text) {

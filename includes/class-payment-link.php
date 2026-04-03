@@ -81,6 +81,8 @@ class PaymentLink {
 				'i18n' => array(
 					'no_payment_link' => __( 'No payment link found to copy.', 'alynt-wc-customer-order-manager' ),
 					'copied'          => __( 'Payment link copied to clipboard!', 'alynt-wc-customer-order-manager' ),
+					'copying'         => __( 'Copying...', 'alynt-wc-customer-order-manager' ),
+					'copy_label'      => __( 'Copy Payment Link', 'alynt-wc-customer-order-manager' ),
 					/* translators: %s: payment link URL. */
 					'copy_failed'     => __( 'Failed to copy. Please copy manually: %s', 'alynt-wc-customer-order-manager' ),
 				),
@@ -125,14 +127,15 @@ class PaymentLink {
 			<div class="wc-order-data-row">
 				<?php $switch_error = $this->get_switch_error_message(); ?>
 				<?php if ( '' !== $switch_error ) : ?>
-					<div class="notice notice-error inline awcom-payment-link-inline-notice">
+					<div class="notice notice-error inline is-dismissible awcom-payment-link-inline-notice">
 						<p><?php echo esc_html( $switch_error ); ?></p>
 					</div>
 				<?php endif; ?>
 
 				<button type="button" class="button button-secondary awcom-payment-action awcom-copy-payment-link" data-payment-link="<?php echo esc_attr( $link ); ?>">
 					<span class="dashicons dashicons-clipboard"></span>
-					<?php echo esc_html( $button_text ); ?>
+					<span class="awcom-payment-action-label"><?php echo esc_html( $button_text ); ?></span>
+					<span class="spinner awcom-payment-action-spinner" aria-hidden="true"></span>
 				</button>
 				<?php if ( '' !== $switch_url ) : ?>
 					<a href="<?php echo esc_url( $switch_url ); ?>" class="button button-secondary awcom-payment-action awcom-switch-to-customer">
@@ -140,7 +143,7 @@ class PaymentLink {
 						<?php echo esc_html( $switch_button_text ); ?>
 					</a>
 				<?php endif; ?>
-				<div class="awcom-payment-link-feedback" hidden></div>
+				<div class="awcom-payment-link-feedback" aria-live="polite" aria-atomic="true" hidden></div>
 				<p class="description"><?php echo esc_html( $workflow_guidance ); ?></p>
 				<?php if ( '' !== $switch_unavailable_reason ) : ?>
 					<p class="description"><?php echo esc_html( $switch_unavailable_reason ); ?></p>
@@ -188,20 +191,20 @@ class PaymentLink {
 
 		$customer_id = absint( $order->get_customer_id() );
 		if ( $customer_id <= 0 ) {
-			return __( 'This order is not attached to a valid WordPress customer account, so customer switching is unavailable.', 'alynt-wc-customer-order-manager' );
+			return __( 'This order is not attached to a valid WordPress customer account, so customer switching is unavailable. Assign the order to a customer account or send the payment link directly.', 'alynt-wc-customer-order-manager' );
 		}
 
 		$customer = get_user_by( 'id', $customer_id );
 		if ( ! $customer instanceof \WP_User ) {
-			return __( 'This order is not attached to a valid WordPress customer account, so customer switching is unavailable.', 'alynt-wc-customer-order-manager' );
+			return __( 'This order is not attached to a valid WordPress customer account, so customer switching is unavailable. Assign the order to a customer account or send the payment link directly.', 'alynt-wc-customer-order-manager' );
+		}
+
+		if ( user_can( $customer, 'manage_woocommerce' ) || user_can( $customer, 'manage_options' ) ) {
+			return __( 'This order is assigned to a staff account, so customer switching is unavailable. Use the payment link directly instead.', 'alynt-wc-customer-order-manager' );
 		}
 
 		if ( $customer_id === get_current_user_id() ) {
-			return __( 'This order is already attached to your current WordPress account, so User Switching cannot switch into the same user.', 'alynt-wc-customer-order-manager' );
-		}
-
-		if ( ! \user_switching::maybe_switch_url( $customer ) ) {
-			return __( 'Your current account cannot switch into this customer through the User Switching plugin.', 'alynt-wc-customer-order-manager' );
+			return __( 'This order is already attached to your current WordPress account, so User Switching cannot switch into the same user. Use the payment link directly instead.', 'alynt-wc-customer-order-manager' );
 		}
 
 		return '';
