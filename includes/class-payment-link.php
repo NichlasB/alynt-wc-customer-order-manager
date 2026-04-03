@@ -1,9 +1,6 @@
 <?php // phpcs:disable WordPress.Files.FileName -- Legacy file naming retained for compatibility.
 /**
- * Payment link copy button for WooCommerce order edit screens.
- *
- * Renders a "Copy Payment Link" button in the order actions sidebar for
- * pending, unpaid orders so admins can quickly share the payment URL.
+ * Payment-link actions for WooCommerce order edit screens.
  *
  * @package    Alynt_WC_Customer_Order_Manager
  * @subpackage Alynt_WC_Customer_Order_Manager/includes
@@ -15,7 +12,7 @@ namespace AlyntWCOrderManager;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Adds a copy-to-clipboard payment link button on the order edit screen.
+ * Adds payment-link actions on the order edit screen.
  *
  * @since 1.0.2
  */
@@ -92,9 +89,9 @@ class PaymentLink {
 	}
 
 	/**
-	 * Render the "Copy Payment Link" button in the order actions sidebar.
+	 * Render the payment-link actions in the order actions sidebar.
 	 *
-	 * Only displayed for pending, unpaid orders. The button uses the
+	 * Only displayed for pending, unpaid orders. The copy button uses the
 	 * Clipboard API with a textarea fallback for older browsers.
 	 *
 	 * @since 1.0.2
@@ -103,42 +100,110 @@ class PaymentLink {
 	 * @return void
 	 */
 	public function add_payment_link_copy_button( $order_id ) {
-		// Get the order object from the ID.
 		$order = wc_get_order( $order_id );
 
-		if ( ! $order ) {
+		if ( ! $this->is_order_eligible_for_payment_actions( $order ) ) {
 			return;
 		}
 
-		// Only show the button for unpaid orders.
-		if ( $order->is_paid() ) {
-			return;
-		}
+		$link                      = $order->get_checkout_payment_url();
+		$button_text               = __( 'Copy Payment Link', 'alynt-wc-customer-order-manager' );
+		$section_title             = __( 'Payment Link', 'alynt-wc-customer-order-manager' );
+		$switch_button_text        = __( 'Switch to Customer & Pay', 'alynt-wc-customer-order-manager' );
+		$workflow_guidance         = __( 'Some payment gateways may require this payment link to be completed while signed in as the customer rather than while signed in as staff. If payment does not go through, switch into the customer account or send the link to the customer to complete themselves.', 'alynt-wc-customer-order-manager' );
+		$switch_unavailable_reason = $this->get_switch_unavailable_reason( $order );
+		$switch_url                = '';
 
-		// Show the button only for pending orders.
-		if ( 'pending' !== $order->get_status() ) {
-			return;
+		if ( '' === $switch_unavailable_reason ) {
+			$switch_url = CustomerPaymentSwitch::get_switch_action_url( $order->get_id() );
 		}
-
-		// Always use the standard WooCommerce payment link.
-		$link              = $order->get_checkout_payment_url();
-		$button_text       = __( 'Copy Payment Link', 'alynt-wc-customer-order-manager' );
-		$section_title     = __( 'Payment Link', 'alynt-wc-customer-order-manager' );
-		$workflow_guidance = __( 'If this site uses Square, complete the payment link in a logged-out window or while switched into the customer account. Admin wp-admin sessions can fail before payment.', 'alynt-wc-customer-order-manager' );
 		?>
 		<div class="payment-link-actions">
 			<h3 class="wc-order-data-row-toggle">
 				<?php echo esc_html( $section_title ); ?>
 			</h3>
 			<div class="wc-order-data-row">
-				<button type="button" class="button button-secondary awcom-copy-payment-link" data-payment-link="<?php echo esc_attr( $link ); ?>">
+				<?php $switch_error = $this->get_switch_error_message(); ?>
+				<?php if ( '' !== $switch_error ) : ?>
+					<div class="notice notice-error inline awcom-payment-link-inline-notice">
+						<p><?php echo esc_html( $switch_error ); ?></p>
+					</div>
+				<?php endif; ?>
+
+				<button type="button" class="button button-secondary awcom-payment-action awcom-copy-payment-link" data-payment-link="<?php echo esc_attr( $link ); ?>">
 					<span class="dashicons dashicons-clipboard"></span>
 					<?php echo esc_html( $button_text ); ?>
 				</button>
+				<?php if ( '' !== $switch_url ) : ?>
+					<a href="<?php echo esc_url( $switch_url ); ?>" class="button button-secondary awcom-payment-action awcom-switch-to-customer">
+						<span class="dashicons dashicons-randomize"></span>
+						<?php echo esc_html( $switch_button_text ); ?>
+					</a>
+				<?php endif; ?>
 				<div class="awcom-payment-link-feedback" hidden></div>
 				<p class="description"><?php echo esc_html( $workflow_guidance ); ?></p>
+				<?php if ( '' !== $switch_unavailable_reason ) : ?>
+					<p class="description"><?php echo esc_html( $switch_unavailable_reason ); ?></p>
+				<?php endif; ?>
 			</div>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Check whether the payment actions should render for an order.
+	 *
+	 * @param mixed $order WooCommerce order object.
+	 * @return bool
+	 */
+	private function is_order_eligible_for_payment_actions( $order ) {
+		return $order instanceof \WC_Order && ! $order->is_paid() && 'pending' === $order->get_status();
+	}
+
+	/**
+	 * Read any switch error message passed back to the order screen.
+	 *
+	 * @return string
+	 */
+	private function get_switch_error_message() {
+		/* phpcs:disable WordPress.Security.NonceVerification.Recommended -- Reading redirect notice query args only. */
+		$error_message = isset( $_GET[ CustomerPaymentSwitch::REQUEST_ERROR ] )
+			? sanitize_text_field( rawurldecode( wp_unslash( $_GET[ CustomerPaymentSwitch::REQUEST_ERROR ] ) ) )
+			: '';
+		/* phpcs:enable */
+
+		return $error_message;
+	}
+
+	/**
+	 * Explain why the switch action is unavailable for this order.
+	 *
+	 * @param \WC_Order $order WooCommerce order object.
+	 * @return string
+	 */
+	private function get_switch_unavailable_reason( \WC_Order $order ) {
+		if ( ! CustomerPaymentSwitch::is_user_switching_available() ) {
+			return __( 'Install and activate the User Switching plugin to enable the one-click customer payment switch.', 'alynt-wc-customer-order-manager' );
+		}
+
+		$customer_id = absint( $order->get_customer_id() );
+		if ( $customer_id <= 0 ) {
+			return __( 'This order is not attached to a valid WordPress customer account, so customer switching is unavailable.', 'alynt-wc-customer-order-manager' );
+		}
+
+		$customer = get_user_by( 'id', $customer_id );
+		if ( ! $customer instanceof \WP_User ) {
+			return __( 'This order is not attached to a valid WordPress customer account, so customer switching is unavailable.', 'alynt-wc-customer-order-manager' );
+		}
+
+		if ( $customer_id === get_current_user_id() ) {
+			return __( 'This order is already attached to your current WordPress account, so User Switching cannot switch into the same user.', 'alynt-wc-customer-order-manager' );
+		}
+
+		if ( ! \user_switching::maybe_switch_url( $customer ) ) {
+			return __( 'Your current account cannot switch into this customer through the User Switching plugin.', 'alynt-wc-customer-order-manager' );
+		}
+
+		return '';
 	}
 }

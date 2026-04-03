@@ -102,6 +102,12 @@ function awcom_init() {
 	// Load the text domain for translations.
 	load_plugin_textdomain( 'alynt-wc-customer-order-manager', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 
+	// Load switch flow support early so it is available on wp-login.php.
+	require_once AWCOM_PLUGIN_PATH . 'includes/class-security.php';
+	require_once AWCOM_PLUGIN_PATH . 'includes/class-customer-payment-switch.php';
+
+	new \AlyntWCOrderManager\CustomerPaymentSwitch();
+
 	if ( ! class_exists( 'WooCommerce' ) ) {
 		if ( is_admin() ) {
 			add_action( 'admin_notices', 'awcom_render_missing_woocommerce_notice' );
@@ -112,7 +118,6 @@ function awcom_init() {
 
 	// Include the required files.
 	require_once AWCOM_PLUGIN_PATH . 'includes/class-pricing-rule-lookup.php';
-	require_once AWCOM_PLUGIN_PATH . 'includes/class-security.php';
 	require_once AWCOM_PLUGIN_PATH . 'includes/class-order-payment-access.php';
 	require_once AWCOM_PLUGIN_PATH . 'includes/class-order-handler.php';
 

@@ -12,22 +12,40 @@
     padding: 1.5em 0 0 0;
 }
 
-.awcom-copy-payment-link {
-    display: inline-flex !important;
+.awcom-payment-action {
+    display: flex !important;
     align-items: center;
     width: 100%;
     justify-content: center;
+    box-sizing: border-box;
+    min-height: 30px;
+    padding: 0 10px !important;
+    gap: 5px;
+    text-decoration: none;
+}
+
+.awcom-payment-action + .awcom-payment-action {
+    margin-top: 8px !important;
+}
+
+.awcom-payment-action:hover,
+.awcom-payment-action:focus {
+    text-decoration: none;
 }
 
 .awcom-copy-payment-link.is-busy {
     opacity: 0.8;
 }
 
-.awcom-copy-payment-link .dashicons {
-    margin-right: 5px;
+.awcom-payment-action .dashicons {
     font-size: 16px;
     width: 16px;
     height: 16px;
+    flex: 0 0 16px;
+}
+
+.awcom-payment-link-inline-notice {
+    margin: 0 0 12px 0;
 }
 
 .awcom-payment-link-feedback {
