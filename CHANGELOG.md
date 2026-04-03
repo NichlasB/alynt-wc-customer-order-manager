@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.1.0] - 2026-04-03
+
+### Added
+- Customer edit-screen improvements, including shipping-address management, customer notes, and billing email tools
+- Pending-order editing enhancements with live product search, shipping updates, and stock-aware workflows
+- Customer payment switching for staff-assisted payment flows that need the customer account context
+- Build tooling, release automation, and settings/hooks documentation
+
+### Changed
+- Refactored admin pages, order handling, order interface, and pricing lookup into smaller components
+- Improved payment-link copy UX, product search behavior, and deploy packaging defaults
+- Clarified gateway guidance for payment links that require customer-context completion
+
+### Fixed
+- Shipping-address fallback logic during order creation
+- Pricing protection and admin order-origin edge cases
+- Release workflow asset-upload handling
+
+### Security
+- Hardened capability checks, nonce validation, uninstall cleanup, and scoped switched-payment access
+
 ## [1.0.6] - 2026-03-11
 
 ### Added

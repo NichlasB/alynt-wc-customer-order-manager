@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Alynt WooCommerce Customer and Order Manager
  * Description:       Provides a customer management interface for WooCommerce customers and orders.
- * Version:           1.0.6
+ * Version:           1.1.0
  * Author:            Alynt
  * GitHub Plugin URI: NichlasB/alynt-wc-customer-order-manager
  * Requires at least: 5.0
@@ -22,7 +22,7 @@ defined( 'ABSPATH' ) || exit;
 // Define plugin constants.
 define( 'AWCOM_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 define( 'AWCOM_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-define( 'AWCOM_VERSION', '1.0.6' );
+define( 'AWCOM_VERSION', '1.1.0' );
 
 require_once AWCOM_PLUGIN_PATH . 'includes/class-activator.php';
 require_once AWCOM_PLUGIN_PATH . 'includes/class-deactivator.php';

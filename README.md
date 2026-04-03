@@ -103,6 +103,12 @@ Order-level pricing is stored in WooCommerce order meta (`_has_custom_pricing`, 
 
 See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 
+### 1.1.0 (2026-04-03)
+- Added customer edit-screen improvements, including shipping address management, notes, and billing email tools
+- Added pending-order editing enhancements with live product and shipping updates
+- Added a hardened customer payment-switch workflow for staff-assisted payment completion
+- Improved payment link UX, shipping/pricing flow reliability, and deploy/build tooling
+
 ### 1.0.6 (2026-03-11)
 - Added PHPDoc blocks for all classes, traits, and public methods
 - Added CHANGELOG.md, docs/SETTINGS.md, and docs/HOOKS.md

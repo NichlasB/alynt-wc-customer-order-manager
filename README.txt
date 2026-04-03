@@ -5,7 +5,7 @@ Requires at least: 5.0
 Tested up to: 6.7.1
 Requires PHP: 7.2
 WC requires at least: 4.0
-Stable tag: 1.0.6
+Stable tag: 1.1.0
 License: GPL v2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -63,6 +63,15 @@ Customers can modify pending orders by adding or removing products, changing ite
 
 == Changelog ==
 
+= 1.1.0 =
+* Added: Customer order editing improvements for pending orders, including live product and shipping updates
+* Added: Expanded customer admin management with shipping address, notes, and billing email tools
+* Added: Customer payment switching workflow for gateways that need the customer account context during payment
+* Enhancement: Refactored core admin, order, and pricing flows into smaller maintainable components
+* Enhancement: Improved payment link copy feedback, product search UX, and deploy/build tooling
+* Fix: Corrected shipping-address fallback behavior, pricing protection edge cases, and Square payment-link guidance
+* Security: Hardened capability checks, nonce validation, uninstall cleanup, and switched-payment access rules
+
 = 1.0.6 =
 * Fix: Resolved critical bug where shipping addresses were reverting to billing addresses during order creation
 * Fix: Modified address copy logic to only copy billing to shipping when ALL key shipping fields (address_1, city, country) are empty
@@ -116,6 +125,9 @@ Customers can modify pending orders by adding or removing products, changing ite
 * Security features implementation
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+Feature release: adds customer order editing improvements, expanded customer admin tools, and a hardened switch-to-customer payment workflow. Recommended for all users. No breaking changes.
 
 = 1.0.5 =
 Major new feature: Customers can now edit their pending orders before payment! This includes adding/removing products, changing quantities, and updating shipping methods with real-time calculations. Highly recommended for all users to improve customer experience.
