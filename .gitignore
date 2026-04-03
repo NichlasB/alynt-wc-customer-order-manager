@@ -27,3 +27,7 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# Local-only workflow files
+deploy.sh
+session-context.tmp.md
