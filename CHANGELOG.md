@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.1.1] - 2026-05-21
+
+### Changed
+- Refined release packaging to exclude local-only and development files from generated plugin archives
+- Added a deploy script template for local deployment workflows without shipping local automation defaults
+
+### Fixed
+- Prevented cart-based payment overrides from running during WooCommerce order-pay requests
+- Ensured PayPal order-pay flows use the authoritative order total, including locked pricing when present
+
 ## [1.1.0] - 2026-04-03
 
 ### Added

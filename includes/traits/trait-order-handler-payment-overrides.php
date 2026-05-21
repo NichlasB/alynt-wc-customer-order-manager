@@ -89,6 +89,11 @@ trait OrderHandlerPaymentOverridesTrait {
 			return $total;
 		}
 
+		if ( $this->is_order_pay_request() ) {
+			$this->log( 'Cart Total Override: Skipping cart-based override on order-pay request' );
+			return $total;
+		}
+
 		$cart = WC()->cart;
 		if ( ! $cart || $cart->is_empty() ) {
 			return $total;
@@ -142,6 +147,13 @@ trait OrderHandlerPaymentOverridesTrait {
 
 		$this->log( 'PayPal: Original cart data total = ' . $cart_data['total'] );
 
+		$pay_order_total = $this->get_current_pay_order_total();
+		if ( null !== $pay_order_total ) {
+			$cart_data['total'] = round( $pay_order_total, 2 );
+			$this->log( 'PayPal: Using order-pay total = ' . $cart_data['total'] );
+			return $cart_data;
+		}
+
 		$cart = WC()->cart;
 		if ( $cart && ! $cart->is_empty() ) {
 			$correct_total = 0;
@@ -169,6 +181,59 @@ trait OrderHandlerPaymentOverridesTrait {
 		}
 
 		return $cart_data;
+	}
+
+	/**
+	 * Determine whether the current request is a WooCommerce order-pay request.
+	 *
+	 * @return bool
+	 */
+	protected function is_order_pay_request() {
+		return function_exists( 'is_wc_endpoint_url' ) && is_wc_endpoint_url( 'order-pay' );
+	}
+
+	/**
+	 * Get the current payable order for an order-pay request.
+	 *
+	 * @return \WC_Order|null
+	 */
+	protected function get_current_pay_order() {
+		if ( ! $this->is_order_pay_request() || ! function_exists( 'get_query_var' ) ) {
+			return null;
+		}
+
+		$order_id = absint( get_query_var( 'order-pay' ) );
+		if ( $order_id <= 0 ) {
+			return null;
+		}
+
+		$order = wc_get_order( $order_id );
+		if ( ! $order instanceof \WC_Order ) {
+			return null;
+		}
+
+		return $order;
+	}
+
+	/**
+	 * Get the authoritative total for the current order-pay request.
+	 *
+	 * Uses the protected order calculation when Alynt pricing locks are active so
+	 * fees and taxes from the stored order remain the single source of truth.
+	 *
+	 * @return float|null
+	 */
+	protected function get_current_pay_order_total() {
+		$order = $this->get_current_pay_order();
+		if ( ! $order ) {
+			return null;
+		}
+
+		if ( $this->order_has_pricing_protection( $order ) ) {
+			return (float) $this->calculate_protected_order_total( $order );
+		}
+
+		return (float) $order->get_total();
 	}
 
 	/**

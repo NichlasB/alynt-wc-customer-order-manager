@@ -103,6 +103,11 @@ Order-level pricing is stored in WooCommerce order meta (`_has_custom_pricing`, 
 
 See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 
+### 1.1.1 (2026-05-21)
+- Fixed order-pay payment handling so cart-based overrides do not alter existing-order totals during checkout
+- Fixed PayPal order-pay flows to use the authoritative locked order total when present
+- Improved release packaging by excluding local-only and development files from plugin archives
+
 ### 1.1.0 (2026-04-03)
 - Added customer edit-screen improvements, including shipping address management, notes, and billing email tools
 - Added pending-order editing enhancements with live product and shipping updates
