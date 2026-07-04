@@ -103,6 +103,11 @@ Order-level pricing is stored in WooCommerce order meta (`_has_custom_pricing`, 
 
 See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 
+### 1.1.2 (2026-07-02)
+- Fixed manual admin order shipping so qualifying orders can display WooCommerce free shipping without relying on frontend cart state
+- Passed the selected customer through manual shipping packages for customer-group based shipping eligibility checks
+- Improved shipping package totals by using customer-group adjusted pricing during manual order shipping calculations
+
 ### 1.1.1 (2026-05-21)
 - Fixed order-pay payment handling so cart-based overrides do not alter existing-order totals during checkout
 - Fixed PayPal order-pay flows to use the authoritative locked order total when present

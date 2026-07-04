@@ -18,6 +18,7 @@ defined( 'ABSPATH' ) || exit;
 require_once __DIR__ . '/traits/trait-order-interface-render.php';
 require_once __DIR__ . '/traits/trait-order-interface-ajax-products.php';
 require_once __DIR__ . '/traits/trait-order-interface-ajax-shipping.php';
+require_once __DIR__ . '/traits/trait-manual-shipping-compatibility.php';
 
 /**
  * Provides the admin order creation UI and supporting AJAX endpoints.
@@ -28,6 +29,7 @@ class OrderInterface {
 	use OrderInterfaceRenderTrait;
 	use OrderInterfaceAjaxProductsTrait;
 	use OrderInterfaceAjaxShippingTrait;
+	use ManualShippingCompatibilityTrait;
 
 	/**
 	 * ID of the customer for whom an order is being created.

@@ -22,6 +22,7 @@ require_once __DIR__ . '/traits/trait-order-handler-cart-pricing-core.php';
 require_once __DIR__ . '/traits/trait-order-handler-cart-display.php';
 require_once __DIR__ . '/traits/trait-order-handler-checkout.php';
 require_once __DIR__ . '/traits/trait-order-handler-payment-overrides.php';
+require_once __DIR__ . '/traits/trait-manual-shipping-compatibility.php';
 
 /**
  * Manages order creation, pricing locks, and cart/checkout overrides.
@@ -36,6 +37,7 @@ class OrderHandler {
 	use OrderHandlerCartDisplayTrait;
 	use OrderHandlerCheckoutTrait;
 	use OrderHandlerPaymentOverridesTrait;
+	use ManualShippingCompatibilityTrait;
 
 	/**
 	 * Accumulated shipping errors from the most recent shipping method lookup.

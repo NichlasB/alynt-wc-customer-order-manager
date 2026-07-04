@@ -5,7 +5,7 @@ Requires at least: 5.0
 Tested up to: 6.7.1
 Requires PHP: 7.2
 WC requires at least: 4.0
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 License: GPL v2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,11 @@ Yes! Customers can edit pending orders before payment. When they click the payme
 Customers can modify pending orders by adding or removing products, changing item quantities (with stock validation), selecting different shipping methods, and adding special instructions. All changes are calculated in real-time with updated totals and shipping costs.
 
 == Changelog ==
+
+= 1.1.2 =
+* Fix: Restored free-shipping eligibility for manually created admin orders when the package total meets the configured WooCommerce free-shipping minimum
+* Fix: Passed the target customer ID through manual shipping packages so customer-group based shipping filters evaluate the intended customer
+* Enhancement: Calculated manual order shipping package totals from customer-group adjusted prices for more accurate live shipping rate eligibility
 
 = 1.1.1 =
 * Fix: Prevented cart-based payment overrides from running during WooCommerce order-pay requests
@@ -131,6 +136,9 @@ Customers can modify pending orders by adding or removing products, changing ite
 * Security features implementation
 
 == Upgrade Notice ==
+
+= 1.1.2 =
+Maintenance release: fixes free-shipping eligibility for manually created admin orders and improves customer-group aware shipping calculations. Recommended for stores using manual order creation. No breaking changes.
 
 = 1.1.1 =
 Maintenance release: fixes order-pay payment total handling for PayPal and excludes local-only files from release packages. Recommended for all users. No breaking changes.

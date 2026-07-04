@@ -195,7 +195,7 @@ trait OrderInterfaceAjaxShippingTrait {
 					}
 
 					ob_start();
-					$rates  = $method->get_rates_for_package( $package );
+					$rates  = $this->get_manual_package_shipping_rates( $method, $package );
 					$output = ob_get_clean();
 
 					if ( ! empty( $output ) ) {
@@ -280,8 +280,29 @@ trait OrderInterfaceAjaxShippingTrait {
 				'address'   => $address['address_1'],
 				'address_2' => $address['address_2'],
 			),
-			'user'            => array( 'ID' => absint( $customer_id ) ),
 		);
+		$package = $this->prepare_manual_shipping_package_customer( $package, $customer_id );
+
+		$product_ids = array();
+		foreach ( $items as $item ) {
+			$product_id = isset( $item['product_id'] ) ? absint( $item['product_id'] ) : 0;
+			if ( $product_id > 0 ) {
+				$product_ids[] = $product_id;
+			}
+		}
+
+		$group_id             = PricingRuleLookup::get_customer_group_id( $customer_id, true );
+		$product_category_map = array();
+		$rule_lookup          = array(
+			'product_rules'        => array(),
+			'category_rules'       => array(),
+			'product_category_map' => array(),
+			'resolved_rules'       => array(),
+		);
+		if ( $group_id && ! empty( $product_ids ) ) {
+			$product_category_map = PricingRuleLookup::get_product_category_map( $product_ids );
+			$rule_lookup          = PricingRuleLookup::get_rule_lookup( $group_id, $product_ids, $product_category_map, true, false );
+		}
 
 		foreach ( $items as $item ) {
 			$product_id = isset( $item['product_id'] ) ? absint( $item['product_id'] ) : 0;
@@ -304,7 +325,15 @@ trait OrderInterfaceAjaxShippingTrait {
 				continue;
 			}
 
-			$line_total = is_numeric( $product->get_price() ) ? (float) $product->get_price() * $quantity : 0;
+			$original_price = PricingRuleLookup::get_product_base_price( $product );
+			$adjusted_price = $original_price;
+			$matching_rule  = $group_id ? PricingRuleLookup::get_matching_rule( $product->get_id(), $rule_lookup ) : null;
+			if ( $matching_rule ) {
+				$adjusted_price = PricingRuleLookup::get_adjusted_price( $original_price, $matching_rule );
+			}
+
+			$line_subtotal = max( 0, $original_price ) * $quantity;
+			$line_total    = max( 0, $adjusted_price ) * $quantity;
 			$is_variation = $product->is_type( 'variation' );
 			$product_id   = $is_variation ? $product->get_parent_id() : $product->get_id();
 			$variation_id = $is_variation ? $product->get_id() : 0;
@@ -318,7 +347,7 @@ trait OrderInterfaceAjaxShippingTrait {
 				'variation'         => $variation,
 				'line_total'        => $line_total,
 				'line_tax'          => 0,
-				'line_subtotal'     => $line_total,
+				'line_subtotal'     => $line_subtotal,
 				'line_subtotal_tax' => 0,
 			);
 			$package['contents_cost'] += $line_total;

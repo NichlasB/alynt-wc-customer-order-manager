@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.1.2] - 2026-07-02
+
+### Fixed
+- Restored free-shipping eligibility for manually created admin orders when the package total meets the configured WooCommerce free-shipping minimum
+- Passed the target customer ID through manual shipping packages so customer-group based shipping filters evaluate the intended customer
+- Calculated manual order shipping package totals from customer-group adjusted prices for more accurate live shipping rate eligibility
+
 ## [1.1.1] - 2026-05-21
 
 ### Changed

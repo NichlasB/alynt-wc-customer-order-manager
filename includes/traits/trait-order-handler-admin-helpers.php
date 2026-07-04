@@ -190,8 +190,8 @@ trait OrderHandlerAdminHelpersTrait {
 					'address'   => $order->get_shipping_address_1() ? $order->get_shipping_address_1() : '',
 					'address_2' => $order->get_shipping_address_2() ? $order->get_shipping_address_2() : '',
 				),
-				'user'            => array( 'ID' => $order->get_customer_id() ),
 			);
+			$package = $this->prepare_manual_shipping_package_customer( $package, $order->get_customer_id() );
 
 			foreach ( $order->get_items() as $item ) {
 				$product = $item->get_product();
@@ -239,7 +239,7 @@ trait OrderHandlerAdminHelpersTrait {
 						}
 
 						ob_start();
-						$rates  = $method->get_rates_for_package( $package );
+						$rates  = $this->get_manual_package_shipping_rates( $method, $package );
 						$output = ob_get_clean();
 
 						if ( ! empty( $output ) ) {
