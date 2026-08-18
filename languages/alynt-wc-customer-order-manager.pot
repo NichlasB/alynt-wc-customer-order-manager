@@ -1,0 +1,1353 @@
+# Copyright (C) 2026 Alynt
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Alynt WooCommerce Customer and Order Manager 1.1.3\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/alynt-wc-customer-order-manager\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-08-18T16:35:48+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: alynt-wc-customer-order-manager\n"
+
+#. Plugin Name of the plugin
+#: alynt-wc-customer-order-manager.php
+msgid "Alynt WooCommerce Customer and Order Manager"
+msgstr ""
+
+#. Description of the plugin
+#: alynt-wc-customer-order-manager.php
+msgid "Provides a customer management interface for WooCommerce customers and orders."
+msgstr ""
+
+#. Author of the plugin
+#: alynt-wc-customer-order-manager.php
+msgid "Alynt"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-form.php:17
+msgid "Customer Information"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-form.php:24
+#: includes/traits/trait-admin-pages-render-add.php:91
+msgid "Account Details"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-form.php:28
+msgid "Customer Group (if any)"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-form.php:33
+msgid "--Select a group--"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-form.php:35
+#: includes/traits/trait-admin-pages-render-add.php:102
+msgid "No customer groups available"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-form.php:44
+#: includes/traits/trait-admin-pages-render-add.php:111
+msgid "Customer groups will appear here after they are configured."
+msgstr ""
+
+#: admin/partials/customer-edit/customer-form.php:49
+#: includes/traits/trait-admin-pages-render-add.php:117
+msgid "First Name"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-form.php:58
+#: includes/traits/trait-admin-pages-render-add.php:128
+msgid "Last Name"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-form.php:67
+#: includes/traits/trait-admin-pages-render-add.php:139
+msgid "Account Email"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-form.php:77
+#: includes/traits/trait-admin-pages-render-add.php:150
+#: includes/traits/trait-order-interface-render.php:148
+msgid "Billing Address"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-form.php:80
+#: includes/traits/trait-admin-pages-render-add.php:154
+msgid "Billing Email"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-form.php:84
+#: includes/traits/trait-admin-pages-render-add.php:162
+msgid "Company Name"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-form.php:88
+#: admin/partials/customer-edit/customer-shipping-fields.php:36
+#: includes/class-customer-list-table.php:114
+#: includes/traits/trait-admin-pages-render-add.php:170
+msgid "Phone"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-form.php:92
+#: includes/traits/trait-admin-pages-render-add.php:178
+msgid "Billing Address 1"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-form.php:96
+#: includes/traits/trait-admin-pages-render-add.php:186
+msgid "Billing Address 2"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-form.php:100
+#: admin/partials/customer-edit/customer-shipping-fields.php:40
+#: includes/traits/trait-admin-pages-render-add.php:194
+msgid "City"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-form.php:104
+#: includes/traits/trait-admin-pages-render-add.php:202
+msgid "State"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-form.php:108
+#: admin/partials/customer-edit/customer-shipping-fields.php:48
+#: includes/traits/trait-admin-pages-render-add.php:210
+msgid "Postal Code"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-form.php:112
+#: admin/partials/customer-edit/customer-shipping-fields.php:52
+#: includes/traits/trait-admin-pages-render-add.php:218
+msgid "Country"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-form.php:115
+#: admin/partials/customer-edit/customer-shipping-fields.php:55
+msgid "--Select--"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-form.php:129
+msgid "Update Customer"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-form.php:131
+msgid "Back to List"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-notes-box.php:12
+msgid "Customer Notes"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-notes-box.php:23
+#: includes/class-customer-list-table.php:167
+#: includes/traits/trait-admin-pages-notes.php:214
+msgid "Edit"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-notes-box.php:24
+#: includes/class-customer-list-table.php:173
+#: includes/class-customer-list-table.php:338
+#: includes/traits/trait-admin-pages-notes.php:215
+msgid "Delete"
+msgstr ""
+
+#. translators: 1: customer note author, 2: customer note date.
+#: admin/partials/customer-edit/customer-notes-box.php:29
+#: includes/traits/trait-admin-pages-notes.php:224
+#, php-format
+msgid "By %1$s on %2$s"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-notes-box.php:34
+#: includes/traits/trait-admin-pages-notes.php:218
+msgid "No Notes Yet"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-notes-box.php:35
+#: includes/traits/trait-admin-pages-notes.php:219
+msgid "Notes added for this customer will appear here for your team."
+msgstr ""
+
+#: admin/partials/customer-edit/customer-notes-box.php:36
+#: includes/traits/trait-admin-pages-notes.php:220
+msgid "Add First Note"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-notes-box.php:43
+msgid "Add a note about this customer"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-notes-box.php:44
+msgid "Add a note about this customer..."
+msgstr ""
+
+#: admin/partials/customer-edit/customer-notes-box.php:45
+msgid "Add an internal note for staff working with this customer record."
+msgstr ""
+
+#: admin/partials/customer-edit/customer-notes-box.php:47
+msgid "Add Note"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-shipping-fields.php:13
+#: includes/traits/trait-order-interface-render.php:191
+msgid "Shipping Address"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-shipping-fields.php:17
+msgid "Same as billing address"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-shipping-fields.php:20
+msgid "Select this option to copy the billing address into the shipping address fields."
+msgstr ""
+
+#: admin/partials/customer-edit/customer-shipping-fields.php:28
+msgid "Shipping Address 1"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-shipping-fields.php:32
+msgid "Shipping Address 2"
+msgstr ""
+
+#: admin/partials/customer-edit/customer-shipping-fields.php:44
+msgid "State/Province"
+msgstr ""
+
+#: admin/partials/customer-edit/email-template-modal.php:13
+msgid "Edit Login Email Template"
+msgstr ""
+
+#: admin/partials/customer-edit/email-template-modal.php:16
+msgid "Available merge tags:"
+msgstr ""
+
+#: admin/partials/customer-edit/email-template-modal.php:17
+msgid "Customer's first name"
+msgstr ""
+
+#: admin/partials/customer-edit/email-template-modal.php:18
+msgid "Password reset link"
+msgstr ""
+
+#. translators: %s: site name.
+#: admin/partials/customer-edit/email-template-modal.php:25
+#, php-format
+msgid ""
+"Hello {customer_first_name},\n"
+"\n"
+"You can set your password and login to your account by visiting the following address:\n"
+"\n"
+"{password_reset_link}\n"
+"\n"
+"This link will expire in 24 hours.\n"
+"\n"
+"Regards,\n"
+"%s"
+msgstr ""
+
+#: admin/partials/customer-edit/email-template-modal.php:33
+msgid "Save Template"
+msgstr ""
+
+#: admin/partials/customer-edit/email-template-modal.php:36
+#: includes/traits/trait-admin-pages-email.php:82
+#: includes/traits/trait-admin-pages-menu-main.php:51
+#: includes/traits/trait-admin-pages-notes.php:217
+#: includes/traits/trait-order-interface-render.php:140
+msgid "Cancel"
+msgstr ""
+
+#: admin/partials/customer-edit/login-details-box.php:12
+msgid "Login Details"
+msgstr ""
+
+#: admin/partials/customer-edit/login-details-box.php:18
+msgid "Send Login Details Email"
+msgstr ""
+
+#: admin/partials/customer-edit/login-details-box.php:21
+#: includes/traits/trait-admin-pages-email.php:74
+msgid "Edit Email Template"
+msgstr ""
+
+#: admin/partials/customer-edit/orders-section.php:12
+#: includes/class-customer-list-table.php:117
+msgid "Orders"
+msgstr ""
+
+#: admin/partials/customer-edit/orders-section.php:26
+msgid "Create New Order"
+msgstr ""
+
+#: admin/partials/customer-edit/orders-section.php:27
+#: admin/partials/customer-edit/orders-section.php:28
+msgid "Recent Orders"
+msgstr ""
+
+#: admin/partials/customer-edit/orders-section.php:29
+msgid "Order"
+msgstr ""
+
+#: admin/partials/customer-edit/orders-section.php:30
+msgid "Date"
+msgstr ""
+
+#: admin/partials/customer-edit/orders-section.php:31
+msgid "Status"
+msgstr ""
+
+#: admin/partials/customer-edit/orders-section.php:32
+#: includes/traits/trait-order-interface-render.php:94
+msgid "Total"
+msgstr ""
+
+#: admin/partials/customer-edit/orders-section.php:46
+msgid "No Orders Yet"
+msgstr ""
+
+#: admin/partials/customer-edit/orders-section.php:47
+msgid "Orders created for this customer will appear here."
+msgstr ""
+
+#: admin/partials/customer-edit/orders-section.php:48
+msgid "Create First Order"
+msgstr ""
+
+#. translators: 1: customer's first name, 2: customer's last name.
+#: admin/partials/customer-edit/page.php:35
+#, php-format
+msgid "Edit Customer - %1$s %2$s"
+msgstr ""
+
+#: admin/partials/customer-edit/page.php:44
+#: includes/traits/trait-admin-pages-render-add.php:78
+msgid "Customer created successfully."
+msgstr ""
+
+#. translators: %s: current customer group name.
+#: admin/partials/customer-edit/page.php:56
+#, php-format
+msgid "Customer updated successfully. Current group: %s"
+msgstr ""
+
+#: admin/partials/customer-edit/page.php:60
+msgid "Customer updated successfully."
+msgstr ""
+
+#: admin/partials/customer-edit/page.php:77
+msgid "Login details email sent successfully."
+msgstr ""
+
+#: admin/partials/customer-edit/page.php:83
+msgid "Customer notes updated successfully."
+msgstr ""
+
+#: alynt-wc-customer-order-manager.php:67
+msgid "Alynt WC Customer Order Manager requires WooCommerce to be installed and activated."
+msgstr ""
+
+#: alynt-wc-customer-order-manager.php:214
+msgid "The plugin upload directory could not be prepared. Check your WordPress uploads configuration if generated files do not work as expected."
+msgstr ""
+
+#: alynt-wc-customer-order-manager.php:216
+msgid "The plugin upload directory could not be created. Check file permissions if generated files do not work as expected."
+msgstr ""
+
+#: alynt-wc-customer-order-manager.php:223
+msgid "The plugin security file could not be created in the uploads directory. Check folder permissions if directory protection is required."
+msgstr ""
+
+#: alynt-wc-customer-order-manager.php:278
+msgid "Manage Customers"
+msgstr ""
+
+#: alynt-wc-customer-order-manager.php:305
+msgid "Documentation"
+msgstr ""
+
+#: includes/class-customer-list-table.php:38
+msgctxt "customer list table singular label"
+msgid "customer"
+msgstr ""
+
+#: includes/class-customer-list-table.php:39
+msgctxt "customer list table plural label"
+msgid "customers"
+msgstr ""
+
+#: includes/class-customer-list-table.php:111
+msgid "Name"
+msgstr ""
+
+#: includes/class-customer-list-table.php:112
+msgid "Company"
+msgstr ""
+
+#: includes/class-customer-list-table.php:113
+msgid "Email"
+msgstr ""
+
+#: includes/class-customer-list-table.php:115
+msgid "Address"
+msgstr ""
+
+#: includes/class-customer-list-table.php:116
+msgid "Created"
+msgstr ""
+
+#. translators: %d: number of customer orders.
+#: includes/class-customer-list-table.php:198
+#, php-format
+msgid "%d order"
+msgid_plural "%d orders"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/class-customer-list-table.php:367
+msgid "All"
+msgstr ""
+
+#: includes/class-customer-payment-switch.php:189
+msgid "You do not have permission to start this payment workflow."
+msgstr ""
+
+#: includes/class-customer-payment-switch.php:197
+msgid "Install and activate the User Switching plugin to use this payment workflow."
+msgstr ""
+
+#: includes/class-customer-payment-switch.php:205
+msgid "This order is no longer available for payment. Refresh the order screen and confirm the order is still pending and unpaid."
+msgstr ""
+
+#: includes/class-customer-payment-switch.php:213
+msgid "This order is not attached to a valid WordPress customer account. Assign the order to a customer account or send the payment link directly."
+msgstr ""
+
+#: includes/class-customer-payment-switch.php:220
+#: includes/class-payment-link.php:203
+msgid "This order is assigned to a staff account, so customer switching is unavailable. Use the payment link directly instead."
+msgstr ""
+
+#: includes/class-customer-payment-switch.php:227
+msgid "This order is already assigned to your current WordPress account, so User Switching cannot switch into it. Use the payment link directly instead."
+msgstr ""
+
+#: includes/class-customer-payment-switch.php:235
+msgid "Could not start the customer switch flow for this order. Try again, or send the payment link directly if the problem continues."
+msgstr ""
+
+#: includes/class-customer-payment-switch.php:260
+msgid "This payment handoff is no longer valid. Switch back to staff, then restart the payment flow from the order screen."
+msgstr ""
+
+#: includes/class-customer-payment-switch.php:264
+msgid "This order is no longer available for payment. Return to the order screen and confirm the order is still pending and unpaid."
+msgstr ""
+
+#: includes/class-customer-payment-switch.php:269
+msgid "This switched session does not match the customer assigned to the order. Switch back to staff, then restart the payment flow from the order screen."
+msgstr ""
+
+#: includes/class-customer-payment-switch.php:334
+msgid "You are completing this payment while switched into the customer account. Use the admin bar to switch back after payment."
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:40
+#: includes/traits/trait-admin-pages-menu-main.php:134
+#: includes/traits/trait-admin-pages-render-add.php:33
+#: includes/traits/trait-admin-pages-render-edit.php:33
+#: includes/traits/trait-order-interface-render.php:34
+msgid "You do not have sufficient permissions to access this page."
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:47
+msgid "Customer Manager Diagnostics"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:51
+msgid "Settings"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:59
+#: includes/traits/trait-admin-pages-menu-main.php:104
+#: includes/traits/trait-admin-pages-menu-main.php:105
+msgid "Diagnostics"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:63
+msgid "Enable diagnostics logging"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:65
+msgid "Diagnostics are disabled by default. Sensitive values are redacted before storage or export."
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:69
+msgid "Minimum level"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:81
+msgid "Retention"
+msgstr ""
+
+#. translators: %d: number of days.
+#: includes/class-diagnostics-admin.php:90
+#, php-format
+msgid "%d day"
+msgid_plural "%d days"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/class-diagnostics-admin.php:103
+msgid "Save Diagnostics Settings"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:106
+msgid "Health"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:109
+msgid "Plugin version"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:110
+msgid "WordPress version"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:111
+msgid "PHP version"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:112
+msgid "Storage"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:112
+msgid "Option-backed ring buffer"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:113
+msgid "Stored events"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:114
+msgid "Last event"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:118
+msgid "Recent Events"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:121
+msgid "Export Events"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:124
+msgid "Clear all diagnostics events?"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:127
+msgid "Clear Events"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:227
+msgid "Diagnostics settings saved."
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:229
+msgid "Diagnostics events cleared."
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:243
+msgid "No diagnostics events have been recorded."
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:250
+msgid "Time"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:251
+msgid "Level"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:252
+msgid "Category"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:253
+msgid "Code"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:254
+msgid "Message"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:255
+msgid "Context"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:284
+msgid "None recorded"
+msgstr ""
+
+#: includes/class-diagnostics-admin.php:300
+msgid "You do not have sufficient permissions to perform this action."
+msgstr ""
+
+#: includes/class-order-interface.php:102
+#: includes/class-order-interface.php:103
+#: includes/traits/trait-order-interface-render.php:138
+msgid "Create Order"
+msgstr ""
+
+#: includes/class-order-interface.php:186
+msgid "Search for a product..."
+msgstr ""
+
+#: includes/class-order-interface.php:187
+msgid "No products found"
+msgstr ""
+
+#: includes/class-order-interface.php:188
+msgid "Could not load matching products. Please try again."
+msgstr ""
+
+#: includes/class-order-interface.php:189
+msgid "Product search is unavailable because required scripts did not load. Refresh the page and try again."
+msgstr ""
+
+#: includes/class-order-interface.php:190
+msgid "Remove item"
+msgstr ""
+
+#: includes/class-order-interface.php:191
+msgid "Calculating..."
+msgstr ""
+
+#: includes/class-order-interface.php:192
+msgid "No shipping methods available"
+msgstr ""
+
+#: includes/class-order-interface.php:193
+msgid "Error calculating shipping methods"
+msgstr ""
+
+#: includes/class-order-interface.php:194
+msgid "Shipping is taking longer than expected. Please try again."
+msgstr ""
+
+#: includes/class-order-interface.php:195
+msgid "You appear to be offline. Check your connection and try again."
+msgstr ""
+
+#: includes/class-order-interface.php:196
+msgid "Try Again"
+msgstr ""
+
+#: includes/class-order-interface.php:197
+msgid "Please add at least one item to the order."
+msgstr ""
+
+#: includes/class-order-interface.php:198
+msgid "Enter a quantity greater than 0 for each item."
+msgstr ""
+
+#: includes/class-order-interface.php:199
+#: includes/traits/trait-order-handler-admin-create.php:79
+msgid "Please select a shipping method."
+msgstr ""
+
+#: includes/class-order-interface.php:200
+msgid "Creating order..."
+msgstr ""
+
+#: includes/class-payment-link.php:82
+msgid "No payment link found to copy."
+msgstr ""
+
+#: includes/class-payment-link.php:83
+msgid "Payment link copied to clipboard!"
+msgstr ""
+
+#: includes/class-payment-link.php:84
+msgid "Copying..."
+msgstr ""
+
+#: includes/class-payment-link.php:85
+#: includes/class-payment-link.php:112
+msgid "Copy Payment Link"
+msgstr ""
+
+#. translators: %s: payment link URL.
+#: includes/class-payment-link.php:87
+#, php-format
+msgid "Failed to copy. Please copy manually: %s"
+msgstr ""
+
+#: includes/class-payment-link.php:113
+msgid "Payment Link"
+msgstr ""
+
+#: includes/class-payment-link.php:114
+msgid "Switch to Customer & Pay"
+msgstr ""
+
+#: includes/class-payment-link.php:115
+msgid "Some payment gateways may require this payment link to be completed while signed in as the customer rather than while signed in as staff. If payment does not go through, switch into the customer account or send the link to the customer to complete themselves."
+msgstr ""
+
+#: includes/class-payment-link.php:189
+msgid "Install and activate the User Switching plugin to enable the one-click customer payment switch."
+msgstr ""
+
+#: includes/class-payment-link.php:194
+#: includes/class-payment-link.php:199
+msgid "This order is not attached to a valid WordPress customer account, so customer switching is unavailable. Assign the order to a customer account or send the payment link directly."
+msgstr ""
+
+#: includes/class-payment-link.php:207
+msgid "This order is already attached to your current WordPress account, so User Switching cannot switch into the same user. Use the payment link directly instead."
+msgstr ""
+
+#: includes/class-security.php:57
+msgid "Security check failed"
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-create-bulk.php:54
+#: includes/traits/trait-admin-pages-actions-create-bulk.php:158
+#: includes/traits/trait-admin-pages-actions-edit.php:46
+#: includes/traits/trait-admin-pages-actions-edit.php:257
+#: includes/traits/trait-order-handler-admin-create.php:51
+#: includes/traits/trait-order-handler-admin-create.php:54
+msgid "Your request could not be verified. Please try again."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-create-bulk.php:63
+msgid "You do not have permission to delete customers."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-create-bulk.php:73
+msgid "Select at least one customer to delete."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-create-bulk.php:106
+msgid "No customers were deleted."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-create-bulk.php:166
+msgid "You do not have permission to create customers."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-create-bulk.php:173
+#: includes/traits/trait-admin-pages-actions-edit.php:81
+msgid "Enter a first name to continue."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-create-bulk.php:177
+#: includes/traits/trait-admin-pages-actions-edit.php:85
+msgid "Enter a last name to continue."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-create-bulk.php:181
+#: includes/traits/trait-admin-pages-actions-edit.php:89
+msgid "Enter an account email address to continue."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-create-bulk.php:187
+#: includes/traits/trait-admin-pages-actions-edit.php:96
+msgid "Please fill in all required fields."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-create-bulk.php:194
+msgid "This email address is already registered. Use a different email address and try again."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-create-bulk.php:197
+msgid "This email address is already registered."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-create-bulk.php:222
+msgid "Could not create the customer account. Please review the details and try again."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-create-bulk.php:250
+msgid "Customer created, but the selected customer group no longer exists."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-create-bulk.php:265
+msgid "Customer created, but the customer group could not be assigned. Please try again."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-edit.php:55
+msgid "You do not have permission to update this customer."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-edit.php:64
+#: includes/traits/trait-admin-pages-actions-edit.php:74
+#: includes/traits/trait-admin-pages-actions-edit.php:273
+#: includes/traits/trait-admin-pages-render-edit.php:46
+#: includes/traits/trait-order-handler-admin-create.php:66
+#: includes/traits/trait-order-handler-admin-create.php:71
+#: includes/traits/trait-order-interface-render.php:48
+msgid "Invalid customer."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-edit.php:104
+msgid "This email address is already registered to another user. Use a different email address and try again."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-edit.php:108
+msgid "This email address is already registered to another user."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-edit.php:132
+msgid "Could not update the customer. Please review the details and try again."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-edit.php:190
+msgid "Customer details were updated, but the selected customer group no longer exists."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-edit.php:202
+#: includes/traits/trait-admin-pages-actions-edit.php:224
+msgid "Customer details were updated, but the customer group could not be saved. Please try again."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-edit.php:264
+msgid "You do not have permission to send login details."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-edit.php:280
+msgid "This customer does not have an email address saved."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-edit.php:296
+msgid "Could not prepare the login email. Please try again."
+msgstr ""
+
+#. translators: %s: site name.
+#: includes/traits/trait-admin-pages-actions-edit.php:308
+#, php-format
+msgid "[%s] Your login details"
+msgstr ""
+
+#. translators: 1: customer display name, 2: password reset URL, 3: site name.
+#: includes/traits/trait-admin-pages-actions-edit.php:322
+#, php-format
+msgid ""
+"Hello %1$s,<br><br>\r\n"
+"                        You can set your password and login to your account by visiting the following address:<br><br>\r\n"
+"                        <a href=\"%2$s\">%2$s</a><br><br>\r\n"
+"                        This link will expire in 24 hours.<br><br>\r\n"
+"                        Regards,<br>\r\n"
+"                        %3$s"
+msgstr ""
+
+#: includes/traits/trait-admin-pages-actions-edit.php:357
+msgid "The login email could not be sent. Please try again."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-email.php:70
+msgid "Customer First Name"
+msgstr ""
+
+#: includes/traits/trait-admin-pages-email.php:71
+msgid "Password Reset Link"
+msgstr ""
+
+#: includes/traits/trait-admin-pages-email.php:75
+msgid "Please enter some content for the email template."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-email.php:76
+#: includes/traits/trait-admin-pages-email.php:124
+msgid "Template saved successfully."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-email.php:77
+msgid "Something unexpected happened while saving the template. Please try again."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-email.php:78
+#: includes/traits/trait-admin-pages-email.php:126
+msgid "The email template could not be saved. Please try again."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-email.php:79
+msgid "Saving..."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-email.php:80
+msgid "Discard Changes?"
+msgstr ""
+
+#: includes/traits/trait-admin-pages-email.php:81
+msgid "Discard Changes"
+msgstr ""
+
+#: includes/traits/trait-admin-pages-email.php:83
+msgid "Discard your unsaved email template changes?"
+msgstr ""
+
+#. translators: %s: error message returned while saving the email template.
+#: includes/traits/trait-admin-pages-email.php:85
+#, php-format
+msgid "The email template could not be saved. %s"
+msgstr ""
+
+#. translators: %s: error message thrown while preparing the email template request.
+#: includes/traits/trait-admin-pages-email.php:87
+#, php-format
+msgid "The email template could not be prepared for saving. %s"
+msgstr ""
+
+#: includes/traits/trait-admin-pages-email.php:88
+msgid "Insert Merge Tag..."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-email.php:107
+#: includes/traits/trait-admin-pages-notes.php:75
+#: includes/traits/trait-order-interface-ajax-products.php:35
+#: includes/traits/trait-order-interface-ajax-shipping.php:35
+msgid "Your session expired. Refresh the page and try again."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-email.php:112
+msgid "You do not have permission to edit this email template."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-email.php:116
+msgid "The email template could not be saved because no content was received. Refresh the page and try again."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-menu-main.php:52
+msgid "Delete Customer?"
+msgstr ""
+
+#: includes/traits/trait-admin-pages-menu-main.php:53
+msgid "Delete Customer"
+msgstr ""
+
+#. translators: %s: customer full name.
+#: includes/traits/trait-admin-pages-menu-main.php:55
+#, php-format
+msgid "This will permanently delete \"%s\". This cannot be undone."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-menu-main.php:56
+msgid "Delete Customers?"
+msgstr ""
+
+#: includes/traits/trait-admin-pages-menu-main.php:57
+msgid "Delete Customers"
+msgstr ""
+
+#. translators: %d: number of selected customers.
+#: includes/traits/trait-admin-pages-menu-main.php:59
+#, php-format
+msgid "This will permanently delete %d customers. This cannot be undone."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-menu-main.php:82
+#: includes/traits/trait-admin-pages-menu-main.php:83
+#: includes/traits/trait-admin-pages-menu-main.php:148
+msgid "Customer Manager"
+msgstr ""
+
+#: includes/traits/trait-admin-pages-menu-main.php:95
+#: includes/traits/trait-admin-pages-menu-main.php:96
+#: includes/traits/trait-admin-pages-menu-main.php:150
+#: includes/traits/trait-admin-pages-render-add.php:73
+msgid "Add New Customer"
+msgstr ""
+
+#: includes/traits/trait-admin-pages-menu-main.php:113
+#: includes/traits/trait-admin-pages-menu-main.php:114
+msgid "Edit Customer"
+msgstr ""
+
+#. translators: %d: number of deleted customers.
+#: includes/traits/trait-admin-pages-menu-main.php:159
+#, php-format
+msgid "%d customer deleted."
+msgid_plural "%d customers deleted."
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of customers that could not be deleted.
+#: includes/traits/trait-admin-pages-menu-main.php:171
+#, php-format
+msgid "%d customer could not be deleted. Please try again."
+msgid_plural "%d customers could not be deleted. Please try again."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/traits/trait-admin-pages-menu-main.php:192
+msgid "Search Customers"
+msgstr ""
+
+#: includes/traits/trait-admin-pages-notes.php:79
+msgid "You do not have permission to manage customer notes."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-notes.php:116
+msgid "Unknown"
+msgstr ""
+
+#: includes/traits/trait-admin-pages-notes.php:209
+msgid "Delete Note?"
+msgstr ""
+
+#: includes/traits/trait-admin-pages-notes.php:210
+msgid "Delete Note"
+msgstr ""
+
+#. translators: %s: note preview text.
+#: includes/traits/trait-admin-pages-notes.php:212
+#, php-format
+msgid "This will permanently delete this note: \"%s\". This cannot be undone."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-notes.php:213
+msgid "Enter a note before you save it."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-notes.php:216
+msgid "Save"
+msgstr ""
+
+#: includes/traits/trait-admin-pages-notes.php:221
+msgid "Note added successfully."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-notes.php:222
+msgid "Note updated successfully."
+msgstr ""
+
+#. translators: %s: server-provided error details while adding a customer note.
+#: includes/traits/trait-admin-pages-notes.php:226
+#, php-format
+msgid "Could not add the note. %s"
+msgstr ""
+
+#: includes/traits/trait-admin-pages-notes.php:227
+msgid "Could not add the note. Please try again."
+msgstr ""
+
+#. translators: %s: server-provided error details while updating a customer note.
+#: includes/traits/trait-admin-pages-notes.php:229
+#, php-format
+msgid "Could not update the note. %s"
+msgstr ""
+
+#: includes/traits/trait-admin-pages-notes.php:230
+msgid "Could not update the note. Please try again."
+msgstr ""
+
+#. translators: %s: server-provided error details while deleting a customer note.
+#: includes/traits/trait-admin-pages-notes.php:232
+#, php-format
+msgid "Could not delete the note. %s"
+msgstr ""
+
+#: includes/traits/trait-admin-pages-notes.php:233
+msgid "Could not delete the note. Please try again."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-notes.php:257
+msgid "The note could not be saved because some required information was missing. Refresh the page and try again."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-notes.php:307
+msgid "The note could not be updated because some required information was missing. Refresh the page and try again."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-notes.php:316
+#: includes/traits/trait-admin-pages-notes.php:358
+msgid "This note could not be found. Refresh the page and try again."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-notes.php:349
+msgid "The note could not be deleted because some required information was missing. Refresh the page and try again."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-render-add.php:95
+msgid "Customer Group"
+msgstr ""
+
+#: includes/traits/trait-admin-pages-render-add.php:100
+msgid "- None (unassigned) -"
+msgstr ""
+
+#: includes/traits/trait-admin-pages-render-add.php:236
+msgid "Create Customer"
+msgstr ""
+
+#: includes/traits/trait-admin-pages-render-edit.php:41
+#: includes/traits/trait-order-interface-render.php:43
+msgid "Invalid customer ID."
+msgstr ""
+
+#: includes/traits/trait-admin-pages-render-edit.php:128
+msgid "Customer edit template not found."
+msgstr ""
+
+#: includes/traits/trait-order-handler-admin-create.php:59
+#: includes/traits/trait-order-handler-admin-create.php:62
+msgid "You do not have permission to create orders."
+msgstr ""
+
+#: includes/traits/trait-order-handler-admin-create.php:75
+msgid "No items selected."
+msgstr ""
+
+#: includes/traits/trait-order-handler-admin-create.php:110
+msgid "Please add at least one valid product with a quantity greater than 0."
+msgstr ""
+
+#: includes/traits/trait-order-handler-admin-create.php:117
+msgid "One or more selected products are no longer available or have an invalid quantity. Please review the order items and try again."
+msgstr ""
+
+#: includes/traits/trait-order-handler-admin-create.php:136
+#: includes/traits/trait-order-handler-admin-create.php:325
+msgid "Could not create the order. Please try again."
+msgstr ""
+
+#. translators: 1: customer group name, 2: discount percentage.
+#: includes/traits/trait-order-handler-admin-create.php:178
+#, php-format
+msgid "%1$s Group Discount: %2$s%%"
+msgstr ""
+
+#. translators: 1: customer group name, 2: discount amount.
+#: includes/traits/trait-order-handler-admin-create.php:185
+#, php-format
+msgid "%1$s Group Discount: %2$s"
+msgstr ""
+
+#. translators: 1: discount description, 2: original product price, 3: discounted product price, 4: total discount amount.
+#: includes/traits/trait-order-handler-admin-create.php:218
+#, php-format
+msgid "Applied %1$s. Original Price: %2$s, Discounted Price: %3$s, Total Discount: %4$s"
+msgstr ""
+
+#. translators: %s: product name.
+#: includes/traits/trait-order-handler-admin-create.php:244
+#, php-format
+msgid "Could not add \"%s\" to the order. Please try again."
+msgstr ""
+
+#: includes/traits/trait-order-handler-admin-create.php:270
+msgid "Could not add the selected shipping method. Please refresh the shipping options and try again."
+msgstr ""
+
+#. translators: %s: admin display name.
+#: includes/traits/trait-order-handler-admin-create.php:303
+#, php-format
+msgid "Order created via Alynt WC Customer Order Manager by %s"
+msgstr ""
+
+#. translators: %s: diagnostic details explaining why no shipping methods were available.
+#: includes/traits/trait-order-handler-admin-helpers.php:114
+#, php-format
+msgid "No shipping methods available for this destination. Details: %s"
+msgstr ""
+
+#: includes/traits/trait-order-handler-admin-helpers.php:120
+msgid "No shipping methods available for this destination."
+msgstr ""
+
+#. translators: 1: selected shipping method ID, 2: comma-separated list of available shipping method IDs.
+#: includes/traits/trait-order-handler-admin-helpers.php:154
+#, php-format
+msgid "Selected shipping method \"%1$s\" not found. Available: %2$s"
+msgstr ""
+
+#. translators: %s: shipping plugin error details.
+#: includes/traits/trait-order-handler-admin-helpers.php:254
+#, php-format
+msgid "USPS plugin errors: %s"
+msgstr ""
+
+#. translators: %s: shipping method title.
+#: includes/traits/trait-order-handler-admin-helpers.php:289
+#, php-format
+msgid "Shipping method \"%s\" returned no rates for this destination"
+msgstr ""
+
+#. translators: 1: shipping method title, 2: error details.
+#: includes/traits/trait-order-handler-admin-helpers.php:296
+#, php-format
+msgid "Shipping method \"%1$s\" error: %2$s"
+msgstr ""
+
+#. translators: 1: shipping method title, 2: fatal error details.
+#: includes/traits/trait-order-handler-admin-helpers.php:306
+#, php-format
+msgid "Shipping method \"%1$s\" fatal error: %2$s"
+msgstr ""
+
+#. translators: %s: critical shipping calculation error details.
+#: includes/traits/trait-order-handler-admin-helpers.php:321
+#, php-format
+msgid "Critical error getting shipping methods: %s"
+msgstr ""
+
+#. translators: 1: order ID, 2: customer ID, 3: admin display name.
+#: includes/traits/trait-order-handler-admin-helpers.php:346
+#, php-format
+msgid "Order #%1$d created for customer #%2$d by %3$s"
+msgstr ""
+
+#. translators: %s: customer group display title.
+#: includes/traits/trait-order-handler-cart-display.php:186
+#, php-format
+msgid "%s pricing applied"
+msgstr ""
+
+#: includes/traits/trait-order-interface-ajax-products.php:44
+msgid "You do not have permission to search products."
+msgstr ""
+
+#. translators: %d: number of items currently in stock.
+#: includes/traits/trait-order-interface-ajax-products.php:170
+#, php-format
+msgid "%d in stock"
+msgid_plural "%d in stock"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/traits/trait-order-interface-ajax-products.php:174
+#: includes/traits/trait-order-interface-ajax-products.php:179
+msgid "Out of stock"
+msgstr ""
+
+#: includes/traits/trait-order-interface-ajax-products.php:177
+msgid "In stock"
+msgstr ""
+
+#: includes/traits/trait-order-interface-ajax-products.php:181
+msgid "On backorder"
+msgstr ""
+
+#: includes/traits/trait-order-interface-ajax-products.php:205
+msgid "We could not load products right now. Please try again."
+msgstr ""
+
+#: includes/traits/trait-order-interface-ajax-shipping.php:44
+msgid "You do not have permission to calculate shipping."
+msgstr ""
+
+#: includes/traits/trait-order-interface-ajax-shipping.php:52
+#: includes/traits/trait-order-interface-ajax-shipping.php:60
+msgid "Choose a valid customer before calculating shipping."
+msgstr ""
+
+#: includes/traits/trait-order-interface-ajax-shipping.php:67
+msgid "Shipping is not available right now. Please refresh the page and try again."
+msgstr ""
+
+#: includes/traits/trait-order-interface-ajax-shipping.php:90
+msgid "Add at least one item before calculating shipping."
+msgstr ""
+
+#: includes/traits/trait-order-interface-ajax-shipping.php:124
+msgid "Add a billing or shipping address for this customer before calculating shipping."
+msgstr ""
+
+#: includes/traits/trait-order-interface-ajax-shipping.php:176
+msgid "Add at least one valid item before calculating shipping."
+msgstr ""
+
+#: includes/traits/trait-order-interface-ajax-shipping.php:244
+#: includes/traits/trait-order-interface-ajax-shipping.php:253
+msgid "We could not calculate shipping methods right now. Please try again."
+msgstr ""
+
+#: includes/traits/trait-order-interface-ajax-shipping.php:260
+msgid "No shipping methods are available for this customer address. Check the address and your WooCommerce shipping settings, then try again."
+msgstr ""
+
+#. translators: %s: customer full name.
+#: includes/traits/trait-order-interface-render.php:57
+#, php-format
+msgid "Create Order for %s"
+msgstr ""
+
+#: includes/traits/trait-order-interface-render.php:80
+#: includes/traits/trait-order-interface-render.php:88
+msgid "Order Items"
+msgstr ""
+
+#: includes/traits/trait-order-interface-render.php:83
+msgid "Search for a product to add"
+msgstr ""
+
+#: includes/traits/trait-order-interface-render.php:91
+msgid "Item"
+msgstr ""
+
+#: includes/traits/trait-order-interface-render.php:92
+msgid "Qty"
+msgstr ""
+
+#: includes/traits/trait-order-interface-render.php:93
+msgid "Price"
+msgstr ""
+
+#: includes/traits/trait-order-interface-render.php:95
+msgid "Actions"
+msgstr ""
+
+#: includes/traits/trait-order-interface-render.php:102
+msgid "Subtotal:"
+msgstr ""
+
+#: includes/traits/trait-order-interface-render.php:108
+msgid "Shipping:"
+msgstr ""
+
+#: includes/traits/trait-order-interface-render.php:114
+msgid "Total:"
+msgstr ""
+
+#: includes/traits/trait-order-interface-render.php:124
+msgid "Order Notes"
+msgstr ""
+
+#: includes/traits/trait-order-interface-render.php:126
+msgid "Order Notes (optional)"
+msgstr ""
+
+#: includes/traits/trait-order-interface-render.php:127
+msgid "Add internal notes for this order if your team needs extra context."
+msgstr ""
+
+#: includes/traits/trait-order-interface-render.php:129
+msgid "Add any notes about this order (optional)"
+msgstr ""
+
+#: includes/traits/trait-order-interface-render.php:136
+msgid "Order Actions"
+msgstr ""
+
+#: includes/traits/trait-order-interface-render.php:145
+msgid "Customer Details"
+msgstr ""
+
+#: includes/traits/trait-order-interface-render.php:203
+msgid "Shipping"
+msgstr ""
+
+#: includes/traits/trait-order-interface-render.php:206
+msgid "Calculating available shipping methods..."
+msgstr ""

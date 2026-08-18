@@ -3,9 +3,18 @@ name: Build Release
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: Release tag to package, such as v1.1.3
+        required: true
 
 permissions:
   contents: write
+
+concurrency:
+  group: release-${{ github.event.release.tag_name || inputs.tag_name }}
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -14,45 +23,55 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.1'
-          tools: composer:v2
+          ref: ${{ github.event.release.tag_name || inputs.tag_name }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '20'
+          cache: 'npm'
 
-      - name: Install Composer dependencies (production)
-        run: composer install --no-dev --optimize-autoloader --no-interaction
-
-      - name: Check for package.json and install npm dependencies
+      - name: Install npm dependencies and build assets
         run: |
-          if [ -f "package.json" ]; then
+          if [ -f "package-lock.json" ]; then
+            npm ci
+          elif [ -f "package.json" ]; then
             npm install
-            npm run build || echo "No build script, skipping"
-          else
-            echo "No package.json found, skipping npm steps"
           fi
+          npm run build
 
       - name: Create plugin zip
         id: package
         run: |
           PLUGIN_SLUG="alynt-wc-customer-order-manager"
-          VERSION="${{ github.event.release.tag_name }}"
+          VERSION="${{ github.event.release.tag_name || inputs.tag_name }}"
 
           mkdir -p build/${PLUGIN_SLUG}
 
           rsync -av --exclude='.git' \
                     --exclude='.github' \
+                    --exclude='.codex' \
+                    --exclude='.agents' \
+                    --exclude='.opencode' \
+                    --exclude='.cursor' \
+                    --exclude='.idea' \
+                    --exclude='.vscode' \
+                    --exclude='.playwright-mcp' \
+                    --exclude='build' \
                     --exclude='node_modules' \
+                    --exclude='vendor' \
                     --exclude='tests' \
+                    --exclude='coverage' \
+                    --exclude='playwright-report' \
                     --exclude='scripts' \
                     --exclude='docs' \
                     --exclude='assets/src' \
+                    --exclude='AGENTS.md' \
+                    --exclude='AI_CODING_RULES.md' \
+                    --exclude='CLAUDE.md' \
+                    --exclude='GEMINI.md' \
+                    --exclude='opencode.json' \
                     --exclude='.gitignore' \
                     --exclude='.gitattributes' \
                     --exclude='.phpcs.xml' \
@@ -66,7 +85,12 @@ jobs:
                     --exclude='package-lock.json' \
                     --exclude='deploy.sh' \
                     --exclude='deploy.example.sh' \
+                    --exclude='implementation-plan.tmp.md' \
                     --exclude='session-context.tmp.md' \
+                    --exclude='session-handoff.tmp.md' \
+                    --exclude='*.tmp.md' \
+                    --exclude='.env' \
+                    --exclude='.env.*' \
                     --exclude='README.md' \
                     --exclude='CHANGELOG.md' \
                     --exclude='*.map' \
@@ -81,6 +105,8 @@ jobs:
       - name: Upload release asset
         uses: softprops/action-gh-release@v3
         with:
+          tag_name: ${{ github.event.release.tag_name || inputs.tag_name }}
           files: ${{ steps.package.outputs.zip_file }}
+          overwrite_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -22,7 +22,8 @@ function awcom_uninstall_cleanup_site_data() {
 	delete_option( 'alynt_wc_customer_order_manager_settings' );
 	delete_option( 'awcom_login_email_template' );
 	delete_option( 'awcom_version' );
-
+	delete_option( 'awcom_diagnostics_settings' );
+	delete_option( 'awcom_diagnostics_events' );
 	// Clean up any additional options.
 	$option_names = array(
 		'alynt_wc_customer_order_manager_version',
@@ -48,6 +49,7 @@ function awcom_uninstall_cleanup_site_data() {
 	);
 
 	foreach ( $transient_patterns as $pattern ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Uninstall cleanup removes plugin-owned transients.
 		$wpdb->query(
 			$wpdb->prepare(
 				"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
@@ -72,7 +74,8 @@ function awcom_uninstall_cleanup_site_data() {
 	delete_post_meta_by_key( '_awcom_pricing_locked' );
 	delete_post_meta_by_key( '_awcom_locked_total' );
 
-	$wc_orders_meta_table  = $wpdb->prefix . 'wc_orders_meta';
+	$wc_orders_meta_table = $wpdb->prefix . 'wc_orders_meta';
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Uninstall cleanup checks whether the WooCommerce HPOS table exists before deleting plugin-owned rows.
 	$wc_orders_meta_exists = $wpdb->get_var(
 		$wpdb->prepare(
 			'SHOW TABLES LIKE %s',
@@ -81,6 +84,7 @@ function awcom_uninstall_cleanup_site_data() {
 	);
 
 	if ( $wc_orders_meta_exists === $wc_orders_meta_table ) {
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Dynamic HPOS table name is built from $wpdb->prefix after existence check.
 		$wpdb->query(
 			$wpdb->prepare(
 				"DELETE FROM {$wc_orders_meta_table} WHERE meta_key IN ( %s, %s, %s )",
@@ -89,9 +93,11 @@ function awcom_uninstall_cleanup_site_data() {
 				'_awcom_locked_total'
 			)
 		);
+		// phpcs:enable
 	}
 
 	// Remove plugin-managed customer notes user meta.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Uninstall cleanup removes plugin-owned user meta.
 	$wpdb->query(
 		$wpdb->prepare(
 			"DELETE FROM {$wpdb->usermeta} WHERE meta_key IN ( %s, %s )",
@@ -128,7 +134,7 @@ if ( function_exists( 'current_user_can' ) && ! current_user_can( 'activate_plug
 }
 
 if ( is_multisite() ) {
-	$site_ids        = get_sites(
+	$site_ids = get_sites(
 		array(
 			'fields' => 'ids',
 		)

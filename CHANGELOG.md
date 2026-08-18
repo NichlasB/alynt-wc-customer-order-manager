@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.1.3] - 2026-08-18
+
+### Added
+- Improved WooCommerce admin product search dropdown relevance by prioritizing product title and SKU matches for native order editing screens
+- Optional admin-only diagnostics tooling with redacted event storage, export, and clear controls
+
 ## [1.1.2] - 2026-07-02
 
 ### Fixed

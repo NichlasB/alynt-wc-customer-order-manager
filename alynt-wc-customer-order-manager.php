@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Alynt WooCommerce Customer and Order Manager
  * Description:       Provides a customer management interface for WooCommerce customers and orders.
- * Version:           1.1.2
+ * Version:           1.1.3
  * Author:            Alynt
  * GitHub Plugin URI: NichlasB/alynt-wc-customer-order-manager
  * Requires at least: 5.0
@@ -22,10 +22,11 @@ defined( 'ABSPATH' ) || exit;
 // Define plugin constants.
 define( 'AWCOM_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 define( 'AWCOM_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-define( 'AWCOM_VERSION', '1.1.2' );
-
+define( 'AWCOM_VERSION', '1.1.3' );
 require_once AWCOM_PLUGIN_PATH . 'includes/class-activator.php';
 require_once AWCOM_PLUGIN_PATH . 'includes/class-deactivator.php';
+require_once AWCOM_PLUGIN_PATH . 'includes/class-diagnostics.php';
+require_once AWCOM_PLUGIN_PATH . 'includes/class-diagnostics-admin.php';
 
 /**
  * Display setup warnings that were captured during activation.
@@ -132,10 +133,13 @@ function awcom_init() {
 		require_once AWCOM_PLUGIN_PATH . 'includes/class-admin-pages.php';
 		require_once AWCOM_PLUGIN_PATH . 'includes/class-order-interface.php';
 		require_once AWCOM_PLUGIN_PATH . 'includes/class-payment-link.php';
+		require_once AWCOM_PLUGIN_PATH . 'includes/class-woocommerce-admin-product-search.php';
 
+		new \AlyntWCOrderManager\DiagnosticsAdmin();
 		new \AlyntWCOrderManager\AdminPages();
 		new \AlyntWCOrderManager\OrderInterface();
 		new \AlyntWCOrderManager\PaymentLink();
+		new \AlyntWCOrderManager\WooCommerceAdminProductSearch();
 	}
 }
 add_action( 'plugins_loaded', 'awcom_init' );
@@ -159,6 +163,14 @@ function awcom_run_upgrade_tasks() {
 }
 
 if ( ! function_exists( 'awcom_get_order_edit_url' ) ) {
+	/**
+	 * Get the admin edit URL for an order.
+	 *
+	 * @since 1.0.6
+	 *
+	 * @param int $order_id Order ID.
+	 * @return string
+	 */
 	function awcom_get_order_edit_url( $order_id ) {
 		$order_id = absint( $order_id );
 

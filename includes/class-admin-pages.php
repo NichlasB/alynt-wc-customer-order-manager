@@ -134,17 +134,27 @@ class AdminPages {
 			return array();
 		}
 
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Admin-only lookup for configured customer groups.
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 		$groups = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT group_id, group_name FROM {$groups_table} WHERE group_id >= %d ORDER BY group_name ASC",
 				0
 			)
 		);
+		// phpcs:enable
 
 		return is_array( $groups ) ? $groups : array();
 	}
 
+	/**
+	 * Remove plugin-owned customer group assignment when a user is deleted.
+	 *
+	 * @since 1.0.6
+	 *
+	 * @param int $user_id User ID.
+	 * @return void
+	 */
 	public function cleanup_customer_group_assignment( $user_id ) {
 		$user_id = absint( $user_id );
 
@@ -155,6 +165,7 @@ class AdminPages {
 		global $wpdb;
 		$user_groups_table = $wpdb->prefix . 'user_groups';
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Cleanup runs only for a deleted user ID.
 		$wpdb->delete(
 			$user_groups_table,
 			array( 'user_id' => $user_id ),
@@ -171,6 +182,6 @@ class AdminPages {
 	 * @return void
 	 */
 	protected function log_admin_error( $message ) {
-		// Logging removed in pre-release cleanup.
+		Diagnostics::log( 'admin_action', 'error', 'admin_error', $message );
 	}
 }

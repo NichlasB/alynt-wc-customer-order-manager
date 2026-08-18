@@ -5,7 +5,7 @@ Requires at least: 5.0
 Tested up to: 6.7.1
 Requires PHP: 7.2
 WC requires at least: 4.0
-Stable tag: 1.1.2
+Stable tag: 1.1.3
 License: GPL v2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -26,6 +26,7 @@ Customer and Order Manager for WooCommerce enhances your WooCommerce store's adm
 * Customizable order interface
 * Streamlined administrative workflow
 * Easy payment link sharing
+* Optional admin-only diagnostics with redacted event logging
 
 = Requirements =
 * WordPress 5.0 or higher
@@ -61,7 +62,15 @@ Yes! Customers can edit pending orders before payment. When they click the payme
 
 Customers can modify pending orders by adding or removing products, changing item quantities (with stock validation), selecting different shipping methods, and adding special instructions. All changes are calculated in real-time with updated totals and shipping costs.
 
+= Where are diagnostics managed? =
+
+Diagnostics are managed under Customer Manager > Diagnostics in wp-admin. Logging is disabled by default. When enabled, the plugin stores a bounded, redacted event history that authorized admins can export or clear.
+
 == Changelog ==
+
+= 1.1.3 =
+* Enhancement: Improved WooCommerce admin product search dropdown relevance by prioritizing product title and SKU matches for native order editing screens
+* Added: Optional admin-only diagnostics tooling with redacted event storage, export, and clear controls
 
 = 1.1.2 =
 * Fix: Restored free-shipping eligibility for manually created admin orders when the package total meets the configured WooCommerce free-shipping minimum
@@ -136,6 +145,9 @@ Customers can modify pending orders by adding or removing products, changing ite
 * Security features implementation
 
 == Upgrade Notice ==
+
+= 1.1.3 =
+Improves product search relevance in WooCommerce admin order editing and adds opt-in diagnostics for support troubleshooting. No breaking changes.
 
 = 1.1.2 =
 Maintenance release: fixes free-shipping eligibility for manually created admin orders and improves customer-group aware shipping calculations. Recommended for stores using manual order creation. No breaking changes.

@@ -18,6 +18,9 @@ This file documents the WordPress and WooCommerce hooks that the Alynt WooCommer
 | `admin_init` | 10 | `AdminPages::handle_customer_edit_submission` | Processes the Edit Customer form and Send Login Details action. |
 | `admin_menu` | 10 | `AdminPages::add_menu_pages` | Registers Customer Manager menu and submenu pages. |
 | `admin_menu` | 10 | `OrderInterface::add_menu_pages` | Registers the hidden Create Order submenu page. |
+| `admin_post_awcom_save_diagnostics_settings` | 10 | `Diagnostics::handle_save_settings` | Saves opt-in diagnostics settings. |
+| `admin_post_awcom_clear_diagnostics` | 10 | `Diagnostics::handle_clear_events` | Clears stored diagnostics events. |
+| `admin_post_awcom_export_diagnostics` | 10 | `Diagnostics::handle_export_events` | Exports stored diagnostics events as JSON. |
 | `admin_enqueue_scripts` | 10 | `AdminPages::enqueue_customer_notes_scripts` | Enqueues customer notes JS on the Edit Customer page. |
 | `admin_enqueue_scripts` | 10 | `AdminPages::enqueue_editor_scripts` | Enqueues the email template editor on the Edit Customer page. |
 | `admin_enqueue_scripts` | 10 | `OrderInterface::enqueue_scripts` | Enqueues order interface assets on the Create Order page. |
@@ -41,6 +44,7 @@ This file documents the WordPress and WooCommerce hooks that the Alynt WooCommer
 |------|----------|----------|-------------|
 | `plugin_action_links_{basename}` | 10 | `awcom_add_plugin_action_links` | Prepends a "Manage Customers" link to the plugin's action links. |
 | `plugin_row_meta` | 10 | `awcom_plugin_row_meta` | Adds a "Documentation" link to the plugin's row meta. |
+| `woocommerce_product_pre_search_products` | 10 | `WooCommerceAdminProductSearch::search_products` | Overrides WooCommerce admin AJAX product-search IDs with title/SKU-focused relevance ordering. |
 | `woocommerce_order_item_get_subtotal` | 10 | `OrderHandler::preserve_item_subtotal` | Passes item subtotal through unchanged for custom-priced orders. |
 | `woocommerce_order_item_get_total` | 10 | `OrderHandler::preserve_item_total` | Passes item total through unchanged for custom-priced orders. |
 | `woocommerce_order_get_total` | 9999 | `OrderHandler::lock_order_total` | Returns the locked order total on the frontend pay page. |

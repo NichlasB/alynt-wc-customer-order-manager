@@ -29,6 +29,11 @@ A powerful WordPress plugin that enhances WooCommerce's customer and order manag
   - Data encryption support
   - Order key validation for customer access
 
+- **Diagnostics**
+  - Optional admin-only diagnostics screen
+  - Redacted event logging for support investigations
+  - Export and clear controls protected by capability checks and nonces
+
 ## 📋 Requirements
 
 - WordPress 5.0 or higher
@@ -76,6 +81,12 @@ When customers receive payment links for pending orders, they can:
 - Stock validation prevents overselling
 - Customer-specific pricing maintained
 
+### Diagnostics
+- Open Customer Manager > Diagnostics in wp-admin
+- Diagnostics logging is disabled by default
+- When enabled, the plugin stores a bounded, redacted event history for support troubleshooting
+- Authorized admins can export or clear diagnostics events from the diagnostics screen
+
 ## 🔒 Security
 
 The plugin implements various security measures:
@@ -102,6 +113,10 @@ Order-level pricing is stored in WooCommerce order meta (`_has_custom_pricing`, 
 ## 📝 Changelog
 
 See [CHANGELOG.md](CHANGELOG.md) for the full version history.
+
+### 1.1.3 (2026-08-18)
+- Improved WooCommerce admin product search dropdown relevance by prioritizing product title and SKU matches for native order editing screens
+- Added optional admin-only diagnostics tooling with redacted event storage, export, and clear controls
 
 ### 1.1.2 (2026-07-02)
 - Fixed manual admin order shipping so qualifying orders can display WooCommerce free shipping without relying on frontend cart state

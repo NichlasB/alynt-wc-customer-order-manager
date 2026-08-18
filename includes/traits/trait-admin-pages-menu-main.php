@@ -100,6 +100,15 @@ trait AdminPagesMenuMainTrait {
 		);
 
 		add_submenu_page(
+			'alynt-wc-customer-order-manager',
+			__( 'Diagnostics', 'alynt-wc-customer-order-manager' ),
+			__( 'Diagnostics', 'alynt-wc-customer-order-manager' ),
+			'manage_woocommerce',
+			'alynt-wc-customer-order-manager-diagnostics',
+			array( DiagnosticsAdmin::class, 'render_page' )
+		);
+
+		add_submenu_page(
 			null,
 			__( 'Edit Customer', 'alynt-wc-customer-order-manager' ),
 			__( 'Edit Customer', 'alynt-wc-customer-order-manager' ),
